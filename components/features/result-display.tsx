@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ResultDisplayProps {
   title: string;
-  data: any;
+  data: unknown;
   className?: string;
 }
 

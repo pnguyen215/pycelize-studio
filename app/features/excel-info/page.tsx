@@ -13,7 +13,7 @@ import { FileText } from "lucide-react";
 export default function ExcelInfoPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -26,8 +26,8 @@ export default function ExcelInfoPage() {
     try {
       const response = await excelApi.getInfo(file);
       setResult(response);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }

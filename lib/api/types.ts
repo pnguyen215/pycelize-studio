@@ -90,7 +90,7 @@ export interface CustomSQLRequest {
   template: string;
   columnMapping: Record<string, string>;
   columns?: string[];
-  autoIncrement?: any;
+  autoIncrement?: Record<string, unknown>;
   removeDuplicates?: boolean;
 }
 
@@ -126,7 +126,7 @@ export interface NormalizationRequest {
   normalizations: Array<{
     column_name: string;
     normalization_type: string;
-    config?: any;
+    config?: Record<string, unknown>;
   }>;
 }
 

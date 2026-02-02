@@ -25,7 +25,7 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => response.data,
-  (error: AxiosError<any>) => {
+  (error: AxiosError<{ message?: string }>) => {
     const message = error.response?.data?.message || 
                    error.message || 
                    'An unexpected error occurred';

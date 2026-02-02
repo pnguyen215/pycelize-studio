@@ -11,7 +11,7 @@ import { Activity, CheckCircle2 } from "lucide-react";
 
 export default function HealthCheckPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheck = async () => {
@@ -22,8 +22,8 @@ export default function HealthCheckPage() {
     try {
       const response = await healthApi.check();
       setResult(response);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
