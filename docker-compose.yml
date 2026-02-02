@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  pycelize-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pycelize-studio
+    ports:
+      - "3000:3000"
+    environment:
+      # Example: URL to backend pycelize API
+      # Adjust this to point to your actual Flask backend
+      NEXT_PUBLIC_PYCELIZE_API_URL: "http://localhost:5050"
+      NODE_ENV: "production"
+    restart: unless-stopped
