@@ -68,7 +68,7 @@ export default function HealthCheckPage() {
         </Alert>
       )}
 
-      {result && (
+      {result !== null && (
         <ResultDisplay title="Health Status" data={result} />
       )}
     </div>

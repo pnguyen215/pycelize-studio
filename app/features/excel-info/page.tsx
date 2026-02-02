@@ -76,7 +76,7 @@ export default function ExcelInfoPage() {
         </Alert>
       )}
 
-      {result && (
+      {result !== null && (
         <ResultDisplay title="File Information" data={result} />
       )}
     </div>
