@@ -1,5 +1,5 @@
 // Base API Response
-export interface ApiResponse<T> {
+export interface StandardResponse<T> {
   data: T;
   message: string;
   meta: {
@@ -72,7 +72,7 @@ export interface SQLGenerationRequest {
   file: File;
   tableName: string;
   columnMapping: Record<string, string>;
-  databaseType: 'postgresql' | 'mysql' | 'sqlite';
+  databaseType: "postgresql" | "mysql" | "sqlite";
   autoIncrement?: {
     enabled: boolean;
     columnName: string;
@@ -100,7 +100,7 @@ export interface JSONGenerationRequest {
   columnMapping: Record<string, string>;
   columns?: string[];
   prettyPrint?: boolean;
-  nullHandling?: 'include' | 'exclude' | 'default';
+  nullHandling?: "include" | "exclude" | "default";
   arrayWrapper?: boolean;
   outputFilename?: string;
 }
@@ -110,7 +110,7 @@ export interface JSONTemplateRequest {
   template: string | object;
   columnMapping: Record<string, string>;
   prettyPrint?: boolean;
-  aggregationMode?: 'array' | 'single' | 'nested';
+  aggregationMode?: "array" | "single" | "nested";
   outputFilename?: string;
 }
 

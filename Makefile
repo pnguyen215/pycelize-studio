@@ -123,6 +123,8 @@ dev:
 		$(NPM) run dev; \
 	fi
 
+run: dev
+
 build:
 	$(call print_section,"Building Next.js app for production")
 	@if [ "$(PKG)" = "pnpm" ]; then \
