@@ -12,16 +12,36 @@ export interface StandardResponse<T> {
   total?: number;
 }
 
+// Health Check
+export interface HealthCheckData {
+  service: string;
+  status: string;
+  version: string;
+}
+
 // Excel Operations
-export interface ExcelInfoResponse {
-  filename: string;
-  file_size: number;
-  sheets: Array<{
-    name: string;
-    rows: number;
-    columns: number;
-    column_names: string[];
+export interface ExcelInfoData {
+  column_names: string[];
+  columns: number;
+  data_types: Record<string, string>;
+  file_name: string;
+  file_path: string;
+  rows: number;
+  sheets: string[];
+}
+
+export interface ColumnExtractionData {
+  columns: Record<string, {
+    count: number;
+    data_type: string;
+    sample_values: unknown[];
   }>;
+  rows_extracted: number;
+  total_rows: number;
+}
+
+export interface DownloadUrlData {
+  download_url: string;
 }
 
 export interface ColumnExtractionRequest {
@@ -33,6 +53,7 @@ export interface ColumnExtractionRequest {
 export interface ColumnMappingRequest {
   file: File;
   mapping: Record<string, { source: string; default?: string }>;
+  outputFilename?: string;
 }
 
 export interface BindingSingleKeyRequest {
@@ -52,27 +73,29 @@ export interface BindingMultiKeyRequest {
 }
 
 // CSV Operations
-export interface CSVInfoResponse {
-  filename: string;
-  file_size: number;
-  rows: number;
-  columns: number;
+export interface CSVInfoData {
   column_names: string[];
+  columns: number;
+  data_types: Record<string, string>;
   delimiter: string;
+  file_name: string;
+  file_path: string;
+  rows: number;
 }
 
 export interface CSVConvertRequest {
   file: File;
+  sheetName?: string;
   outputFilename?: string;
-  delimiter?: string;
 }
 
 // SQL Generation
 export interface SQLGenerationRequest {
   file: File;
   tableName: string;
-  columnMapping: Record<string, string>;
   databaseType: "postgresql" | "mysql" | "sqlite";
+  columns?: string[];
+  columnMapping?: Record<string, string>;
   autoIncrement?: {
     enabled: boolean;
     columnName: string;
@@ -80,25 +103,29 @@ export interface SQLGenerationRequest {
     startValue?: number;
     sequenceName?: string;
   };
-  batchSize?: number;
-  includeTransaction?: boolean;
-  returnFile?: boolean;
+  removeDuplicates?: boolean;
 }
 
 export interface CustomSQLRequest {
   file: File;
   template: string;
-  columnMapping: Record<string, string>;
   columns?: string[];
-  autoIncrement?: Record<string, unknown>;
+  columnMapping?: Record<string, string>;
+  autoIncrement?: {
+    enabled: boolean;
+    columnName: string;
+    incrementType?: string;
+    startValue?: number;
+    sequenceName?: string;
+  };
   removeDuplicates?: boolean;
 }
 
 // JSON Generation
 export interface JSONGenerationRequest {
   file: File;
-  columnMapping: Record<string, string>;
   columns?: string[];
+  columnMapping?: Record<string, string>;
   prettyPrint?: boolean;
   nullHandling?: "include" | "exclude" | "default";
   arrayWrapper?: boolean;
@@ -108,7 +135,7 @@ export interface JSONGenerationRequest {
 export interface JSONTemplateRequest {
   file: File;
   template: string | object;
-  columnMapping: Record<string, string>;
+  columnMapping?: Record<string, string>;
   prettyPrint?: boolean;
   aggregationMode?: "array" | "single" | "nested";
   outputFilename?: string;
@@ -123,25 +150,14 @@ export interface NormalizationType {
 
 export interface NormalizationRequest {
   file: File;
-  normalizations: Array<{
-    column_name: string;
-    normalization_type: string;
-    config?: Record<string, unknown>;
-  }>;
+  normalizations: string; // JSON string of array
+  outputFilename?: string;
 }
 
-// File Binding
+// File Binding (Deactivated)
 export interface FileBindingRequest {
   file: File;
   bindingFile: File;
   columnMapping: Record<string, string>;
   outputFilename?: string;
-}
-
-// Health Check
-export interface HealthCheckResponse {
-  status: string;
-  timestamp: string;
-  version: string;
-  services: Record<string, string>;
 }

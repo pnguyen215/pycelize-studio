@@ -1,9 +1,9 @@
 import { apiClient } from './client';
-import type { HealthCheckResponse } from './types';
+import type { StandardResponse, HealthCheckData } from './types';
 
 export const healthApi = {
   // Get health check status
-  check: async (): Promise<HealthCheckResponse> => {
+  check: async (): Promise<StandardResponse<HealthCheckData>> => {
     return apiClient.get('/health');
   },
 };
