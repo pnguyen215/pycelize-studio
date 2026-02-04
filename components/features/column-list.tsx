@@ -40,7 +40,7 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           } catch (err) {
-            console.error("Failed to copy image:", err);
+            console.error("Failed to copy image to clipboard, downloading instead:", err);
             // Fallback: download the image
             const url = canvas.toDataURL("image/png");
             const link = document.createElement("a");
@@ -83,11 +83,11 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
       <CardContent>
         <div ref={tableRef} className="max-h-[500px] overflow-auto border rounded-md">
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
+            <TableHeader className="sticky top-0 bg-muted z-10">
               <TableRow>
-                <TableHead className="bg-muted">Column Name</TableHead>
-                {dataTypes && <TableHead className="bg-muted">Data Type</TableHead>}
-                <TableHead className="w-[100px] bg-muted">Actions</TableHead>
+                <TableHead>Column Name</TableHead>
+                {dataTypes && <TableHead>Data Type</TableHead>}
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
