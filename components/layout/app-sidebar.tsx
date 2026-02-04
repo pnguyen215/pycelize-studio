@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   Home, Activity, FileText, Columns, GitBranch, Link as LinkIcon,
   Link2, FileSpreadsheet, ArrowRightLeft, Wand2, FileInput,
-  Database, Code2, Braces, FileJson
+  Database, Code2, Braces, FileJson, AlertTriangle
 } from "lucide-react";
 
 const navigationGroups = [
@@ -39,7 +39,7 @@ const navigationGroups = [
     group: "Data Transformation",
     items: [
       { name: "Normalization", path: "/features/normalization", icon: Wand2 },
-      { name: "File Binding", path: "/features/file-binding", icon: FileInput }
+      { name: "File Binding", path: "/features/file-binding", icon: FileInput, disabled: true }
     ]
   },
   {
@@ -77,6 +77,21 @@ export function AppSidebar() {
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.path;
+                  const isDisabled = item.disabled;
+                  
+                  if (isDisabled) {
+                    return (
+                      <div
+                        key={item.path}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground opacity-50 cursor-not-allowed"
+                        title="This feature is currently disabled"
+                      >
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="line-through">{item.name}</span>
+                      </div>
+                    );
+                  }
+                  
                   return (
                     <Link
                       key={item.path}
