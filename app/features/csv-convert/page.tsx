@@ -126,7 +126,7 @@ export default function CSVConvertPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename={outputFilename || "converted.xlsx"} />
+            <DownloadButton downloadUrl={downloadUrl} filename={outputFilename || "converted.xlsx"} />
           </CardContent>
         </Card>
       )}

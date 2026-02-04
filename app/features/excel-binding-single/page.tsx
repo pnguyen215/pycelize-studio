@@ -147,7 +147,7 @@ export default function ExcelBindingSinglePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="bound_single_key.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="bound_single_key.xlsx" />
           </CardContent>
         </Card>
       )}

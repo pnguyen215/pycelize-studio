@@ -116,7 +116,7 @@ export default function ColumnMappingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="mapped_columns.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="mapped_columns.xlsx" />
           </CardContent>
         </Card>
       )}

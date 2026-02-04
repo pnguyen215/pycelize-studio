@@ -131,7 +131,7 @@ export default function JSONGenerationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="output.json" />
+            <DownloadButton downloadUrl={downloadUrl} filename="output.json" />
           </CardContent>
         </Card>
       )}

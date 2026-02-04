@@ -147,7 +147,7 @@ export default function JSONTemplatePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="template_output.json" />
+            <DownloadButton downloadUrl={downloadUrl} filename="template_output.json" />
           </CardContent>
         </Card>
       )}

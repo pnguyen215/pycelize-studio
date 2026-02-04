@@ -149,7 +149,7 @@ export default function SQLGenerationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename={`${tableName || 'output'}.sql`} />
+            <DownloadButton downloadUrl={downloadUrl} filename={`${tableName || 'output'}.sql`} />
           </CardContent>
         </Card>
       )}

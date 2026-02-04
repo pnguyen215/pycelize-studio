@@ -131,7 +131,7 @@ export default function FileBindingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="bound_files.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="bound_files.xlsx" />
           </CardContent>
         </Card>
       )}

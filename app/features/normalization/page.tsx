@@ -125,7 +125,7 @@ export default function NormalizationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="normalized.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="normalized.xlsx" />
           </CardContent>
         </Card>
       )}

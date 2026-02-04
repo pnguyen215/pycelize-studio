@@ -132,7 +132,7 @@ export default function SQLCustomPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="custom_output.sql" />
+            <DownloadButton downloadUrl={downloadUrl} filename="custom_output.sql" />
           </CardContent>
         </Card>
       )}

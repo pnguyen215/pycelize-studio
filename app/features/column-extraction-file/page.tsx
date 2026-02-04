@@ -117,7 +117,7 @@ export default function ColumnExtractionFilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="extracted_columns.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="extracted_columns.xlsx" />
           </CardContent>
         </Card>
       )}

@@ -149,7 +149,7 @@ export default function ExcelBindingMultiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="bound_multi_key.xlsx" />
+            <DownloadButton downloadUrl={downloadUrl} filename="bound_multi_key.xlsx" />
           </CardContent>
         </Card>
       )}
