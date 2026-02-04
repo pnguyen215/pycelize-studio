@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { MetricCard } from "@/components/features/metric-card";
 import { ColumnList } from "@/components/features/column-list";
 import { csvApi } from "@/lib/api/csv";
-import { FileText, Rows, Columns, FileSpreadsheet, Separator } from "lucide-react";
+import { FileText, Rows, Columns, FileSpreadsheet, Split } from "lucide-react";
 import type { StandardResponse, CSVInfoData } from "@/lib/api/types";
 
 export default function CSVInfoPage() {
@@ -89,7 +89,7 @@ export default function CSVInfoPage() {
               iconColor="text-purple-500"
             />
             <MetricCard
-              icon={Separator}
+              icon={Split}
               title="Delimiter"
               value={result.data.delimiter}
               iconColor="text-orange-500"
