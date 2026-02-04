@@ -3,51 +3,46 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
 import { ResultDisplay } from "@/components/features/result-display";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { MultiColumnInput } from "@/components/common/MultiColumnInput";
 import { excelApi } from "@/lib/api/excel";
 import { Columns } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ColumnExtractionPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [columns, setColumns] = useState<string>('["Column1", "Column2"]');
+  const [columns, setColumns] = useState<string[]>([]);
+  const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!file) return;
+    if (!file || columns.length === 0) return;
     
     setLoading(true);
-    setError(null);
     setResult(null);
     
     try {
-      const columnArray = JSON.parse(columns);
-      if (!Array.isArray(columnArray)) {
-        throw new Error("Columns must be a JSON array");
-      }
-      
       const response = await excelApi.extractColumns({
         file,
-        columns: columnArray,
-        removeDuplicates: false
+        columns,
+        removeDuplicates,
       });
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Error is handled by toast in API client
+      console.error('Failed to extract columns:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Columns className="h-8 w-8" />
@@ -60,12 +55,12 @@ export default function ColumnExtractionPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure Extraction</CardTitle>
           <CardDescription>
             Upload an Excel file and specify which columns to extract
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <FileUpload
             accept=".xlsx,.xls"
             onChange={setFile}
@@ -73,23 +68,27 @@ export default function ColumnExtractionPage() {
             label="Select Excel File"
           />
           
-          <div className="space-y-2">
-            <Label htmlFor="columns">Columns to Extract (JSON Array)</Label>
-            <Textarea
-              id="columns"
-              value={columns}
-              onChange={(e) => setColumns(e.target.value)}
-              placeholder='["Column1", "Column2"]'
-              rows={4}
+          <MultiColumnInput
+            value={columns}
+            onChange={setColumns}
+            label="Columns to Extract"
+            placeholder="Enter column name (e.g., Column1)"
+          />
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remove-duplicates"
+              checked={removeDuplicates}
+              onCheckedChange={(checked) => setRemoveDuplicates(checked === true)}
             />
-            <p className="text-sm text-muted-foreground">
-              Enter column names as a JSON array
-            </p>
+            <Label htmlFor="remove-duplicates" className="cursor-pointer">
+              Remove duplicate values
+            </Label>
           </div>
 
           <Button 
             onClick={handleSubmit} 
-            disabled={!file || loading}
+            disabled={!file || columns.length === 0 || loading}
           >
             {loading ? "Processing..." : "Extract Columns"}
           </Button>
@@ -97,12 +96,6 @@ export default function ColumnExtractionPage() {
       </Card>
 
       {loading && <LoadingSpinner text="Extracting columns..." />}
-
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
       {result && (
         <ResultDisplay title="Extracted Data" data={result} />

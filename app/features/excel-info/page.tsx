@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/features/file-upload";
-import { ResultDisplay } from "@/components/features/result-display";
+import { ExcelInfoDisplay } from "@/components/features/excel-info-display";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { excelApi } from "@/lib/api/excel";
 import { FileText } from "lucide-react";
@@ -13,28 +12,27 @@ import { FileText } from "lucide-react";
 export default function ExcelInfoPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<unknown>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
     
     setLoading(true);
-    setError(null);
     setResult(null);
     
     try {
       const response = await excelApi.getInfo(file);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      // Error is handled by toast in API client
+      console.error('Failed to get Excel info:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <FileText className="h-8 w-8" />
@@ -70,15 +68,7 @@ export default function ExcelInfoPage() {
 
       {loading && <LoadingSpinner text="Analyzing file..." />}
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {result !== null && (
-        <ResultDisplay title="File Information" data={result} />
-      )}
+      {result && <ExcelInfoDisplay data={result} />}
     </div>
   );
 }
