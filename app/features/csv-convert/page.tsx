@@ -3,61 +3,55 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
-import { DownloadButton } from "@/components/features/download-button";
+import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { csvApi } from "@/lib/api/csv";
-import { FileDown, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
 
 export default function CSVConvertPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [outputFilename, setOutputFilename] = useState<string>("");
-  const [delimiter, setDelimiter] = useState<string>(",");
+  const [sheetName, setSheetName] = useState("");
+  const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
     
     setLoading(true);
-    setError(null);
-    setDownloadUrl(null);
+    setResult(null);
     
     try {
-      const blob = await csvApi.convertToExcel({
+      const response = await csvApi.convertToExcel({
         file,
-        outputFilename: outputFilename || undefined,
-        delimiter: delimiter || undefined
-      }) as unknown as Blob;
-      
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+        sheetName: sheetName || undefined,
+        outputFilename: outputFilename || undefined
+      });
+      setResult(response);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <RefreshCw className="h-8 w-8" />
           CSV to Excel Conversion
         </h1>
         <p className="text-muted-foreground mt-2">
-          Convert CSV files to Excel format with customizable delimiter
+          Convert CSV files to Excel format with customizable options
         </p>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload CSV File</CardTitle>
+          <CardTitle>Configure Conversion</CardTitle>
           <CardDescription>
             Upload a CSV file and configure conversion options
           </CardDescription>
@@ -71,30 +65,23 @@ export default function CSVConvertPage() {
           />
           
           <div className="space-y-2">
-            <Label htmlFor="delimiter">Delimiter (Optional)</Label>
+            <Label htmlFor="sheet-name">Sheet Name (Optional)</Label>
             <Input
-              id="delimiter"
-              value={delimiter}
-              onChange={(e) => setDelimiter(e.target.value)}
-              placeholder=","
-              maxLength={1}
+              id="sheet-name"
+              value={sheetName}
+              onChange={(e) => setSheetName(e.target.value)}
+              placeholder="Sheet1"
             />
-            <p className="text-sm text-muted-foreground">
-              Default is comma (,). Can use tab, semicolon, etc.
-            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="outputFilename">Output Filename (Optional)</Label>
+            <Label htmlFor="output-filename">Output Filename (Optional)</Label>
             <Input
-              id="outputFilename"
+              id="output-filename"
               value={outputFilename}
               onChange={(e) => setOutputFilename(e.target.value)}
               placeholder="converted.xlsx"
             />
-            <p className="text-sm text-muted-foreground">
-              Leave empty for default filename
-            </p>
           </div>
 
           <Button 
@@ -108,27 +95,12 @@ export default function CSVConvertPage() {
 
       {loading && <LoadingSpinner text="Converting file..." />}
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {downloadUrl && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileDown className="h-5 w-5" />
-              Download Ready
-            </CardTitle>
-            <CardDescription>
-              Your converted Excel file is ready to download
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DownloadButton url={downloadUrl} filename={outputFilename || "converted.xlsx"} />
-          </CardContent>
-        </Card>
+      {result && result.data && (
+        <DownloadLink 
+          downloadUrl={result.data.download_url}
+          title="Conversion Complete"
+          description="Your Excel file is ready to download"
+        />
       )}
     </div>
   );

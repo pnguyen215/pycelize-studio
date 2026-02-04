@@ -3,51 +3,69 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
-import { DownloadButton } from "@/components/features/download-button";
+import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { excelApi } from "@/lib/api/excel";
-import { FileDown, ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Plus, X } from "lucide-react";
+import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+
+interface MappingRow {
+  newColumn: string;
+  sourceColumn: string;
+  defaultValue: string;
+}
 
 export default function ColumnMappingPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [mapping, setMapping] = useState<string>('{\n  "NewColumn1": {"source": "OldColumn1"},\n  "NewColumn2": {"source": "OldColumn2", "default": "N/A"}\n}');
+  const [mappingRows, setMappingRows] = useState<MappingRow[]>([
+    { newColumn: "", sourceColumn: "", defaultValue: "" }
+  ]);
+  const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
     
+    const validRows = mappingRows.filter(row => row.newColumn.trim() && row.sourceColumn.trim());
+    if (validRows.length === 0) return;
+    
     setLoading(true);
-    setError(null);
-    setDownloadUrl(null);
+    setResult(null);
     
     try {
-      const mappingObject = JSON.parse(mapping);
-      if (typeof mappingObject !== 'object') {
-        throw new Error("Mapping must be a JSON object");
-      }
+      const mapping: Record<string, { source: string; default?: string }> = {};
+      validRows.forEach(row => {
+        mapping[row.newColumn] = {
+          source: row.sourceColumn,
+          ...(row.defaultValue.trim() && { default: row.defaultValue })
+        };
+      });
       
-      const blob = await excelApi.mapColumns({
+      const response = await excelApi.mapColumns({
         file,
-        mapping: mappingObject
-      }) as unknown as Blob;
-      
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+        mapping,
+        outputFilename: outputFilename || undefined
+      });
+      setResult(response);
     } finally {
       setLoading(false);
     }
   };
 
+  const addMappingRow = () => setMappingRows([...mappingRows, { newColumn: "", sourceColumn: "", defaultValue: "" }]);
+  const removeMappingRow = (index: number) => setMappingRows(mappingRows.filter((_, i) => i !== index));
+  const updateMappingRow = (index: number, field: keyof MappingRow, value: string) => {
+    const newRows = [...mappingRows];
+    newRows[index][field] = value;
+    setMappingRows(newRows);
+  };
+
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <ArrowLeftRight className="h-8 w-8" />
@@ -60,9 +78,9 @@ export default function ColumnMappingPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure Mapping</CardTitle>
           <CardDescription>
-            Upload an Excel file and specify the column mapping
+            Upload an Excel file and define column mappings
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -74,17 +92,52 @@ export default function ColumnMappingPage() {
           />
           
           <div className="space-y-2">
-            <Label htmlFor="mapping">Column Mapping (JSON Object)</Label>
-            <Textarea
-              id="mapping"
-              value={mapping}
-              onChange={(e) => setMapping(e.target.value)}
-              placeholder='{"NewName": {"source": "OldName", "default": "value"}}'
-              rows={8}
+            <Label>Column Mappings</Label>
+            <div className="space-y-2">
+              {mappingRows.map((row, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={row.newColumn}
+                    onChange={(e) => updateMappingRow(index, "newColumn", e.target.value)}
+                    placeholder="New column name"
+                  />
+                  <span className="flex items-center px-2">→</span>
+                  <Input
+                    value={row.sourceColumn}
+                    onChange={(e) => updateMappingRow(index, "sourceColumn", e.target.value)}
+                    placeholder="Source column"
+                  />
+                  <Input
+                    value={row.defaultValue}
+                    onChange={(e) => updateMappingRow(index, "defaultValue", e.target.value)}
+                    placeholder="Default value (optional)"
+                  />
+                  {mappingRows.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMappingRow(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={addMappingRow}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Mapping
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="output-filename">Output Filename (Optional)</Label>
+            <Input
+              id="output-filename"
+              value={outputFilename}
+              onChange={(e) => setOutputFilename(e.target.value)}
+              placeholder="mapped_file.xlsx"
             />
-            <p className="text-sm text-muted-foreground">
-              Map new column names to source columns. Optional &quot;default&quot; value for missing data.
-            </p>
           </div>
 
           <Button 
@@ -98,27 +151,12 @@ export default function ColumnMappingPage() {
 
       {loading && <LoadingSpinner text="Mapping columns..." />}
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {downloadUrl && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileDown className="h-5 w-5" />
-              Download Ready
-            </CardTitle>
-            <CardDescription>
-              Your mapped file is ready to download
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DownloadButton url={downloadUrl} filename="mapped_columns.xlsx" />
-          </CardContent>
-        </Card>
+      {result && result.data && (
+        <DownloadLink 
+          downloadUrl={result.data.download_url}
+          title="Mapping Complete"
+          description="Your mapped Excel file is ready to download"
+        />
       )}
     </div>
   );

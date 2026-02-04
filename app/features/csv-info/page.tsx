@@ -3,39 +3,35 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/features/file-upload";
-import { ResultDisplay } from "@/components/features/result-display";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { MetricCard } from "@/components/features/metric-card";
+import { ColumnList } from "@/components/features/column-list";
 import { csvApi } from "@/lib/api/csv";
-import { FileText } from "lucide-react";
+import { FileText, Rows, Columns, FileSpreadsheet, Separator } from "lucide-react";
+import type { StandardResponse, CSVInfoData } from "@/lib/api/types";
 
 export default function CSVInfoPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<StandardResponse<CSVInfoData> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
     
     setLoading(true);
-    setError(null);
     setResult(null);
     
     try {
       const response = await csvApi.getInfo(file);
       setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <FileText className="h-8 w-8" />
@@ -71,14 +67,41 @@ export default function CSVInfoPage() {
 
       {loading && <LoadingSpinner text="Analyzing file..." />}
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      {result !== null && result.data && (
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-4">
+            <MetricCard
+              icon={Rows}
+              title="Rows"
+              value={result.data.rows.toLocaleString()}
+              iconColor="text-blue-500"
+            />
+            <MetricCard
+              icon={Columns}
+              title="Columns"
+              value={result.data.columns}
+              iconColor="text-green-500"
+            />
+            <MetricCard
+              icon={FileSpreadsheet}
+              title="Filename"
+              value={result.data.file_name}
+              iconColor="text-purple-500"
+            />
+            <MetricCard
+              icon={Separator}
+              title="Delimiter"
+              value={result.data.delimiter}
+              iconColor="text-orange-500"
+            />
+          </div>
 
-      {result && (
-        <ResultDisplay title="File Information" data={result} />
+          <ColumnList
+            columns={result.data.column_names}
+            dataTypes={result.data.data_types}
+            title="Columns & Data Types"
+          />
+        </div>
       )}
     </div>
   );
