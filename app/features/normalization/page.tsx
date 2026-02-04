@@ -33,9 +33,12 @@ export default function NormalizationPage() {
     const fetchTypes = async () => {
       try {
         const response = await normalizationApi.getTypes();
-        setNormalizationTypes(response.data);
+        if (response.data) {
+          setNormalizationTypes(response.data);
+        }
       } catch (error) {
         console.error("Failed to fetch normalization types:", error);
+        // Fallback to empty object - user can still use the page without dropdown
       }
     };
     fetchTypes();
