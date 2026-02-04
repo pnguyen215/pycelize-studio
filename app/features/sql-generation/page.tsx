@@ -59,7 +59,7 @@ export default function SQLGenerationPage() {
         autoIncrement: autoIncrementEnabled ? {
           enabled: true,
           column_name: autoIncrementColumn,
-          start_value: parseInt(autoIncrementStart) || 1
+          start_value: parseInt(autoIncrementStart, 10) || 1
         } : undefined,
         removeDuplicates
       });
