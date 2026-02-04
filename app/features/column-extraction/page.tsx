@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -21,38 +27,40 @@ export default function ColumnExtractionPage() {
   const [columns, setColumns] = useState<string[]>([""]);
   const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<ColumnExtractionData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<ColumnExtractionData> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
-    const validColumns = columns.filter(col => col.trim() !== '');
+
+    const validColumns = columns.filter((col) => col.trim() !== "");
     if (validColumns.length === 0) {
       setError("Please enter at least one column name");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     setResult(null);
-    
+
     try {
       const response = await excelApi.extractColumns({
         file,
         columns: validColumns,
-        removeDuplicates
+        removeDuplicates,
       });
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   const addColumn = () => setColumns([...columns, ""]);
-  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const removeColumn = (index: number) =>
+    setColumns(columns.filter((_, i) => i !== index));
   const updateColumn = (index: number, value: string) => {
     const newColumns = [...columns];
     newColumns[index] = value;
@@ -67,7 +75,8 @@ export default function ColumnExtractionPage() {
           Column Extraction to JSON
         </h1>
         <p className="text-muted-foreground mt-2">
-          Extract specific columns from Excel files and return as JSON with statistics
+          Extract specific columns from Excel files and return as JSON with
+          statistics
         </p>
       </div>
 
@@ -85,7 +94,7 @@ export default function ColumnExtractionPage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label>Columns to Extract</Label>
             <div className="space-y-2">
@@ -123,10 +132,7 @@ export default function ColumnExtractionPage() {
             <Label htmlFor="remove-duplicates">Remove Duplicates</Label>
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Processing..." : "Extract Columns"}
           </Button>
         </CardContent>
@@ -146,7 +152,7 @@ export default function ColumnExtractionPage() {
             <MetricCard
               icon={Rows}
               title="Rows Extracted"
-              value={result.data.rows_extracted.toLocaleString()}
+              value={result?.data?.rows_extracted?.toLocaleString()}
               iconColor="text-blue-500"
             />
             <MetricCard
@@ -164,7 +170,9 @@ export default function ColumnExtractionPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="font-mono text-lg">{columnName}</CardTitle>
+                      <CardTitle className="font-mono text-lg">
+                        {columnName}
+                      </CardTitle>
                       <CopyButton text={columnName} />
                     </div>
                     <DataTypeBadge dataType={stats.data_type} />
@@ -173,15 +181,24 @@ export default function ColumnExtractionPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Count:</span>
-                      <span className="font-semibold">{stats.count.toLocaleString()}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Count:
+                      </span>
+                      <span className="font-semibold">
+                        {stats.count.toLocaleString()}
+                      </span>
                     </div>
                     {stats.sample_values && stats.sample_values.length > 0 && (
                       <div>
-                        <span className="text-sm text-muted-foreground">Sample Values:</span>
+                        <span className="text-sm text-muted-foreground">
+                          Sample Values:
+                        </span>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {stats.sample_values.slice(0, 5).map((value, idx) => (
-                            <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
+                            <span
+                              key={idx}
+                              className="text-xs bg-muted px-2 py-1 rounded"
+                            >
                               {String(value)}
                             </span>
                           ))}
