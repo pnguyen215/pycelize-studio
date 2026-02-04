@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -25,6 +26,20 @@ export default function NormalizationPage() {
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [normalizationTypes, setNormalizationTypes] = useState<Record<string, string>>({});
+
+  // Fetch normalization types on mount
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const response = await normalizationApi.getTypes();
+        setNormalizationTypes(response.data);
+      } catch (error) {
+        console.error("Failed to fetch normalization types:", error);
+      }
+    };
+    fetchTypes();
+  }, []);
 
   const handleSubmit = async () => {
     if (!file) return;
@@ -97,11 +112,21 @@ export default function NormalizationPage() {
                     onChange={(e) => updateRule(index, "columnName", e.target.value)}
                     placeholder="Column name"
                   />
-                  <Input
+                  <Select
                     value={rule.normalizationType}
-                    onChange={(e) => updateRule(index, "normalizationType", e.target.value)}
-                    placeholder="Normalization type"
-                  />
+                    onValueChange={(value) => updateRule(index, "normalizationType", value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select normalization type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(normalizationTypes).map(([type, description]) => (
+                        <SelectItem key={type} value={type}>
+                          {type} : {description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {rules.length > 1 && (
                     <Button
                       variant="ghost"
@@ -118,18 +143,6 @@ export default function NormalizationPage() {
               <Plus className="mr-2 h-4 w-4" />
               Add Rule
             </Button>
-            <div className="text-sm text-muted-foreground space-y-1 pt-2">
-              <p>Available normalization types:</p>
-              <ul className="list-disc list-inside ml-2 space-y-1">
-                <li><strong>uppercase</strong> - Convert text to uppercase</li>
-                <li><strong>lowercase</strong> - Convert text to lowercase</li>
-                <li><strong>trim</strong> - Remove leading/trailing whitespace</li>
-                <li><strong>remove_duplicates</strong> - Remove duplicate values</li>
-                <li><strong>normalize_whitespace</strong> - Normalize multiple spaces</li>
-                <li><strong>remove_special_chars</strong> - Remove special characters</li>
-                <li><strong>title_case</strong> - Convert to title case</li>
-              </ul>
-            </div>
           </div>
 
           <div className="space-y-2">

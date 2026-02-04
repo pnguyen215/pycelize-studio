@@ -142,10 +142,8 @@ export interface JSONTemplateRequest {
 }
 
 // Normalization
-export interface NormalizationType {
-  type: string;
-  description: string;
-  category: string;
+export interface NormalizationTypesData {
+  [key: string]: string; // key is type, value is description
 }
 
 export interface NormalizationRequest {

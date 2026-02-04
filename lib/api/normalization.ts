@@ -1,9 +1,9 @@
 import { apiClient } from "./client";
-import type { StandardResponse, DownloadUrlData, NormalizationType, NormalizationRequest } from "./types";
+import type { StandardResponse, DownloadUrlData, NormalizationTypesData, NormalizationRequest } from "./types";
 
 export const normalizationApi = {
   // Get available normalization types
-  getTypes: async (): Promise<StandardResponse<NormalizationType[]>> => {
+  getTypes: async (): Promise<StandardResponse<NormalizationTypesData>> => {
     return apiClient.get("/normalization/types");
   },
 
