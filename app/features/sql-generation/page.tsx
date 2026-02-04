@@ -7,6 +7,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -17,7 +19,12 @@ export default function SQLGenerationPage() {
   const [file, setFile] = useState<File | null>(null);
   const [tableName, setTableName] = useState<string>("");
   const [columnMapping, setColumnMapping] = useState<string>('{\n  "table_column": "excel_column"\n}');
+  const [columns, setColumns] = useState<string>('');
   const [databaseType, setDatabaseType] = useState<"postgresql" | "mysql" | "sqlite">("postgresql");
+  const [autoIncrementEnabled, setAutoIncrementEnabled] = useState(false);
+  const [autoIncrementColumn, setAutoIncrementColumn] = useState("");
+  const [autoIncrementStart, setAutoIncrementStart] = useState("1");
+  const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,16 +42,29 @@ export default function SQLGenerationPage() {
         throw new Error("Column mapping must be a JSON object");
       }
       
-      const blob = await sqlApi.generateSQL({
+      let columnsArray: string[] | undefined;
+      if (columns.trim()) {
+        columnsArray = JSON.parse(columns);
+        if (!Array.isArray(columnsArray)) {
+          throw new Error("Columns must be a JSON array");
+        }
+      }
+      
+      const response = await sqlApi.generateToText({
         file,
         tableName,
         columnMapping: mappingObject,
         databaseType,
-        returnFile: true
-      }) as unknown as Blob;
+        columns: columnsArray,
+        autoIncrement: autoIncrementEnabled ? {
+          enabled: true,
+          column_name: autoIncrementColumn,
+          start_value: parseInt(autoIncrementStart) || 1
+        } : undefined,
+        removeDuplicates
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -94,16 +114,16 @@ export default function SQLGenerationPage() {
 
           <div className="space-y-2">
             <Label htmlFor="databaseType">Database Type</Label>
-            <select
-              id="databaseType"
-              value={databaseType}
-              onChange={(e) => setDatabaseType(e.target.value as "postgresql" | "mysql" | "sqlite")}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background"
-            >
-              <option value="postgresql">PostgreSQL</option>
-              <option value="mysql">MySQL</option>
-              <option value="sqlite">SQLite</option>
-            </select>
+            <Select value={databaseType} onValueChange={(value) => setDatabaseType(value as "postgresql" | "mysql" | "sqlite")}>
+              <SelectTrigger id="databaseType">
+                <SelectValue placeholder="Select database type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="postgresql">PostgreSQL</SelectItem>
+                <SelectItem value="mysql">MySQL</SelectItem>
+                <SelectItem value="sqlite">SQLite</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -118,6 +138,68 @@ export default function SQLGenerationPage() {
             <p className="text-sm text-muted-foreground">
               Map database column names to Excel column names
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="columns">Columns (Optional JSON Array)</Label>
+            <Textarea
+              id="columns"
+              value={columns}
+              onChange={(e) => setColumns(e.target.value)}
+              placeholder='["column1", "column2", "column3"]'
+              rows={4}
+            />
+            <p className="text-sm text-muted-foreground">
+              Specify specific columns to include (leave empty for all columns)
+            </p>
+          </div>
+
+          <div className="space-y-4 border rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoIncrementEnabled"
+                checked={autoIncrementEnabled}
+                onCheckedChange={setAutoIncrementEnabled}
+              />
+              <Label htmlFor="autoIncrementEnabled" className="cursor-pointer">
+                Enable Auto Increment
+              </Label>
+            </div>
+            
+            {autoIncrementEnabled && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="autoIncrementColumn">Column Name</Label>
+                  <Input
+                    id="autoIncrementColumn"
+                    value={autoIncrementColumn}
+                    onChange={(e) => setAutoIncrementColumn(e.target.value)}
+                    placeholder="id"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="autoIncrementStart">Start Value</Label>
+                  <Input
+                    id="autoIncrementStart"
+                    type="number"
+                    value={autoIncrementStart}
+                    onChange={(e) => setAutoIncrementStart(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="removeDuplicates"
+              checked={removeDuplicates}
+              onCheckedChange={setRemoveDuplicates}
+            />
+            <Label htmlFor="removeDuplicates" className="cursor-pointer">
+              Remove Duplicates
+            </Label>
           </div>
 
           <Button 

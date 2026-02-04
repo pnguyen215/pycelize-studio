@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -15,7 +18,11 @@ import { FileDown, Braces } from "lucide-react";
 export default function JSONGenerationPage() {
   const [file, setFile] = useState<File | null>(null);
   const [columnMapping, setColumnMapping] = useState<string>('{\n  "json_key": "excel_column"\n}');
+  const [columns, setColumns] = useState<string>('');
   const [prettyPrint, setPrettyPrint] = useState<boolean>(true);
+  const [nullHandling, setNullHandling] = useState<"include" | "exclude" | "default">("default");
+  const [arrayWrapper, setArrayWrapper] = useState<boolean>(true);
+  const [outputFilename, setOutputFilename] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,14 +40,25 @@ export default function JSONGenerationPage() {
         throw new Error("Column mapping must be a JSON object");
       }
       
-      const blob = await jsonApi.generateJSON({
+      let columnsArray: string[] | undefined;
+      if (columns.trim()) {
+        columnsArray = JSON.parse(columns);
+        if (!Array.isArray(columnsArray)) {
+          throw new Error("Columns must be a JSON array");
+        }
+      }
+      
+      const response = await jsonApi.generateJSON({
         file,
         columnMapping: mappingObject,
-        prettyPrint
-      }) as unknown as Blob;
+        columns: columnsArray,
+        prettyPrint,
+        nullHandling,
+        arrayWrapper,
+        outputFilename: outputFilename || undefined
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -89,16 +107,69 @@ export default function JSONGenerationPage() {
             </p>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="columns">Columns (Optional JSON Array)</Label>
+            <Textarea
+              id="columns"
+              value={columns}
+              onChange={(e) => setColumns(e.target.value)}
+              placeholder='["column1", "column2", "column3"]'
+              rows={4}
+            />
+            <p className="text-sm text-muted-foreground">
+              Specify specific columns to include (leave empty for all columns)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="outputFilename">Output Filename (Optional)</Label>
+            <Input
+              id="outputFilename"
+              value={outputFilename}
+              onChange={(e) => setOutputFilename(e.target.value)}
+              placeholder="output.json"
+            />
+            <p className="text-sm text-muted-foreground">
+              Custom filename for the generated file
+            </p>
+          </div>
+
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Switch
               id="prettyPrint"
               checked={prettyPrint}
-              onChange={(e) => setPrettyPrint(e.target.checked)}
-              className="w-4 h-4"
+              onCheckedChange={setPrettyPrint}
             />
             <Label htmlFor="prettyPrint" className="cursor-pointer">
-              Pretty Print JSON (formatted with indentation)
+              Pretty Print (formatted with indentation)
+            </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nullHandling">Null Handling</Label>
+            <Select value={nullHandling} onValueChange={(value) => setNullHandling(value as "include" | "exclude" | "default")}>
+              <SelectTrigger id="nullHandling">
+                <SelectValue placeholder="Select null handling" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="include">Include</SelectItem>
+                <SelectItem value="exclude">Exclude</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              How to handle null values in the output
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="arrayWrapper"
+              checked={arrayWrapper}
+              onCheckedChange={setArrayWrapper}
+            />
+            <Label htmlFor="arrayWrapper" className="cursor-pointer">
+              Array Wrapper (wrap output in array)
             </Label>
           </div>
 
@@ -131,7 +202,7 @@ export default function JSONGenerationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="output.json" />
+            <DownloadButton url={downloadUrl} filename={outputFilename || "output.json"} />
           </CardContent>
         </Card>
       )}

@@ -8,8 +8,10 @@ export const sqlApi = {
     form.append("file", request.file);
     form.append("table_name", request.tableName);
     form.append("column_mapping", JSON.stringify(request.columnMapping));
-    form.append("database_type", request.databaseType);
-
+    
+    if (request.databaseType) {
+      form.append("database_type", request.databaseType);
+    }
     if (request.columns) {
       form.append("columns", JSON.stringify(request.columns));
     }

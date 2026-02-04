@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -17,6 +20,8 @@ export default function JSONTemplatePage() {
   const [template, setTemplate] = useState<string>('{\n  "name": "{name}",\n  "email": "{email}",\n  "age": "{age}"\n}');
   const [columnMapping, setColumnMapping] = useState<string>('{\n  "name": "FullName",\n  "email": "EmailAddress",\n  "age": "Age"\n}');
   const [prettyPrint, setPrettyPrint] = useState<boolean>(true);
+  const [aggregationMode, setAggregationMode] = useState<"array" | "single" | "nested">("array");
+  const [outputFilename, setOutputFilename] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,15 +39,16 @@ export default function JSONTemplatePage() {
         throw new Error("Column mapping must be a JSON object");
       }
       
-      const blob = await jsonApi.generateTemplateJSON({
+      const response = await jsonApi.generateTemplateJSON({
         file,
         template,
         columnMapping: mappingObject,
-        prettyPrint
-      }) as unknown as Blob;
+        prettyPrint,
+        aggregationMode,
+        outputFilename: outputFilename || undefined
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -105,17 +111,45 @@ export default function JSONTemplatePage() {
             </p>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="outputFilename">Output Filename (Optional)</Label>
+            <Input
+              id="outputFilename"
+              value={outputFilename}
+              onChange={(e) => setOutputFilename(e.target.value)}
+              placeholder="template_output.json"
+            />
+            <p className="text-sm text-muted-foreground">
+              Custom filename for the generated file
+            </p>
+          </div>
+
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Switch
               id="prettyPrint"
               checked={prettyPrint}
-              onChange={(e) => setPrettyPrint(e.target.checked)}
-              className="w-4 h-4"
+              onCheckedChange={setPrettyPrint}
             />
             <Label htmlFor="prettyPrint" className="cursor-pointer">
-              Pretty Print JSON (formatted with indentation)
+              Pretty Print (formatted with indentation)
             </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="aggregationMode">Aggregation Mode</Label>
+            <Select value={aggregationMode} onValueChange={(value) => setAggregationMode(value as "array" | "single" | "nested")}>
+              <SelectTrigger id="aggregationMode">
+                <SelectValue placeholder="Select aggregation mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="array">Array</SelectItem>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="nested">Nested</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              How to aggregate the output data
+            </p>
           </div>
 
           <Button 
@@ -147,7 +181,7 @@ export default function JSONTemplatePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DownloadButton url={downloadUrl} filename="template_output.json" />
+            <DownloadButton url={downloadUrl} filename={outputFilename || "template_output.json"} />
           </CardContent>
         </Card>
       )}
