@@ -4,47 +4,57 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/features/file-upload";
-import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { DownloadLink } from "@/components/features/download-link";
 import { excelApi } from "@/lib/api/excel";
-import { FileDown, Columns } from "lucide-react";
+import { Columns, X, Plus } from "lucide-react";
+import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
 
 export default function ColumnExtractionFilePage() {
   const [file, setFile] = useState<File | null>(null);
-  const [columns, setColumns] = useState<string>('["Column1", "Column2"]');
+  const [columns, setColumns] = useState<string[]>([""]);
+  const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
     
+    const validColumns = columns.filter(col => col.trim() !== '');
+    if (validColumns.length === 0) {
+      setError("Please enter at least one column name");
+      return;
+    }
+    
     setLoading(true);
     setError(null);
-    setDownloadUrl(null);
+    setResult(null);
     
     try {
-      const columnArray = JSON.parse(columns);
-      if (!Array.isArray(columnArray)) {
-        throw new Error("Columns must be a JSON array");
-      }
-      
-      const blob = await excelApi.extractColumnsToFile({
+      const response = await excelApi.extractColumnsToFile({
         file,
-        columns: columnArray,
-        removeDuplicates: false
-      }) as unknown as Blob;
-      
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+        columns: validColumns,
+        removeDuplicates
+      });
+      setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
+  };
+
+  const addColumn = () => setColumns([...columns, ""]);
+  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const updateColumn = (index: number, value: string) => {
+    const newColumns = [...columns];
+    newColumns[index] = value;
+    setColumns(newColumns);
   };
 
   return (
@@ -61,7 +71,7 @@ export default function ColumnExtractionFilePage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure Extraction</CardTitle>
           <CardDescription>
             Upload an Excel file and specify which columns to extract
           </CardDescription>
@@ -75,17 +85,40 @@ export default function ColumnExtractionFilePage() {
           />
           
           <div className="space-y-2">
-            <Label htmlFor="columns">Columns to Extract (JSON Array)</Label>
-            <Textarea
-              id="columns"
-              value={columns}
-              onChange={(e) => setColumns(e.target.value)}
-              placeholder='["Column1", "Column2"]'
-              rows={4}
+            <Label>Columns to Extract</Label>
+            <div className="space-y-2">
+              {columns.map((column, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={column}
+                    onChange={(e) => updateColumn(index, e.target.value)}
+                    placeholder="Column name"
+                  />
+                  {columns.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeColumn(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={addColumn}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Column
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="remove-duplicates"
+              checked={removeDuplicates}
+              onCheckedChange={setRemoveDuplicates}
             />
-            <p className="text-sm text-muted-foreground">
-              Enter column names as a JSON array
-            </p>
+            <Label htmlFor="remove-duplicates">Remove Duplicates</Label>
           </div>
 
           <Button 
@@ -105,21 +138,11 @@ export default function ColumnExtractionFilePage() {
         </Alert>
       )}
 
-      {downloadUrl && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileDown className="h-5 w-5" />
-              Download Ready
-            </CardTitle>
-            <CardDescription>
-              Your extracted file is ready to download
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DownloadButton url={downloadUrl} filename="extracted_columns.xlsx" />
-          </CardContent>
-        </Card>
+      {result && result.data && (
+        <DownloadLink
+          downloadUrl={result.data.download_url}
+          filename="extracted_columns.xlsx"
+        />
       )}
     </div>
   );

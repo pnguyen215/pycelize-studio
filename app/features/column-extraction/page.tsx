@@ -4,39 +4,44 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/features/file-upload";
-import { ResultDisplay } from "@/components/features/result-display";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { MetricCard } from "@/components/features/metric-card";
+import { CopyButton } from "@/components/features/copy-button";
+import { DataTypeBadge } from "@/components/features/data-type-badge";
 import { excelApi } from "@/lib/api/excel";
-import { Columns } from "lucide-react";
+import { Columns, X, Plus, Hash, Rows } from "lucide-react";
+import type { StandardResponse, ColumnExtractionData } from "@/lib/api/types";
 
 export default function ColumnExtractionPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [columns, setColumns] = useState<string>('["Column1", "Column2"]');
+  const [columns, setColumns] = useState<string[]>([""]);
+  const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<StandardResponse<ColumnExtractionData> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
+    
+    const validColumns = columns.filter(col => col.trim() !== '');
+    if (validColumns.length === 0) {
+      setError("Please enter at least one column name");
+      return;
+    }
     
     setLoading(true);
     setError(null);
     setResult(null);
     
     try {
-      const columnArray = JSON.parse(columns);
-      if (!Array.isArray(columnArray)) {
-        throw new Error("Columns must be a JSON array");
-      }
-      
       const response = await excelApi.extractColumns({
         file,
-        columns: columnArray,
-        removeDuplicates: false
+        columns: validColumns,
+        removeDuplicates
       });
       setResult(response);
     } catch (err) {
@@ -46,21 +51,29 @@ export default function ColumnExtractionPage() {
     }
   };
 
+  const addColumn = () => setColumns([...columns, ""]);
+  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const updateColumn = (index: number, value: string) => {
+    const newColumns = [...columns];
+    newColumns[index] = value;
+    setColumns(newColumns);
+  };
+
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Columns className="h-8 w-8" />
           Column Extraction to JSON
         </h1>
         <p className="text-muted-foreground mt-2">
-          Extract specific columns from Excel files and return as JSON
+          Extract specific columns from Excel files and return as JSON with statistics
         </p>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure Extraction</CardTitle>
           <CardDescription>
             Upload an Excel file and specify which columns to extract
           </CardDescription>
@@ -74,17 +87,40 @@ export default function ColumnExtractionPage() {
           />
           
           <div className="space-y-2">
-            <Label htmlFor="columns">Columns to Extract (JSON Array)</Label>
-            <Textarea
-              id="columns"
-              value={columns}
-              onChange={(e) => setColumns(e.target.value)}
-              placeholder='["Column1", "Column2"]'
-              rows={4}
+            <Label>Columns to Extract</Label>
+            <div className="space-y-2">
+              {columns.map((column, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={column}
+                    onChange={(e) => updateColumn(index, e.target.value)}
+                    placeholder="Column name"
+                  />
+                  {columns.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeColumn(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={addColumn}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Column
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="remove-duplicates"
+              checked={removeDuplicates}
+              onCheckedChange={setRemoveDuplicates}
             />
-            <p className="text-sm text-muted-foreground">
-              Enter column names as a JSON array
-            </p>
+            <Label htmlFor="remove-duplicates">Remove Duplicates</Label>
           </div>
 
           <Button 
@@ -104,8 +140,60 @@ export default function ColumnExtractionPage() {
         </Alert>
       )}
 
-      {result && (
-        <ResultDisplay title="Extracted Data" data={result} />
+      {result && result.data && (
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <MetricCard
+              icon={Rows}
+              title="Rows Extracted"
+              value={result.data.rows_extracted.toLocaleString()}
+              iconColor="text-blue-500"
+            />
+            <MetricCard
+              icon={Hash}
+              title="Total Rows"
+              value={result.data.total_rows.toLocaleString()}
+              iconColor="text-green-500"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Column Statistics</h3>
+            {Object.entries(result.data.columns).map(([columnName, stats]) => (
+              <Card key={columnName}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="font-mono text-lg">{columnName}</CardTitle>
+                      <CopyButton text={columnName} />
+                    </div>
+                    <DataTypeBadge dataType={stats.data_type} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Count:</span>
+                      <span className="font-semibold">{stats.count.toLocaleString()}</span>
+                    </div>
+                    {stats.sample_values && stats.sample_values.length > 0 && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Sample Values:</span>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {stats.sample_values.slice(0, 5).map((value, idx) => (
+                            <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
+                              {String(value)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

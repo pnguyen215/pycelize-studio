@@ -4,14 +4,15 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ResultDisplay } from "@/components/features/result-display";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { MetricCard } from "@/components/features/metric-card";
 import { healthApi } from "@/lib/api/health";
-import { Activity, CheckCircle2 } from "lucide-react";
+import { Activity, CheckCircle2, Server, GitBranch } from "lucide-react";
+import type { StandardResponse, HealthCheckData } from "@/lib/api/types";
 
 export default function HealthCheckPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<StandardResponse<HealthCheckData> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheck = async () => {
@@ -22,6 +23,11 @@ export default function HealthCheckPage() {
     try {
       const response = await healthApi.check();
       setResult(response);
+      
+      // Debug logging
+      if (process.env.NEXT_PUBLIC_PYCELIZE_DEBUGGING === 'true') {
+        console.debug('Health Check Response:', JSON.stringify(response, null, 2));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -30,7 +36,7 @@ export default function HealthCheckPage() {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Activity className="h-8 w-8" />
@@ -68,8 +74,27 @@ export default function HealthCheckPage() {
         </Alert>
       )}
 
-      {result !== null && (
-        <ResultDisplay title="Health Status" data={result} />
+      {result !== null && result.data && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <MetricCard
+            icon={Server}
+            title="Service"
+            value={result.data.service}
+            iconColor="text-blue-500"
+          />
+          <MetricCard
+            icon={CheckCircle2}
+            title="Status"
+            value={result.data.status}
+            iconColor="text-green-500"
+          />
+          <MetricCard
+            icon={GitBranch}
+            title="Version"
+            value={result.data.version}
+            iconColor="text-purple-500"
+          />
+        </div>
       )}
     </div>
   );
