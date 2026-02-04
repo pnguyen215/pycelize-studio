@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { ColumnSelect } from "@/components/features/column-select";
+import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import { excelApi } from "@/lib/api/excel";
 import { ArrowLeftRight, Plus, X } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -33,6 +35,13 @@ export default function ColumnMappingPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] =
     useState<StandardResponse<DownloadUrlResponse> | null>(null);
+
+  // Fetch available columns from the uploaded file
+  const {
+    columns: availableColumns,
+    loading: columnsLoading,
+    error: columnsError,
+  } = useFileColumns(file, "excel");
 
   const handleSubmit = async () => {
     if (!file) return;
@@ -122,13 +131,18 @@ export default function ColumnMappingPage() {
                     placeholder="New column name"
                   />
                   <span className="flex items-center px-2">→</span>
-                  <Input
-                    value={row.sourceColumn}
-                    onChange={(e) =>
-                      updateMappingRow(index, "sourceColumn", e.target.value)
-                    }
-                    placeholder="Source column"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={row.sourceColumn}
+                      onChange={(value) =>
+                        updateMappingRow(index, "sourceColumn", value)
+                      }
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      error={index === 0 ? columnsError : null}
+                      placeholder="Select source column"
+                    />
+                  </div>
                   <Input
                     value={row.defaultValue}
                     onChange={(e) =>

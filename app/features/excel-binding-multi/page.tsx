@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { ColumnSelect } from "@/components/features/column-select";
+import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import { excelApi } from "@/lib/api/excel";
 import { Link2, Plus, X } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -27,6 +29,20 @@ export default function ExcelBindingMultiPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] =
     useState<StandardResponse<DownloadUrlResponse> | null>(null);
+
+  // Fetch available columns from source file for comparison columns
+  const {
+    columns: sourceColumns,
+    loading: sourceColumnsLoading,
+    error: sourceColumnsError,
+  } = useFileColumns(sourceFile, "excel");
+
+  // Fetch available columns from bind file for bind columns
+  const {
+    columns: bindFileColumns,
+    loading: bindColumnsLoading,
+    error: bindColumnsError,
+  } = useFileColumns(bindFile, "excel");
 
   const handleSubmit = async () => {
     if (!sourceFile || !bindFile) return;
@@ -121,13 +137,16 @@ export default function ExcelBindingMultiPage() {
             <div className="space-y-2">
               {comparisonColumns.map((column, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={column}
-                    onChange={(e) =>
-                      updateComparisonColumn(index, e.target.value)
-                    }
-                    placeholder="Column name"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={column}
+                      onChange={(value) => updateComparisonColumn(index, value)}
+                      columns={sourceColumns}
+                      loading={sourceColumnsLoading}
+                      error={index === 0 ? sourceColumnsError : null}
+                      placeholder="Select comparison column"
+                    />
+                  </div>
                   {comparisonColumns.length > 1 && (
                     <Button
                       variant="ghost"
@@ -154,11 +173,16 @@ export default function ExcelBindingMultiPage() {
             <div className="space-y-2">
               {bindColumns.map((column, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={column}
-                    onChange={(e) => updateBindColumn(index, e.target.value)}
-                    placeholder="Column name"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={column}
+                      onChange={(value) => updateBindColumn(index, value)}
+                      columns={bindFileColumns}
+                      loading={bindColumnsLoading}
+                      error={index === 0 ? bindColumnsError : null}
+                      placeholder="Select column to bind"
+                    />
+                  </div>
                   {bindColumns.length > 1 && (
                     <Button
                       variant="ghost"

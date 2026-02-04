@@ -21,6 +21,8 @@ import {
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { ColumnSelect } from "@/components/features/column-select";
+import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import { normalizationApi } from "@/lib/api/normalization";
 import { Wand2, Plus, X } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -42,6 +44,13 @@ export default function NormalizationPage() {
   const [normalizationTypes, setNormalizationTypes] = useState<
     Record<string, string>
   >({});
+
+  // Fetch available columns from the uploaded file
+  const {
+    columns: availableColumns,
+    loading: columnsLoading,
+    error: columnsError,
+  } = useFileColumns(file, "excel");
 
   // Fetch normalization types on mount
   useEffect(() => {
@@ -133,13 +142,18 @@ export default function NormalizationPage() {
             <div className="space-y-2">
               {rules.map((rule, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={rule.columnName}
-                    onChange={(e) =>
-                      updateRule(index, "columnName", e.target.value)
-                    }
-                    placeholder="Column name"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={rule.columnName}
+                      onChange={(value) =>
+                        updateRule(index, "columnName", value)
+                      }
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      error={index === 0 ? columnsError : null}
+                      placeholder="Select column"
+                    />
+                  </div>
                   <Select
                     value={rule.normalizationType}
                     onValueChange={(value) =>

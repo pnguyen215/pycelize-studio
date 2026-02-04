@@ -16,6 +16,8 @@ import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { ColumnSelect } from "@/components/features/column-select";
+import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import { sqlApi } from "@/lib/api/sql";
 import { Code, Plus, X } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -38,6 +40,13 @@ export default function SQLCustomPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] =
     useState<StandardResponse<DownloadUrlResponse> | null>(null);
+
+  // Fetch available columns from the uploaded file
+  const {
+    columns: availableColumns,
+    loading: columnsLoading,
+    error: columnsError,
+  } = useFileColumns(file, "excel");
 
   const handleSubmit = async () => {
     if (!file || !template) return;
@@ -148,11 +157,16 @@ export default function SQLCustomPage() {
             <div className="space-y-2">
               {columns.map((column, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={column}
-                    onChange={(e) => updateColumn(index, e.target.value)}
-                    placeholder="Column name"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={column}
+                      onChange={(value) => updateColumn(index, value)}
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      error={index === 0 ? columnsError : null}
+                      placeholder="Select column"
+                    />
+                  </div>
                   {columns.length > 1 && (
                     <Button
                       variant="ghost"
@@ -184,13 +198,15 @@ export default function SQLCustomPage() {
                     placeholder="Template placeholder"
                   />
                   <span className="flex items-center px-2">→</span>
-                  <Input
-                    value={mapping.value}
-                    onChange={(e) =>
-                      updateMapping(index, "value", e.target.value)
-                    }
-                    placeholder="Excel column"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={mapping.value}
+                      onChange={(value) => updateMapping(index, "value", value)}
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      placeholder="Select Excel column"
+                    />
+                  </div>
                   {columnMappings.length > 1 && (
                     <Button
                       variant="ghost"

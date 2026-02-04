@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/features/file-upload";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { DownloadLink } from "@/components/features/download-link";
+import { ColumnSelect } from "@/components/features/column-select";
+import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import { excelApi } from "@/lib/api/excel";
 import { Columns, X, Plus } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -28,6 +29,13 @@ export default function ColumnExtractionFilePage() {
   const [result, setResult] =
     useState<StandardResponse<DownloadUrlResponse> | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch available columns from the uploaded file
+  const {
+    columns: availableColumns,
+    loading: columnsLoading,
+    error: columnsError,
+  } = useFileColumns(file, "excel");
 
   const handleSubmit = async () => {
     if (!file) return;
@@ -98,11 +106,16 @@ export default function ColumnExtractionFilePage() {
             <div className="space-y-2">
               {columns.map((column, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    value={column}
-                    onChange={(e) => updateColumn(index, e.target.value)}
-                    placeholder="Column name"
-                  />
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={column}
+                      onChange={(value) => updateColumn(index, value)}
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      error={index === 0 ? columnsError : null}
+                      placeholder="Select column to extract"
+                    />
+                  </div>
                   {columns.length > 1 && (
                     <Button
                       variant="ghost"
