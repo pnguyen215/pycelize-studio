@@ -16,14 +16,27 @@ interface ColumnListProps {
 
 export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnListProps) {
   const tableRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCapture = async () => {
-    if (!tableRef.current) return;
+    if (!tableRef.current || !scrollContainerRef.current) return;
     
     setCapturing(true);
+    
+    // Save original max-height and overflow styles
+    const originalMaxHeight = scrollContainerRef.current.style.maxHeight;
+    const originalOverflow = scrollContainerRef.current.style.overflow;
+    
     try {
+      // Temporarily remove height constraint to capture full content
+      scrollContainerRef.current.style.maxHeight = 'none';
+      scrollContainerRef.current.style.overflow = 'visible';
+      
+      // Wait a bit for layout to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const blob = await htmlToImage.toBlob(tableRef.current, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
@@ -53,10 +66,13 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
           link.click();
         }
       }
-      setCapturing(false);
     } catch (err) {
       console.error("Failed to capture:", err);
       alert("Failed to capture screenshot. Please try again.");
+    } finally {
+      // Restore original styles
+      scrollContainerRef.current.style.maxHeight = originalMaxHeight;
+      scrollContainerRef.current.style.overflow = originalOverflow;
       setCapturing(false);
     }
   };
@@ -99,7 +115,7 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
             </table>
           </div>
           {/* Scrollable Body */}
-          <div className="max-h-[400px] overflow-y-auto">
+          <div ref={scrollContainerRef} className="max-h-[400px] overflow-y-auto">
             <table className="w-full table-fixed">
               <tbody>
                 {columns.map((column, index) => (
