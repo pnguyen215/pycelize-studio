@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTypeBadge } from "./data-type-badge";
@@ -89,35 +88,35 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
         <div ref={tableRef} className="border rounded-md">
           {/* Fixed Header */}
           <div className="border-b bg-muted">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Column Name</TableHead>
-                  {dataTypes && <TableHead>Data Type</TableHead>}
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
+            <table className="w-full table-fixed">
+              <thead>
+                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Column Name</th>
+                  {dataTypes && <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[200px]">Data Type</th>}
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">Actions</th>
+                </tr>
+              </thead>
+            </table>
           </div>
           {/* Scrollable Body */}
           <div className="max-h-[400px] overflow-y-auto">
-            <Table>
-              <TableBody>
+            <table className="w-full table-fixed">
+              <tbody>
                 {columns.map((column, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-mono text-sm">{column}</TableCell>
+                  <tr key={index} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <td className="p-4 align-middle font-mono text-sm">{column}</td>
                     {dataTypes && (
-                      <TableCell>
+                      <td className="p-4 align-middle w-[200px]">
                         <DataTypeBadge dataType={dataTypes[column] || "unknown"} />
-                      </TableCell>
+                      </td>
                     )}
-                    <TableCell>
+                    <td className="p-4 align-middle w-[100px]">
                       <CopyButton text={column} />
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         </div>
       </CardContent>
