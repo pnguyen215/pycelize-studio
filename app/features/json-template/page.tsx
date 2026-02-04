@@ -3,36 +3,32 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { JsonTemplateEditor } from "@/components/forms/JsonTemplateEditor";
+import { ColumnMappingBuilder, MappingRule, convertRulesToMapping } from "@/components/forms/ColumnMappingBuilder";
+import { Checkbox } from "@/components/ui/checkbox";
 import { jsonApi } from "@/lib/api/json";
 import { FileDown, FileJson } from "lucide-react";
 
 export default function JSONTemplatePage() {
   const [file, setFile] = useState<File | null>(null);
   const [template, setTemplate] = useState<string>('{\n  "name": "{name}",\n  "email": "{email}",\n  "age": "{age}"\n}');
-  const [columnMapping, setColumnMapping] = useState<string>('{\n  "name": "FullName",\n  "email": "EmailAddress",\n  "age": "Age"\n}');
+  const [mappingRules, setMappingRules] = useState<MappingRule[]>([]);
   const [prettyPrint, setPrettyPrint] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file || !template) return;
     
     setLoading(true);
-    setError(null);
     setDownloadUrl(null);
     
     try {
-      const mappingObject = JSON.parse(columnMapping);
-      if (typeof mappingObject !== 'object') {
-        throw new Error("Column mapping must be a JSON object");
-      }
+      const mappingObject = convertRulesToMapping(mappingRules);
       
       const blob = await jsonApi.generateTemplateJSON({
         file,
@@ -44,14 +40,15 @@ export default function JSONTemplatePage() {
       const url = URL.createObjectURL(blob);
       setDownloadUrl(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Error is handled by toast in API client
+      console.error('Failed to generate JSON:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <FileJson className="h-8 w-8" />
@@ -64,12 +61,12 @@ export default function JSONTemplatePage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure JSON Generation</CardTitle>
           <CardDescription>
-            Upload an Excel file and provide a JSON template
+            Upload an Excel file and provide a JSON template with column mapping
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <FileUpload
             accept=".xlsx,.xls"
             onChange={setFile}
@@ -77,44 +74,26 @@ export default function JSONTemplatePage() {
             label="Select Excel File"
           />
           
-          <div className="space-y-2">
-            <Label htmlFor="template">JSON Template</Label>
-            <Textarea
-              id="template"
-              value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              placeholder='{"key": "{placeholder}"}'
-              rows={8}
-            />
-            <p className="text-sm text-muted-foreground">
-              Use {`{placeholder}`} syntax that will be replaced with actual values
-            </p>
-          </div>
+          <JsonTemplateEditor
+            value={template}
+            onChange={setTemplate}
+            placeholder="Enter your JSON template here..."
+            showHelp={true}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="columnMapping">Column Mapping (JSON Object)</Label>
-            <Textarea
-              id="columnMapping"
-              value={columnMapping}
-              onChange={(e) => setColumnMapping(e.target.value)}
-              placeholder='{"placeholder": "ExcelColumn"}'
-              rows={8}
-            />
-            <p className="text-sm text-muted-foreground">
-              Map template placeholders to Excel column names
-            </p>
-          </div>
+          <ColumnMappingBuilder
+            value={mappingRules}
+            onChange={setMappingRules}
+          />
 
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="prettyPrint"
+            <Checkbox
+              id="pretty-print"
               checked={prettyPrint}
-              onChange={(e) => setPrettyPrint(e.target.checked)}
-              className="w-4 h-4"
+              onCheckedChange={(checked) => setPrettyPrint(checked === true)}
             />
-            <Label htmlFor="prettyPrint" className="cursor-pointer">
-              Pretty Print JSON (formatted with indentation)
+            <Label htmlFor="pretty-print" className="cursor-pointer">
+              Pretty print JSON output
             </Label>
           </div>
 
@@ -122,18 +101,12 @@ export default function JSONTemplatePage() {
             onClick={handleSubmit} 
             disabled={!file || !template || loading}
           >
-            {loading ? "Generating..." : "Generate Template JSON"}
+            {loading ? "Processing..." : "Generate JSON"}
           </Button>
         </CardContent>
       </Card>
 
-      {loading && <LoadingSpinner text="Generating JSON with template..." />}
-
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      {loading && <LoadingSpinner text="Generating JSON..." />}
 
       {downloadUrl && (
         <Card>
@@ -143,7 +116,7 @@ export default function JSONTemplatePage() {
               Download Ready
             </CardTitle>
             <CardDescription>
-              Your template JSON file is ready to download
+              Your JSON file is ready to download
             </CardDescription>
           </CardHeader>
           <CardContent>
