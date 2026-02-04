@@ -20,7 +20,10 @@ import { CopyButton } from "@/components/features/copy-button";
 import { DataTypeBadge } from "@/components/features/data-type-badge";
 import { excelApi } from "@/lib/api/excel";
 import { Columns, X, Plus, Hash, Rows } from "lucide-react";
-import type { StandardResponse, ColumnExtractionData } from "@/lib/api/types";
+import type {
+  StandardResponse,
+  ColumnExtractionResponse,
+} from "@/lib/api/types";
 
 export default function ColumnExtractionPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -28,7 +31,7 @@ export default function ColumnExtractionPage() {
   const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] =
-    useState<StandardResponse<ColumnExtractionData> | null>(null);
+    useState<StandardResponse<ColumnExtractionResponse> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {

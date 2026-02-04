@@ -1,9 +1,16 @@
 import { apiClient } from "./client";
-import type { StandardResponse, DownloadUrlData, JSONGenerationRequest, JSONTemplateRequest } from "./types";
+import type {
+  StandardResponse,
+  DownloadUrlResponse,
+  JSONGenerationRequest,
+  JSONTemplateRequest,
+} from "./types";
 
 export const jsonApi = {
   // Generate standard JSON mapping - returns download URL
-  generateJSON: async (request: JSONGenerationRequest): Promise<StandardResponse<DownloadUrlData>> => {
+  generateJSON: async (
+    request: JSONGenerationRequest
+  ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
     form.append("file", request.file);
 
@@ -30,7 +37,9 @@ export const jsonApi = {
   },
 
   // Generate JSON using template - returns download URL
-  generateTemplateJSON: async (request: JSONTemplateRequest): Promise<StandardResponse<DownloadUrlData>> => {
+  generateTemplateJSON: async (
+    request: JSONTemplateRequest
+  ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
     form.append("file", request.file);
 
@@ -39,7 +48,7 @@ export const jsonApi = {
         ? JSON.stringify(request.template)
         : request.template;
     form.append("template", template);
-    
+
     if (request.columnMapping) {
       form.append("column_mapping", JSON.stringify(request.columnMapping));
     }

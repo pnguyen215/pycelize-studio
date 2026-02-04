@@ -1,17 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { normalizationApi } from "@/lib/api/normalization";
 import { Wand2, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 interface NormalizationRule {
   columnName: string;
@@ -21,12 +33,15 @@ interface NormalizationRule {
 export default function NormalizationPage() {
   const [file, setFile] = useState<File | null>(null);
   const [rules, setRules] = useState<NormalizationRule[]>([
-    { columnName: "", normalizationType: "" }
+    { columnName: "", normalizationType: "" },
   ]);
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
-  const [normalizationTypes, setNormalizationTypes] = useState<Record<string, string>>({});
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
+  const [normalizationTypes, setNormalizationTypes] = useState<
+    Record<string, string>
+  >({});
 
   // Fetch normalization types on mount
   useEffect(() => {
@@ -46,23 +61,25 @@ export default function NormalizationPage() {
 
   const handleSubmit = async () => {
     if (!file) return;
-    
-    const validRules = rules.filter(rule => rule.columnName.trim() && rule.normalizationType.trim());
+
+    const validRules = rules.filter(
+      (rule) => rule.columnName.trim() && rule.normalizationType.trim()
+    );
     if (validRules.length === 0) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
-      const normalizations = validRules.map(rule => ({
+      const normalizations = validRules.map((rule) => ({
         column_name: rule.columnName,
-        normalization_type: rule.normalizationType
+        normalization_type: rule.normalizationType,
       }));
-      
+
       const response = await normalizationApi.normalize({
         file,
         normalizations: JSON.stringify(normalizations),
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -70,9 +87,15 @@ export default function NormalizationPage() {
     }
   };
 
-  const addRule = () => setRules([...rules, { columnName: "", normalizationType: "" }]);
-  const removeRule = (index: number) => setRules(rules.filter((_, i) => i !== index));
-  const updateRule = (index: number, field: keyof NormalizationRule, value: string) => {
+  const addRule = () =>
+    setRules([...rules, { columnName: "", normalizationType: "" }]);
+  const removeRule = (index: number) =>
+    setRules(rules.filter((_, i) => i !== index));
+  const updateRule = (
+    index: number,
+    field: keyof NormalizationRule,
+    value: string
+  ) => {
     const newRules = [...rules];
     newRules[index][field] = value;
     setRules(newRules);
@@ -104,7 +127,7 @@ export default function NormalizationPage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label>Normalization Rules</Label>
             <div className="space-y-2">
@@ -112,22 +135,28 @@ export default function NormalizationPage() {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={rule.columnName}
-                    onChange={(e) => updateRule(index, "columnName", e.target.value)}
+                    onChange={(e) =>
+                      updateRule(index, "columnName", e.target.value)
+                    }
                     placeholder="Column name"
                   />
                   <Select
                     value={rule.normalizationType}
-                    onValueChange={(value) => updateRule(index, "normalizationType", value)}
+                    onValueChange={(value) =>
+                      updateRule(index, "normalizationType", value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select normalization type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(normalizationTypes).map(([type, description]) => (
-                        <SelectItem key={type} value={type}>
-                          {type} : {description}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(normalizationTypes).map(
+                        ([type, description]) => (
+                          <SelectItem key={type} value={type}>
+                            {type} : {description}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   {rules.length > 1 && (
@@ -158,10 +187,7 @@ export default function NormalizationPage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Processing..." : "Apply Normalization"}
           </Button>
         </CardContent>
@@ -170,7 +196,7 @@ export default function NormalizationPage() {
       {loading && <LoadingSpinner text="Normalizing data..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Normalization Complete"
           description="Your normalized file is ready to download"

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,7 @@ import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { excelApi } from "@/lib/api/excel";
 import { Link2, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function ExcelBindingMultiPage() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
@@ -19,26 +25,30 @@ export default function ExcelBindingMultiPage() {
   const [bindColumns, setBindColumns] = useState<string[]>([""]);
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!sourceFile || !bindFile) return;
-    
-    const validComparisonColumns = comparisonColumns.filter(col => col.trim() !== '');
-    const validBindColumns = bindColumns.filter(col => col.trim() !== '');
-    
-    if (validComparisonColumns.length === 0 || validBindColumns.length === 0) return;
-    
+
+    const validComparisonColumns = comparisonColumns.filter(
+      (col) => col.trim() !== ""
+    );
+    const validBindColumns = bindColumns.filter((col) => col.trim() !== "");
+
+    if (validComparisonColumns.length === 0 || validBindColumns.length === 0)
+      return;
+
     setLoading(true);
     setResult(null);
-    
+
     try {
       const response = await excelApi.bindMultiKey({
         sourceFile,
         bindFile,
         comparisonColumns: validComparisonColumns,
         bindColumns: validBindColumns,
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -46,8 +56,10 @@ export default function ExcelBindingMultiPage() {
     }
   };
 
-  const addComparisonColumn = () => setComparisonColumns([...comparisonColumns, ""]);
-  const removeComparisonColumn = (index: number) => setComparisonColumns(comparisonColumns.filter((_, i) => i !== index));
+  const addComparisonColumn = () =>
+    setComparisonColumns([...comparisonColumns, ""]);
+  const removeComparisonColumn = (index: number) =>
+    setComparisonColumns(comparisonColumns.filter((_, i) => i !== index));
   const updateComparisonColumn = (index: number, value: string) => {
     const newColumns = [...comparisonColumns];
     newColumns[index] = value;
@@ -55,7 +67,8 @@ export default function ExcelBindingMultiPage() {
   };
 
   const addBindColumn = () => setBindColumns([...bindColumns, ""]);
-  const removeBindColumn = (index: number) => setBindColumns(bindColumns.filter((_, i) => i !== index));
+  const removeBindColumn = (index: number) =>
+    setBindColumns(bindColumns.filter((_, i) => i !== index));
   const updateBindColumn = (index: number, value: string) => {
     const newColumns = [...bindColumns];
     newColumns[index] = value;
@@ -70,7 +83,8 @@ export default function ExcelBindingMultiPage() {
           Multi Key Excel Binding
         </h1>
         <p className="text-muted-foreground mt-2">
-          Bind data from one Excel file to another using multiple comparison columns
+          Bind data from one Excel file to another using multiple comparison
+          columns
         </p>
       </div>
 
@@ -101,7 +115,7 @@ export default function ExcelBindingMultiPage() {
               label="Select Bind Excel File"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>Comparison Columns</Label>
             <div className="space-y-2">
@@ -109,7 +123,9 @@ export default function ExcelBindingMultiPage() {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={column}
-                    onChange={(e) => updateComparisonColumn(index, e.target.value)}
+                    onChange={(e) =>
+                      updateComparisonColumn(index, e.target.value)
+                    }
                     placeholder="Column name"
                   />
                   {comparisonColumns.length > 1 && (
@@ -174,8 +190,8 @@ export default function ExcelBindingMultiPage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={!sourceFile || !bindFile || loading}
           >
             {loading ? "Processing..." : "Bind Files"}
@@ -186,7 +202,7 @@ export default function ExcelBindingMultiPage() {
       {loading && <LoadingSpinner text="Binding files..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Binding Complete"
           description="Your bound Excel file is ready to download"

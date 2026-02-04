@@ -1,35 +1,47 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { MetricCard } from "@/components/features/metric-card";
 import { healthApi } from "@/lib/api/health";
 import { Activity, CheckCircle2, Server, GitBranch } from "lucide-react";
-import type { StandardResponse, HealthCheckData } from "@/lib/api/types";
+import type { StandardResponse, HealthCheckResponse } from "@/lib/api/types";
 
 export default function HealthCheckPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<HealthCheckData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<HealthCheckResponse> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheck = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
-    
+
     try {
       const response = await healthApi.check();
       setResult(response);
-      
+
       // Debug logging
-      if (process.env.NEXT_PUBLIC_PYCELIZE_DEBUGGING === 'true') {
-        console.debug('Health Check Response:', JSON.stringify(response, null, 2));
+      if (process.env.NEXT_PUBLIC_PYCELIZE_DEBUGGING === "true") {
+        console.debug(
+          "Health Check Response:",
+          JSON.stringify(response, null, 2)
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -55,8 +67,8 @@ export default function HealthCheckPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={handleCheck} 
+          <Button
+            onClick={handleCheck}
             disabled={loading}
             className="w-full sm:w-auto"
           >

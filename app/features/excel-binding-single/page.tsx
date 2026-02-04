@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,7 @@ import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { excelApi } from "@/lib/api/excel";
 import { Link, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function ExcelBindingSinglePage() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
@@ -19,24 +25,25 @@ export default function ExcelBindingSinglePage() {
   const [bindColumns, setBindColumns] = useState<string[]>([""]);
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!sourceFile || !bindFile || !comparisonColumn) return;
-    
-    const validColumns = bindColumns.filter(col => col.trim() !== '');
+
+    const validColumns = bindColumns.filter((col) => col.trim() !== "");
     if (validColumns.length === 0) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
       const response = await excelApi.bindSingleKey({
         sourceFile,
         bindFile,
         comparisonColumn,
         bindColumns: validColumns,
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -45,7 +52,8 @@ export default function ExcelBindingSinglePage() {
   };
 
   const addColumn = () => setBindColumns([...bindColumns, ""]);
-  const removeColumn = (index: number) => setBindColumns(bindColumns.filter((_, i) => i !== index));
+  const removeColumn = (index: number) =>
+    setBindColumns(bindColumns.filter((_, i) => i !== index));
   const updateColumn = (index: number, value: string) => {
     const newColumns = [...bindColumns];
     newColumns[index] = value;
@@ -60,7 +68,8 @@ export default function ExcelBindingSinglePage() {
           Single Key Excel Binding
         </h1>
         <p className="text-muted-foreground mt-2">
-          Bind data from one Excel file to another using a single comparison column
+          Bind data from one Excel file to another using a single comparison
+          column
         </p>
       </div>
 
@@ -91,7 +100,7 @@ export default function ExcelBindingSinglePage() {
               label="Select Bind Excel File"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="comparison-column">Comparison Column</Label>
             <Input
@@ -143,8 +152,8 @@ export default function ExcelBindingSinglePage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={!sourceFile || !bindFile || !comparisonColumn || loading}
           >
             {loading ? "Processing..." : "Bind Files"}
@@ -155,7 +164,7 @@ export default function ExcelBindingSinglePage() {
       {loading && <LoadingSpinner text="Binding files..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Binding Complete"
           description="Your bound Excel file is ready to download"

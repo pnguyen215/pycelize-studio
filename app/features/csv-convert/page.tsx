@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,26 +16,27 @@ import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { csvApi } from "@/lib/api/csv";
 import { RefreshCw } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function CSVConvertPage() {
   const [file, setFile] = useState<File | null>(null);
   const [sheetName, setSheetName] = useState("");
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
       const response = await csvApi.convertToExcel({
         file,
         sheetName: sheetName || undefined,
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -63,7 +70,7 @@ export default function CSVConvertPage() {
             value={file}
             label="Select CSV File"
           />
-          
+
           <div className="space-y-2">
             <Label htmlFor="sheet-name">Sheet Name (Optional)</Label>
             <Input
@@ -84,10 +91,7 @@ export default function CSVConvertPage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Converting..." : "Convert to Excel"}
           </Button>
         </CardContent>
@@ -96,7 +100,7 @@ export default function CSVConvertPage() {
       {loading && <LoadingSpinner text="Converting file..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Conversion Complete"
           description="Your Excel file is ready to download"

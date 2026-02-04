@@ -1,9 +1,16 @@
 import { apiClient } from "./client";
-import type { StandardResponse, DownloadUrlData, SQLGenerationRequest, CustomSQLRequest } from "./types";
+import type {
+  StandardResponse,
+  DownloadUrlResponse,
+  SQLGenerationRequest,
+  CustomSQLRequest,
+} from "./types";
 
 export const sqlApi = {
   // Generate standard SQL INSERT statements - returns download URL
-  generateSQL: async (request: SQLGenerationRequest): Promise<StandardResponse<DownloadUrlData>> => {
+  generateSQL: async (
+    request: SQLGenerationRequest
+  ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
     form.append("file", request.file);
     form.append("table_name", request.tableName);
@@ -26,7 +33,9 @@ export const sqlApi = {
   },
 
   // Generate custom SQL using template - returns download URL
-  generateCustomSQL: async (request: CustomSQLRequest): Promise<StandardResponse<DownloadUrlData>> => {
+  generateCustomSQL: async (
+    request: CustomSQLRequest
+  ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
     form.append("file", request.file);
     form.append("template", request.template);

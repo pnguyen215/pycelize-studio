@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,13 +18,17 @@ import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { sqlApi } from "@/lib/api/sql";
 import { Code, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function SQLCustomPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [template, setTemplate] = useState('INSERT INTO table_name (col1, col2) VALUES ({col1}, {col2});');
+  const [template, setTemplate] = useState(
+    "INSERT INTO table_name (col1, col2) VALUES ({col1}, {col2});"
+  );
   const [columns, setColumns] = useState<string[]>([""]);
-  const [columnMappings, setColumnMappings] = useState<Array<{ key: string; value: string }>>([{ key: "", value: "" }]);
+  const [columnMappings, setColumnMappings] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: "", value: "" }]);
   const [autoIncrementEnabled, setAutoIncrementEnabled] = useState(false);
   const [autoIncrementColumn, setAutoIncrementColumn] = useState("");
   const [incrementType, setIncrementType] = useState("");
@@ -26,33 +36,40 @@ export default function SQLCustomPage() {
   const [sequenceName, setSequenceName] = useState("");
   const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!file || !template) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
-      const validColumns = columns.filter(col => col.trim() !== '');
-      const validMappings = columnMappings.filter(m => m.key.trim() && m.value.trim());
+      const validColumns = columns.filter((col) => col.trim() !== "");
+      const validMappings = columnMappings.filter(
+        (m) => m.key.trim() && m.value.trim()
+      );
       const mappingObj: Record<string, string> = {};
-      validMappings.forEach(m => { mappingObj[m.key] = m.value; });
-      
+      validMappings.forEach((m) => {
+        mappingObj[m.key] = m.value;
+      });
+
       const response = await sqlApi.generateCustomSQL({
         file,
         template,
         columns: validColumns.length > 0 ? validColumns : undefined,
         columnMapping: validMappings.length > 0 ? mappingObj : undefined,
-        autoIncrement: autoIncrementEnabled ? {
-          enabled: true,
-          columnName: autoIncrementColumn,
-          incrementType: incrementType || undefined,
-          startValue: startValue ? parseInt(startValue) : undefined,
-          sequenceName: sequenceName || undefined
-        } : undefined,
-        removeDuplicates
+        autoIncrement: autoIncrementEnabled
+          ? {
+              enabled: true,
+              columnName: autoIncrementColumn,
+              incrementType: incrementType || undefined,
+              startValue: startValue ? parseInt(startValue) : undefined,
+              sequenceName: sequenceName || undefined,
+            }
+          : undefined,
+        removeDuplicates,
       });
       setResult(response);
     } finally {
@@ -61,16 +78,23 @@ export default function SQLCustomPage() {
   };
 
   const addColumn = () => setColumns([...columns, ""]);
-  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const removeColumn = (index: number) =>
+    setColumns(columns.filter((_, i) => i !== index));
   const updateColumn = (index: number, value: string) => {
     const newColumns = [...columns];
     newColumns[index] = value;
     setColumns(newColumns);
   };
 
-  const addMapping = () => setColumnMappings([...columnMappings, { key: "", value: "" }]);
-  const removeMapping = (index: number) => setColumnMappings(columnMappings.filter((_, i) => i !== index));
-  const updateMapping = (index: number, field: "key" | "value", value: string) => {
+  const addMapping = () =>
+    setColumnMappings([...columnMappings, { key: "", value: "" }]);
+  const removeMapping = (index: number) =>
+    setColumnMappings(columnMappings.filter((_, i) => i !== index));
+  const updateMapping = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const newMappings = [...columnMappings];
     newMappings[index][field] = value;
     setColumnMappings(newMappings);
@@ -102,7 +126,7 @@ export default function SQLCustomPage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label htmlFor="template">SQL Template</Label>
             <Textarea
@@ -114,7 +138,8 @@ export default function SQLCustomPage() {
               className="font-mono"
             />
             <p className="text-sm text-muted-foreground">
-              Use {`{column_name}`} placeholders that will be replaced with actual values
+              Use {`{column_name}`} placeholders that will be replaced with
+              actual values
             </p>
           </div>
 
@@ -129,7 +154,11 @@ export default function SQLCustomPage() {
                     placeholder="Column name"
                   />
                   {columns.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeColumn(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeColumn(index)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -149,17 +178,25 @@ export default function SQLCustomPage() {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={mapping.key}
-                    onChange={(e) => updateMapping(index, "key", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "key", e.target.value)
+                    }
                     placeholder="Template placeholder"
                   />
                   <span className="flex items-center px-2">→</span>
                   <Input
                     value={mapping.value}
-                    onChange={(e) => updateMapping(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "value", e.target.value)
+                    }
                     placeholder="Excel column"
                   />
                   {columnMappings.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeMapping(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMapping(index)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -181,7 +218,7 @@ export default function SQLCustomPage() {
               />
               <Label htmlFor="auto-increment">Enable Auto Increment</Label>
             </div>
-            
+
             {autoIncrementEnabled && (
               <div className="space-y-4 pl-6 border-l-2">
                 <div className="space-y-2">
@@ -194,7 +231,9 @@ export default function SQLCustomPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="increment-type">Increment Type (Optional)</Label>
+                  <Label htmlFor="increment-type">
+                    Increment Type (Optional)
+                  </Label>
                   <Input
                     id="increment-type"
                     value={incrementType}
@@ -213,7 +252,9 @@ export default function SQLCustomPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sequence-name">Sequence Name (Optional)</Label>
+                  <Label htmlFor="sequence-name">
+                    Sequence Name (Optional)
+                  </Label>
                   <Input
                     id="sequence-name"
                     value={sequenceName}
@@ -234,8 +275,8 @@ export default function SQLCustomPage() {
             <Label htmlFor="remove-duplicates">Remove Duplicates</Label>
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={!file || !template || loading}
           >
             {loading ? "Generating..." : "Generate Custom SQL"}
@@ -246,7 +287,7 @@ export default function SQLCustomPage() {
       {loading && <LoadingSpinner text="Generating custom SQL..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Custom SQL Generated"
           description="Your custom SQL file is ready to download"

@@ -1,42 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { jsonApi } from "@/lib/api/json";
 import { Braces, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function JSONGenerationPage() {
   const [file, setFile] = useState<File | null>(null);
   const [columns, setColumns] = useState<string[]>([""]);
-  const [columnMappings, setColumnMappings] = useState<Array<{ key: string; value: string }>>([{ key: "", value: "" }]);
-  const [nullHandling, setNullHandling] = useState<"include" | "exclude" | "default">("include");
+  const [columnMappings, setColumnMappings] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: "", value: "" }]);
+  const [nullHandling, setNullHandling] = useState<
+    "include" | "exclude" | "default"
+  >("include");
   const [prettyPrint, setPrettyPrint] = useState(true);
   const [arrayWrapper, setArrayWrapper] = useState(true);
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
-      const validColumns = columns.filter(col => col.trim() !== '');
-      const validMappings = columnMappings.filter(m => m.key.trim() && m.value.trim());
+      const validColumns = columns.filter((col) => col.trim() !== "");
+      const validMappings = columnMappings.filter(
+        (m) => m.key.trim() && m.value.trim()
+      );
       const mappingObj: Record<string, string> = {};
-      validMappings.forEach(m => { mappingObj[m.key] = m.value; });
-      
+      validMappings.forEach((m) => {
+        mappingObj[m.key] = m.value;
+      });
+
       const response = await jsonApi.generateJSON({
         file,
         columns: validColumns.length > 0 ? validColumns : undefined,
@@ -44,7 +65,7 @@ export default function JSONGenerationPage() {
         nullHandling,
         prettyPrint,
         arrayWrapper,
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -53,16 +74,23 @@ export default function JSONGenerationPage() {
   };
 
   const addColumn = () => setColumns([...columns, ""]);
-  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const removeColumn = (index: number) =>
+    setColumns(columns.filter((_, i) => i !== index));
   const updateColumn = (index: number, value: string) => {
     const newColumns = [...columns];
     newColumns[index] = value;
     setColumns(newColumns);
   };
 
-  const addMapping = () => setColumnMappings([...columnMappings, { key: "", value: "" }]);
-  const removeMapping = (index: number) => setColumnMappings(columnMappings.filter((_, i) => i !== index));
-  const updateMapping = (index: number, field: "key" | "value", value: string) => {
+  const addMapping = () =>
+    setColumnMappings([...columnMappings, { key: "", value: "" }]);
+  const removeMapping = (index: number) =>
+    setColumnMappings(columnMappings.filter((_, i) => i !== index));
+  const updateMapping = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const newMappings = [...columnMappings];
     newMappings[index][field] = value;
     setColumnMappings(newMappings);
@@ -94,7 +122,7 @@ export default function JSONGenerationPage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label>Columns to Include (Optional)</Label>
             <div className="space-y-2">
@@ -106,7 +134,11 @@ export default function JSONGenerationPage() {
                     placeholder="Column name"
                   />
                   {columns.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeColumn(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeColumn(index)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -126,17 +158,25 @@ export default function JSONGenerationPage() {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={mapping.key}
-                    onChange={(e) => updateMapping(index, "key", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "key", e.target.value)
+                    }
                     placeholder="JSON key"
                   />
                   <span className="flex items-center px-2">→</span>
                   <Input
                     value={mapping.value}
-                    onChange={(e) => updateMapping(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "value", e.target.value)
+                    }
                     placeholder="Excel column"
                   />
                   {columnMappings.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeMapping(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMapping(index)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -151,7 +191,12 @@ export default function JSONGenerationPage() {
 
           <div className="space-y-2">
             <Label htmlFor="null-handling">Null Handling</Label>
-            <Select value={nullHandling} onValueChange={(value) => setNullHandling(value as "include" | "exclude" | "default")}>
+            <Select
+              value={nullHandling}
+              onValueChange={(value) =>
+                setNullHandling(value as "include" | "exclude" | "default")
+              }
+            >
               <SelectTrigger id="null-handling">
                 <SelectValue />
               </SelectTrigger>
@@ -169,7 +214,9 @@ export default function JSONGenerationPage() {
               checked={prettyPrint}
               onCheckedChange={setPrettyPrint}
             />
-            <Label htmlFor="pretty-print">Pretty Print (formatted with indentation)</Label>
+            <Label htmlFor="pretty-print">
+              Pretty Print (formatted with indentation)
+            </Label>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -178,7 +225,9 @@ export default function JSONGenerationPage() {
               checked={arrayWrapper}
               onCheckedChange={setArrayWrapper}
             />
-            <Label htmlFor="array-wrapper">Array Wrapper (wrap result in array)</Label>
+            <Label htmlFor="array-wrapper">
+              Array Wrapper (wrap result in array)
+            </Label>
           </div>
 
           <div className="space-y-2">
@@ -191,10 +240,7 @@ export default function JSONGenerationPage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Generating..." : "Generate JSON"}
           </Button>
         </CardContent>
@@ -203,7 +249,7 @@ export default function JSONGenerationPage() {
       {loading && <LoadingSpinner text="Generating JSON..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="JSON Generated"
           description="Your JSON file is ready to download"

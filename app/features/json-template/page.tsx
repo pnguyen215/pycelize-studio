@@ -1,48 +1,71 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { jsonApi } from "@/lib/api/json";
 import { FileJson, Plus, X } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function JSONTemplatePage() {
   const [file, setFile] = useState<File | null>(null);
-  const [template, setTemplate] = useState('{\n  "name": "{name}",\n  "email": "{email}",\n  "age": "{age}"\n}');
-  const [columnMappings, setColumnMappings] = useState<Array<{ key: string; value: string }>>([{ key: "", value: "" }]);
-  const [aggregationMode, setAggregationMode] = useState<"array" | "single" | "nested">("array");
+  const [template, setTemplate] = useState(
+    '{\n  "name": "{name}",\n  "email": "{email}",\n  "age": "{age}"\n}'
+  );
+  const [columnMappings, setColumnMappings] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: "", value: "" }]);
+  const [aggregationMode, setAggregationMode] = useState<
+    "array" | "single" | "nested"
+  >("array");
   const [prettyPrint, setPrettyPrint] = useState(true);
   const [outputFilename, setOutputFilename] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!file || !template) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
-      const validMappings = columnMappings.filter(m => m.key.trim() && m.value.trim());
+      const validMappings = columnMappings.filter(
+        (m) => m.key.trim() && m.value.trim()
+      );
       const mappingObj: Record<string, string> = {};
-      validMappings.forEach(m => { mappingObj[m.key] = m.value; });
-      
+      validMappings.forEach((m) => {
+        mappingObj[m.key] = m.value;
+      });
+
       const response = await jsonApi.generateTemplateJSON({
         file,
         template,
         columnMapping: validMappings.length > 0 ? mappingObj : undefined,
         aggregationMode,
         prettyPrint,
-        outputFilename: outputFilename || undefined
+        outputFilename: outputFilename || undefined,
       });
       setResult(response);
     } finally {
@@ -50,9 +73,15 @@ export default function JSONTemplatePage() {
     }
   };
 
-  const addMapping = () => setColumnMappings([...columnMappings, { key: "", value: "" }]);
-  const removeMapping = (index: number) => setColumnMappings(columnMappings.filter((_, i) => i !== index));
-  const updateMapping = (index: number, field: "key" | "value", value: string) => {
+  const addMapping = () =>
+    setColumnMappings([...columnMappings, { key: "", value: "" }]);
+  const removeMapping = (index: number) =>
+    setColumnMappings(columnMappings.filter((_, i) => i !== index));
+  const updateMapping = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const newMappings = [...columnMappings];
     newMappings[index][field] = value;
     setColumnMappings(newMappings);
@@ -84,7 +113,7 @@ export default function JSONTemplatePage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label htmlFor="template">JSON Template</Label>
             <Textarea
@@ -96,7 +125,8 @@ export default function JSONTemplatePage() {
               className="font-mono"
             />
             <p className="text-sm text-muted-foreground">
-              Use {`{placeholder}`} syntax that will be replaced with actual values
+              Use {`{placeholder}`} syntax that will be replaced with actual
+              values
             </p>
           </div>
 
@@ -107,17 +137,25 @@ export default function JSONTemplatePage() {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={mapping.key}
-                    onChange={(e) => updateMapping(index, "key", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "key", e.target.value)
+                    }
                     placeholder="Template placeholder"
                   />
                   <span className="flex items-center px-2">→</span>
                   <Input
                     value={mapping.value}
-                    onChange={(e) => updateMapping(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "value", e.target.value)
+                    }
                     placeholder="Excel column"
                   />
                   {columnMappings.length > 1 && (
-                    <Button variant="ghost" size="sm" onClick={() => removeMapping(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMapping(index)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -132,14 +170,23 @@ export default function JSONTemplatePage() {
 
           <div className="space-y-2">
             <Label htmlFor="aggregation-mode">Aggregation Mode</Label>
-            <Select value={aggregationMode} onValueChange={(value) => setAggregationMode(value as "array" | "single" | "nested")}>
+            <Select
+              value={aggregationMode}
+              onValueChange={(value) =>
+                setAggregationMode(value as "array" | "single" | "nested")
+              }
+            >
               <SelectTrigger id="aggregation-mode">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="array">Array (multiple records)</SelectItem>
-                <SelectItem value="single">Single (first record only)</SelectItem>
-                <SelectItem value="nested">Nested (grouped structure)</SelectItem>
+                <SelectItem value="single">
+                  Single (first record only)
+                </SelectItem>
+                <SelectItem value="nested">
+                  Nested (grouped structure)
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -150,7 +197,9 @@ export default function JSONTemplatePage() {
               checked={prettyPrint}
               onCheckedChange={setPrettyPrint}
             />
-            <Label htmlFor="pretty-print">Pretty Print (formatted with indentation)</Label>
+            <Label htmlFor="pretty-print">
+              Pretty Print (formatted with indentation)
+            </Label>
           </div>
 
           <div className="space-y-2">
@@ -163,8 +212,8 @@ export default function JSONTemplatePage() {
             />
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={!file || !template || loading}
           >
             {loading ? "Generating..." : "Generate Template JSON"}
@@ -175,7 +224,7 @@ export default function JSONTemplatePage() {
       {loading && <LoadingSpinner text="Generating JSON with template..." />}
 
       {result && result.data && (
-        <DownloadLink 
+        <DownloadLink
           downloadUrl={result.data.download_url}
           title="Template JSON Generated"
           description="Your template JSON file is ready to download"

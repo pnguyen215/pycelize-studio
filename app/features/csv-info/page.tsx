@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/features/file-upload";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -9,19 +15,20 @@ import { MetricCard } from "@/components/features/metric-card";
 import { ColumnList } from "@/components/features/column-list";
 import { csvApi } from "@/lib/api/csv";
 import { FileText, Rows, Columns, FileSpreadsheet, Split } from "lucide-react";
-import type { StandardResponse, CSVInfoData } from "@/lib/api/types";
+import type { StandardResponse, CSVInfoResponse } from "@/lib/api/types";
 
 export default function CSVInfoPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<CSVInfoData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<CSVInfoResponse> | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
+
     setLoading(true);
     setResult(null);
-    
+
     try {
       const response = await csvApi.getInfo(file);
       setResult(response);
@@ -56,10 +63,7 @@ export default function CSVInfoPage() {
             value={file}
             label="Select CSV File"
           />
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Processing..." : "Get File Info"}
           </Button>
         </CardContent>

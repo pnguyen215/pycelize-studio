@@ -13,14 +13,14 @@ export interface StandardResponse<T> {
 }
 
 // Health Check
-export interface HealthCheckData {
+export interface HealthCheckResponse {
   service: string;
   status: string;
   version: string;
 }
 
 // Excel Operations
-export interface ExcelInfoData {
+export interface ExcelInfoResponse {
   column_names: string[];
   columns: number;
   data_types: Record<string, string>;
@@ -30,17 +30,20 @@ export interface ExcelInfoData {
   sheets: string[];
 }
 
-export interface ColumnExtractionData {
-  columns: Record<string, {
-    count: number;
-    data_type: string;
-    sample_values: unknown[];
-  }>;
+export interface ColumnExtractionResponse {
+  columns: Record<
+    string,
+    {
+      count: number;
+      data_type: string;
+      sample_values: unknown[];
+    }
+  >;
   rows_extracted: number;
   total_rows: number;
 }
 
-export interface DownloadUrlData {
+export interface DownloadUrlResponse {
   download_url: string;
 }
 
@@ -73,7 +76,7 @@ export interface BindingMultiKeyRequest {
 }
 
 // CSV Operations
-export interface CSVInfoData {
+export interface CSVInfoResponse {
   column_names: string[];
   columns: number;
   data_types: Record<string, string>;
@@ -142,7 +145,7 @@ export interface JSONTemplateRequest {
 }
 
 // Normalization
-export interface NormalizationTypesData {
+export interface NormalizationTypesResponse {
   [key: string]: string; // key is type, value is description
 }
 

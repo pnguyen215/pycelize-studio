@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/features/file-upload";
@@ -10,26 +16,29 @@ import { MetricCard } from "@/components/features/metric-card";
 import { ColumnList } from "@/components/features/column-list";
 import { excelApi } from "@/lib/api/excel";
 import { FileText, Rows, Columns, FileSpreadsheet, Layers } from "lucide-react";
-import type { StandardResponse, ExcelInfoData } from "@/lib/api/types";
+import type { StandardResponse, ExcelInfoResponse } from "@/lib/api/types";
 
 export default function ExcelInfoPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<ExcelInfoData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<ExcelInfoResponse> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
+
     setLoading(true);
     setError(null);
     setResult(null);
-    
+
     try {
       const response = await excelApi.getInfo(file);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -61,10 +70,7 @@ export default function ExcelInfoPage() {
             value={file}
             label="Select Excel File"
           />
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Processing..." : "Get File Info"}
           </Button>
         </CardContent>

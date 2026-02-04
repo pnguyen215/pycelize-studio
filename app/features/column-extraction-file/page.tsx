@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -12,45 +18,47 @@ import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { DownloadLink } from "@/components/features/download-link";
 import { excelApi } from "@/lib/api/excel";
 import { Columns, X, Plus } from "lucide-react";
-import type { StandardResponse, DownloadUrlData } from "@/lib/api/types";
+import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 
 export default function ColumnExtractionFilePage() {
   const [file, setFile] = useState<File | null>(null);
   const [columns, setColumns] = useState<string[]>([""]);
   const [removeDuplicates, setRemoveDuplicates] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<StandardResponse<DownloadUrlData> | null>(null);
+  const [result, setResult] =
+    useState<StandardResponse<DownloadUrlResponse> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!file) return;
-    
-    const validColumns = columns.filter(col => col.trim() !== '');
+
+    const validColumns = columns.filter((col) => col.trim() !== "");
     if (validColumns.length === 0) {
       setError("Please enter at least one column name");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     setResult(null);
-    
+
     try {
       const response = await excelApi.extractColumnsToFile({
         file,
         columns: validColumns,
-        removeDuplicates
+        removeDuplicates,
       });
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   const addColumn = () => setColumns([...columns, ""]);
-  const removeColumn = (index: number) => setColumns(columns.filter((_, i) => i !== index));
+  const removeColumn = (index: number) =>
+    setColumns(columns.filter((_, i) => i !== index));
   const updateColumn = (index: number, value: string) => {
     const newColumns = [...columns];
     newColumns[index] = value;
@@ -65,7 +73,8 @@ export default function ColumnExtractionFilePage() {
           Column Extraction to File
         </h1>
         <p className="text-muted-foreground mt-2">
-          Extract specific columns from Excel files and download as a new Excel file
+          Extract specific columns from Excel files and download as a new Excel
+          file
         </p>
       </div>
 
@@ -83,7 +92,7 @@ export default function ColumnExtractionFilePage() {
             value={file}
             label="Select Excel File"
           />
-          
+
           <div className="space-y-2">
             <Label>Columns to Extract</Label>
             <div className="space-y-2">
@@ -121,10 +130,7 @@ export default function ColumnExtractionFilePage() {
             <Label htmlFor="remove-duplicates">Remove Duplicates</Label>
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!file || loading}
-          >
+          <Button onClick={handleSubmit} disabled={!file || loading}>
             {loading ? "Processing..." : "Extract Columns"}
           </Button>
         </CardContent>
