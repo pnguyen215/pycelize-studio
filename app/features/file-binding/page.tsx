@@ -69,7 +69,7 @@ export default function FileBindingPage() {
         </AlertDescription>
       </Alert>
 
-      <Card className="mb-6 opacity-50 pointer-events-none">
+      <Card className="mb-6" aria-disabled="true">
         <CardHeader>
           <CardTitle>Upload Files</CardTitle>
           <CardDescription>
@@ -84,6 +84,7 @@ export default function FileBindingPage() {
               onChange={setFile}
               value={file}
               label="Select Source File"
+              disabled={true}
             />
           </div>
 
@@ -94,6 +95,7 @@ export default function FileBindingPage() {
               onChange={setBindingFile}
               value={bindingFile}
               label="Select Binding File"
+              disabled={true}
             />
           </div>
           
@@ -105,6 +107,7 @@ export default function FileBindingPage() {
               onChange={(e) => setColumnMapping(e.target.value)}
               placeholder='{"source_column": "bind_column"}'
               rows={8}
+              disabled={true}
             />
             <p className="text-sm text-muted-foreground">
               Map source file columns to binding file columns for matching records
@@ -113,7 +116,7 @@ export default function FileBindingPage() {
 
           <Button 
             onClick={handleSubmit} 
-            disabled={!file || !bindingFile || loading}
+            disabled={true}
           >
             {loading ? "Processing..." : "Bind Files"}
           </Button>

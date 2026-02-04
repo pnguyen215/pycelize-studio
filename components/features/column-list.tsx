@@ -31,7 +31,10 @@ export function ColumnList({
               className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors border border-border/50"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span className="font-mono text-sm font-medium truncate">
+                <span 
+                  title={column} 
+                  className="font-mono text-sm font-medium truncate"
+                >
                   {column}
                 </span>
                 {dataTypes && dataTypes[column] && (

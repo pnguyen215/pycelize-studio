@@ -12,6 +12,12 @@ export interface StandardResponse<T> {
   total?: number;
 }
 
+// Column Mapping Value Type
+export type ColumnMappingValue = string | { 
+  source?: string; 
+  default?: string | number | boolean 
+};
+
 // Excel Operations
 export interface ExcelInfoResponse {
   column_names: string[];
@@ -31,7 +37,7 @@ export interface ColumnExtractionRequest {
 
 export interface ColumnMappingRequest {
   file: File;
-  mapping: Record<string, string | { source?: string; default?: string | number | boolean }>;
+  mapping: Record<string, ColumnMappingValue>;
 }
 
 export interface BindingSingleKeyRequest {
@@ -72,7 +78,7 @@ export interface SQLGenerationRequest {
   file: File;
   tableName: string;
   columnMapping: Record<string, string>;
-  databaseType?: "postgresql" | "mysql" | "sqlite";
+  databaseType?: "postgresql" | "mysql" | "sqlite"; // Default: postgresql on server
   columns?: string[];
   autoIncrement?: {
     enabled: boolean;

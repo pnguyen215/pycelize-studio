@@ -7,6 +7,7 @@ interface FileUploadProps {
   value?: File | null;
   multiple?: boolean;
   label?: string;
+  disabled?: boolean;
 }
 
 export function FileUpload({ 
@@ -14,7 +15,8 @@ export function FileUpload({
   onChange,
   value,
   multiple = false,
-  label = "Upload File"
+  label = "Upload File",
+  disabled = false
 }: FileUploadProps) {
   return (
     <div className="grid w-full items-center gap-1.5">
@@ -25,6 +27,7 @@ export function FileUpload({
         accept={accept}
         onChange={(e) => onChange(e.target.files?.[0] || null)}
         multiple={multiple}
+        disabled={disabled}
       />
       {value && (
         <p className="text-sm text-muted-foreground mt-1">
