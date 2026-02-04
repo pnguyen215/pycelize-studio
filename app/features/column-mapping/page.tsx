@@ -3,34 +3,27 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
+import { ColumnMappingBuilder, MappingRule, convertRulesToMapping } from "@/components/forms/ColumnMappingBuilder";
 import { excelApi } from "@/lib/api/excel";
 import { FileDown, ArrowLeftRight } from "lucide-react";
 
 export default function ColumnMappingPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [mapping, setMapping] = useState<string>('{\n  "NewColumn1": {"source": "OldColumn1"},\n  "NewColumn2": {"source": "OldColumn2", "default": "N/A"}\n}');
+  const [mappingRules, setMappingRules] = useState<MappingRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!file) return;
+    if (!file || mappingRules.length === 0) return;
     
     setLoading(true);
-    setError(null);
     setDownloadUrl(null);
     
     try {
-      const mappingObject = JSON.parse(mapping);
-      if (typeof mappingObject !== 'object') {
-        throw new Error("Mapping must be a JSON object");
-      }
+      const mappingObject = convertRulesToMapping(mappingRules);
       
       const blob = await excelApi.mapColumns({
         file,
@@ -40,14 +33,15 @@ export default function ColumnMappingPage() {
       const url = URL.createObjectURL(blob);
       setDownloadUrl(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Error is handled by toast in API client
+      console.error('Failed to map columns:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <ArrowLeftRight className="h-8 w-8" />
@@ -60,12 +54,12 @@ export default function ColumnMappingPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
+          <CardTitle>Configure Column Mapping</CardTitle>
           <CardDescription>
             Upload an Excel file and specify the column mapping
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <FileUpload
             accept=".xlsx,.xls"
             onChange={setFile}
@@ -73,23 +67,14 @@ export default function ColumnMappingPage() {
             label="Select Excel File"
           />
           
-          <div className="space-y-2">
-            <Label htmlFor="mapping">Column Mapping (JSON Object)</Label>
-            <Textarea
-              id="mapping"
-              value={mapping}
-              onChange={(e) => setMapping(e.target.value)}
-              placeholder='{"NewName": {"source": "OldName", "default": "value"}}'
-              rows={8}
-            />
-            <p className="text-sm text-muted-foreground">
-              Map new column names to source columns. Optional &quot;default&quot; value for missing data.
-            </p>
-          </div>
+          <ColumnMappingBuilder
+            value={mappingRules}
+            onChange={setMappingRules}
+          />
 
           <Button 
             onClick={handleSubmit} 
-            disabled={!file || loading}
+            disabled={!file || mappingRules.length === 0 || loading}
           >
             {loading ? "Processing..." : "Map Columns"}
           </Button>
@@ -97,12 +82,6 @@ export default function ColumnMappingPage() {
       </Card>
 
       {loading && <LoadingSpinner text="Mapping columns..." />}
-
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
       {downloadUrl && (
         <Card>
