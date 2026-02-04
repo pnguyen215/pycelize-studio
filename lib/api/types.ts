@@ -31,7 +31,7 @@ export interface ColumnExtractionRequest {
 
 export interface ColumnMappingRequest {
   file: File;
-  mapping: Record<string, string | { source?: string; default?: any }>;
+  mapping: Record<string, string | { source?: string; default?: string | number | boolean }>;
 }
 
 export interface BindingSingleKeyRequest {

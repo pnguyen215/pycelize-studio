@@ -60,7 +60,16 @@ export default function FileBindingPage() {
         </p>
       </div>
 
-      <Card className="mb-6">
+      {/* Deactivation Notice */}
+      <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+        <AlertDescription className="text-amber-800 dark:text-amber-200">
+          ⚠️ <strong>Feature Deactivated:</strong> This feature is currently disabled per product requirements. 
+          Please use Excel Binding (Single Key) or Excel Binding (Multi Key) for file binding operations.
+          {/* NOTE: Do not re-enable without PM approval - see spec for details */}
+        </AlertDescription>
+      </Alert>
+
+      <Card className="mb-6 opacity-50 pointer-events-none">
         <CardHeader>
           <CardTitle>Upload Files</CardTitle>
           <CardDescription>

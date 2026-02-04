@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Home, Activity, FileText, Columns, GitBranch, Link as LinkIcon,
-  Link2, FileSpreadsheet, ArrowRightLeft, Wand2, FileInput,
+  Link2, FileSpreadsheet, ArrowRightLeft, Wand2,
   Database, Code2, Braces, FileJson
 } from "lucide-react";
 
@@ -38,8 +38,10 @@ const navigationGroups = [
   {
     group: "Data Transformation",
     items: [
-      { name: "Normalization", path: "/features/normalization", icon: Wand2 },
-      { name: "File Binding", path: "/features/file-binding", icon: FileInput }
+      { name: "Normalization", path: "/features/normalization", icon: Wand2 }
+      // NOTE: File Binding feature is deactivated per spec requirement
+      // Do not re-enable without PM approval
+      // { name: "File Binding", path: "/features/file-binding", icon: FileInput }
     ]
   },
   {

@@ -86,7 +86,7 @@ export default function ColumnExtractionFilePage() {
               className="font-mono text-sm"
             />
             <p className="text-sm text-muted-foreground">
-              Enter column names as a JSON array, e.g., ["column1", "column2"]
+              Enter column names as a JSON array, e.g., [&quot;column1&quot;, &quot;column2&quot;]
             </p>
           </div>
 

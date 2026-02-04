@@ -17,7 +17,23 @@ export const excelApi = {
   },
 
   // Extract columns - returns JSON
-  extractColumns: async (request: ColumnExtractionRequest): Promise<StandardResponse<any>> => {
+  extractColumns: async (request: ColumnExtractionRequest): Promise<StandardResponse<{
+    columns: Record<string, {
+      data_type: string;
+      non_null_count: number;
+      null_count: number;
+      total_count: number;
+      unique_count: number;
+      value_count: number;
+      values: unknown[];
+    }>;
+    extraction_info: {
+      extracted_columns: string[];
+      remove_duplicates: boolean;
+      timestamp: string;
+      total_rows: number;
+    };
+  }>> => {
     const form = new FormData();
     form.append("file", request.file);
     form.append("columns", JSON.stringify(request.columns));
