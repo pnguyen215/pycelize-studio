@@ -35,15 +35,14 @@ export default function ExcelBindingSinglePage() {
         throw new Error("Bind columns must be a JSON array");
       }
       
-      const blob = await excelApi.bindSingleKey({
+      const response = await excelApi.bindSingleKey({
         sourceFile,
         bindFile,
         comparisonColumn,
         bindColumns: bindColumnsArray
-      }) as unknown as Blob;
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

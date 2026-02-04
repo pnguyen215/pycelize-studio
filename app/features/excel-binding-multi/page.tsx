@@ -36,15 +36,14 @@ export default function ExcelBindingMultiPage() {
         throw new Error("Both columns fields must be JSON arrays");
       }
       
-      const blob = await excelApi.bindMultiKey({
+      const response = await excelApi.bindMultiKey({
         sourceFile,
         bindFile,
         comparisonColumns: comparisonColumnsArray,
         bindColumns: bindColumnsArray
-      }) as unknown as Blob;
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

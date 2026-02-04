@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadButton } from "@/components/features/download-button";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
@@ -15,6 +16,7 @@ import { FileDown, Wand2 } from "lucide-react";
 export default function NormalizationPage() {
   const [file, setFile] = useState<File | null>(null);
   const [normalizations, setNormalizations] = useState<string>('[\n  {\n    "column_name": "Column1",\n    "normalization_type": "uppercase"\n  }\n]');
+  const [returnReport, setReturnReport] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +34,13 @@ export default function NormalizationPage() {
         throw new Error("Normalizations must be a JSON array");
       }
       
-      const blob = await normalizationApi.normalize({
+      const response = await normalizationApi.normalize({
         file,
-        normalizations: normalizationsArray
-      }) as unknown as Blob;
+        normalizations: normalizationsArray,
+        returnReport
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -94,6 +96,17 @@ export default function NormalizationPage() {
                 <li><strong>title_case</strong> - Convert to title case</li>
               </ul>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="return-report"
+              checked={returnReport}
+              onCheckedChange={setReturnReport}
+            />
+            <Label htmlFor="return-report" className="cursor-pointer">
+              Return normalization report
+            </Label>
           </div>
 
           <Button 

@@ -32,13 +32,12 @@ export default function ColumnMappingPage() {
         throw new Error("Mapping must be a JSON object");
       }
       
-      const blob = await excelApi.mapColumns({
+      const response = await excelApi.mapColumns({
         file,
         mapping: mappingObject
-      }) as unknown as Blob;
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

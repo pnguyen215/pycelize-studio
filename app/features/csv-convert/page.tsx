@@ -15,6 +15,7 @@ import { FileDown, RefreshCw } from "lucide-react";
 export default function CSVConvertPage() {
   const [file, setFile] = useState<File | null>(null);
   const [outputFilename, setOutputFilename] = useState<string>("");
+  const [sheetName, setSheetName] = useState<string>("");
   const [delimiter, setDelimiter] = useState<string>(",");
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -28,14 +29,14 @@ export default function CSVConvertPage() {
     setDownloadUrl(null);
     
     try {
-      const blob = await csvApi.convertToExcel({
+      const response = await csvApi.convertToExcel({
         file,
         outputFilename: outputFilename || undefined,
+        sheetName: sheetName || undefined,
         delimiter: delimiter || undefined
-      }) as unknown as Blob;
+      });
       
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      setDownloadUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -70,6 +71,19 @@ export default function CSVConvertPage() {
             label="Select CSV File"
           />
           
+          <div className="space-y-2">
+            <Label htmlFor="sheetName">Sheet Name (Optional)</Label>
+            <Input
+              id="sheetName"
+              value={sheetName}
+              onChange={(e) => setSheetName(e.target.value)}
+              placeholder="Sheet1"
+            />
+            <p className="text-sm text-muted-foreground">
+              Name for the Excel sheet. Leave empty for default.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="delimiter">Delimiter (Optional)</Label>
             <Input
