@@ -39,7 +39,8 @@ const navigationGroups = [
     group: "Data Transformation",
     items: [
       { name: "Normalization", path: "/features/normalization", icon: Wand2 },
-      { name: "File Binding", path: "/features/file-binding", icon: FileInput }
+      // File Binding feature disabled per requirement 4.11
+      // { name: "File Binding", path: "/features/file-binding", icon: FileInput }
     ]
   },
   {
