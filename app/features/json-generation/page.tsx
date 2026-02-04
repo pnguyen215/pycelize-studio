@@ -170,6 +170,17 @@ export default function JSONGenerationPage() {
             <div className="space-y-2">
               {columnMappings.map((mapping, index) => (
                 <div key={index} className="flex gap-2">
+                  <div className="flex-1">
+                    <ColumnSelect
+                      value={mapping.value}
+                      onChange={(value) => updateMapping(index, "value", value)}
+                      columns={availableColumns}
+                      loading={columnsLoading}
+                      error={index === 0 ? columnsError : null}
+                      placeholder="Select Excel column"
+                    />
+                  </div>
+                  <span className="flex items-center px-2">→</span>
                   <Input
                     value={mapping.key}
                     onChange={(e) =>
@@ -177,16 +188,6 @@ export default function JSONGenerationPage() {
                     }
                     placeholder="JSON key"
                   />
-                  <span className="flex items-center px-2">→</span>
-                  <div className="flex-1">
-                    <ColumnSelect
-                      value={mapping.value}
-                      onChange={(value) => updateMapping(index, "value", value)}
-                      columns={availableColumns}
-                      loading={columnsLoading}
-                      placeholder="Select Excel column"
-                    />
-                  </div>
                   {columnMappings.length > 1 && (
                     <Button
                       variant="ghost"
