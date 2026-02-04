@@ -26,9 +26,9 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
     setCapturing(true);
     try {
       const canvas = await html2canvas(tableRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
+        background: "#ffffff",
         logging: false,
+        useCORS: true,
       });
       
       canvas.toBlob(async (blob) => {
