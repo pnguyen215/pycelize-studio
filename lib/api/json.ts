@@ -4,54 +4,54 @@ import type { JSONGenerationRequest, JSONTemplateRequest } from "./types";
 export const jsonApi = {
   // Generate standard JSON mapping
   generateJSON: async (request: JSONGenerationRequest) => {
-    const formData = new FormData();
-    formData.append("file", request.file);
-    formData.append("column_mapping", JSON.stringify(request.columnMapping));
+    const form = new FormData();
+    form.append("file", request.file);
+    form.append("column_mapping", JSON.stringify(request.columnMapping));
 
     if (request.columns) {
-      formData.append("columns", JSON.stringify(request.columns));
+      form.append("columns", JSON.stringify(request.columns));
     }
     if (request.prettyPrint !== undefined) {
-      formData.append("pretty_print", String(request.prettyPrint));
+      form.append("pretty_print", String(request.prettyPrint));
     }
     if (request.nullHandling) {
-      formData.append("null_handling", request.nullHandling);
+      form.append("null_handling", request.nullHandling);
     }
     if (request.arrayWrapper !== undefined) {
-      formData.append("array_wrapper", String(request.arrayWrapper));
+      form.append("array_wrapper", String(request.arrayWrapper));
     }
     if (request.outputFilename) {
-      formData.append("output_filename", request.outputFilename);
+      form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate", formData, {
+    return apiClient.post("/json/generate", form, {
       responseType: "blob",
     });
   },
 
   // Generate JSON using template
   generateTemplateJSON: async (request: JSONTemplateRequest) => {
-    const formData = new FormData();
-    formData.append("file", request.file);
+    const form = new FormData();
+    form.append("file", request.file);
 
     const template =
       typeof request.template === "object"
         ? JSON.stringify(request.template)
         : request.template;
-    formData.append("template", template);
-    formData.append("column_mapping", JSON.stringify(request.columnMapping));
+    form.append("template", template);
+    form.append("column_mapping", JSON.stringify(request.columnMapping));
 
     if (request.prettyPrint !== undefined) {
-      formData.append("pretty_print", String(request.prettyPrint));
+      form.append("pretty_print", String(request.prettyPrint));
     }
     if (request.aggregationMode) {
-      formData.append("aggregation_mode", request.aggregationMode);
+      form.append("aggregation_mode", request.aggregationMode);
     }
     if (request.outputFilename) {
-      formData.append("output_filename", request.outputFilename);
+      form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate-with-template", formData, {
+    return apiClient.post("/json/generate-with-template", form, {
       responseType: "blob",
     });
   },

@@ -1,51 +1,51 @@
-import { apiClient } from './client';
-import type { SQLGenerationRequest, CustomSQLRequest } from './types';
+import { apiClient } from "./client";
+import type { SQLGenerationRequest, CustomSQLRequest } from "./types";
 
 export const sqlApi = {
   // Generate standard SQL INSERT statements
   generateSQL: async (request: SQLGenerationRequest) => {
-    const formData = new FormData();
-    formData.append('file', request.file);
-    formData.append('table_name', request.tableName);
-    formData.append('column_mapping', JSON.stringify(request.columnMapping));
-    formData.append('database_type', request.databaseType);
-    
+    const form = new FormData();
+    form.append("file", request.file);
+    form.append("table_name", request.tableName);
+    form.append("column_mapping", JSON.stringify(request.columnMapping));
+    form.append("database_type", request.databaseType);
+
     if (request.autoIncrement) {
-      formData.append('auto_increment', JSON.stringify(request.autoIncrement));
+      form.append("auto_increment", JSON.stringify(request.autoIncrement));
     }
     if (request.batchSize) {
-      formData.append('batch_size', String(request.batchSize));
+      form.append("batch_size", String(request.batchSize));
     }
     if (request.includeTransaction !== undefined) {
-      formData.append('include_transaction', String(request.includeTransaction));
+      form.append("include_transaction", String(request.includeTransaction));
     }
     if (request.returnFile) {
-      return apiClient.post('/sql/generate', formData, {
-        responseType: 'blob'
+      return apiClient.post("/sql/generate", form, {
+        responseType: "blob",
       });
     }
-    return apiClient.post('/sql/generate', formData);
+    return apiClient.post("/sql/generate", form);
   },
 
   // Generate custom SQL using template
   generateCustomSQL: async (request: CustomSQLRequest) => {
-    const formData = new FormData();
-    formData.append('file', request.file);
-    formData.append('template', request.template);
-    formData.append('column_mapping', JSON.stringify(request.columnMapping));
-    
+    const form = new FormData();
+    form.append("file", request.file);
+    form.append("template", request.template);
+    form.append("column_mapping", JSON.stringify(request.columnMapping));
+
     if (request.columns) {
-      formData.append('columns', JSON.stringify(request.columns));
+      form.append("columns", JSON.stringify(request.columns));
     }
     if (request.autoIncrement) {
-      formData.append('auto_increment', JSON.stringify(request.autoIncrement));
+      form.append("auto_increment", JSON.stringify(request.autoIncrement));
     }
     if (request.removeDuplicates !== undefined) {
-      formData.append('remove_duplicates', String(request.removeDuplicates));
+      form.append("remove_duplicates", String(request.removeDuplicates));
     }
-    
-    return apiClient.post('/sql/custom', formData, {
-      responseType: 'blob'
+
+    return apiClient.post("/sql/custom", form, {
+      responseType: "blob",
     });
   },
 };
