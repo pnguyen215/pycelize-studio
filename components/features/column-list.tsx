@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DataTypeBadge } from "./data-type-badge";
 import { CopyButton } from "./copy-button";
 import { Camera, Check } from "lucide-react";
-import html2canvas from "html2canvas";
+import * as htmlToImage from 'html-to-image';
 
 interface ColumnListProps {
   columns: string[];
@@ -25,32 +25,32 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
     
     setCapturing(true);
     try {
-      const canvas = await html2canvas(tableRef.current, {
-        background: "#ffffff",
-        logging: false,
-        useCORS: true,
+      const blob = await htmlToImage.toBlob(tableRef.current, {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
       });
       
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ "image/png": blob })
-            ]);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          } catch (err) {
-            console.error("Failed to copy image to clipboard, downloading instead:", err);
-            // Fallback: download the image
-            const url = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.download = "table-screenshot.png";
-            link.href = url;
-            link.click();
-          }
+      if (blob) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob })
+          ]);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+          console.error("Failed to copy image to clipboard, downloading instead:", err);
+          // Fallback: download the image
+          const dataUrl = await htmlToImage.toPng(tableRef.current, {
+            backgroundColor: '#ffffff',
+            pixelRatio: 2,
+          });
+          const link = document.createElement("a");
+          link.download = "table-screenshot.png";
+          link.href = dataUrl;
+          link.click();
         }
-        setCapturing(false);
-      });
+      }
+      setCapturing(false);
     } catch (err) {
       console.error("Failed to capture:", err);
       setCapturing(false);
@@ -81,31 +81,39 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
         </Button>
       </CardHeader>
       <CardContent>
-        <div ref={tableRef} className="max-h-[500px] overflow-auto border rounded-md">
-          <Table>
-            <TableHeader className="sticky top-0 bg-muted z-10">
-              <TableRow>
-                <TableHead>Column Name</TableHead>
-                {dataTypes && <TableHead>Data Type</TableHead>}
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {columns.map((column, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-mono text-sm">{column}</TableCell>
-                  {dataTypes && (
-                    <TableCell>
-                      <DataTypeBadge dataType={dataTypes[column] || "unknown"} />
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <CopyButton text={column} />
-                  </TableCell>
+        <div ref={tableRef} className="border rounded-md">
+          {/* Fixed Header */}
+          <div className="border-b bg-muted">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Column Name</TableHead>
+                  {dataTypes && <TableHead>Data Type</TableHead>}
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+            </Table>
+          </div>
+          {/* Scrollable Body */}
+          <div className="max-h-[400px] overflow-y-auto">
+            <Table>
+              <TableBody>
+                {columns.map((column, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-mono text-sm">{column}</TableCell>
+                    {dataTypes && (
+                      <TableCell>
+                        <DataTypeBadge dataType={dataTypes[column] || "unknown"} />
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <CopyButton text={column} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>

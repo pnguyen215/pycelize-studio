@@ -23,7 +23,7 @@ export function MetricCard({
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold break-words overflow-hidden" title={typeof value === 'string' ? value : undefined}>{value}</div>
+        <div className="text-2xl font-bold truncate" title={typeof value === 'string' ? value : undefined}>{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
