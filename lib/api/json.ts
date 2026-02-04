@@ -1,9 +1,9 @@
 import { apiClient } from "./client";
-import type { JSONGenerationRequest, JSONTemplateRequest } from "./types";
+import type { JSONGenerationRequest, JSONTemplateRequest, StandardResponse } from "./types";
 
 export const jsonApi = {
-  // Generate standard JSON mapping
-  generateJSON: async (request: JSONGenerationRequest) => {
+  // Generate standard JSON mapping - returns download URL
+  generateJSON: async (request: JSONGenerationRequest): Promise<StandardResponse<{ download_url: string; total_records?: number; file_size?: number }>> => {
     const form = new FormData();
     form.append("file", request.file);
     form.append("column_mapping", JSON.stringify(request.columnMapping));
@@ -24,13 +24,11 @@ export const jsonApi = {
       form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate", form, {
-      responseType: "blob",
-    });
+    return apiClient.post("/json/generate", form);
   },
 
-  // Generate JSON using template
-  generateTemplateJSON: async (request: JSONTemplateRequest) => {
+  // Generate JSON using template - returns download URL
+  generateTemplateJSON: async (request: JSONTemplateRequest): Promise<StandardResponse<{ download_url: string; total_records?: number; file_size?: number }>> => {
     const form = new FormData();
     form.append("file", request.file);
 
@@ -51,8 +49,6 @@ export const jsonApi = {
       form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate-with-template", form, {
-      responseType: "blob",
-    });
+    return apiClient.post("/json/generate-with-template", form);
   },
 };

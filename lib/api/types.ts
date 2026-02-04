@@ -14,14 +14,13 @@ export interface StandardResponse<T> {
 
 // Excel Operations
 export interface ExcelInfoResponse {
-  filename: string;
-  file_size: number;
-  sheets: Array<{
-    name: string;
-    rows: number;
-    columns: number;
-    column_names: string[];
-  }>;
+  column_names: string[];
+  columns: number;
+  data_types: Record<string, string>;
+  file_name: string;
+  file_path: string;
+  rows: number;
+  sheets: string[];
 }
 
 export interface ColumnExtractionRequest {
@@ -32,7 +31,7 @@ export interface ColumnExtractionRequest {
 
 export interface ColumnMappingRequest {
   file: File;
-  mapping: Record<string, { source: string; default?: string }>;
+  mapping: Record<string, string | { source?: string; default?: any }>;
 }
 
 export interface BindingSingleKeyRequest {
@@ -53,16 +52,17 @@ export interface BindingMultiKeyRequest {
 
 // CSV Operations
 export interface CSVInfoResponse {
-  filename: string;
-  file_size: number;
-  rows: number;
-  columns: number;
   column_names: string[];
-  delimiter: string;
+  columns: number;
+  data_types: Record<string, string>;
+  file_name: string;
+  file_path: string;
+  rows: number;
 }
 
 export interface CSVConvertRequest {
   file: File;
+  sheetName?: string;
   outputFilename?: string;
   delimiter?: string;
 }
@@ -72,17 +72,15 @@ export interface SQLGenerationRequest {
   file: File;
   tableName: string;
   columnMapping: Record<string, string>;
-  databaseType: "postgresql" | "mysql" | "sqlite";
+  databaseType?: "postgresql" | "mysql" | "sqlite";
+  columns?: string[];
   autoIncrement?: {
     enabled: boolean;
-    columnName: string;
-    incrementType?: string;
-    startValue?: number;
-    sequenceName?: string;
+    column_name: string;
+    increment_type?: string;
+    start_value?: number;
   };
-  batchSize?: number;
-  includeTransaction?: boolean;
-  returnFile?: boolean;
+  removeDuplicates?: boolean;
 }
 
 export interface CustomSQLRequest {
@@ -90,7 +88,11 @@ export interface CustomSQLRequest {
   template: string;
   columnMapping: Record<string, string>;
   columns?: string[];
-  autoIncrement?: Record<string, unknown>;
+  autoIncrement?: {
+    enabled: boolean;
+    column_name: string;
+    start_value?: number;
+  };
   removeDuplicates?: boolean;
 }
 
@@ -128,6 +130,7 @@ export interface NormalizationRequest {
     normalization_type: string;
     config?: Record<string, unknown>;
   }>;
+  returnReport?: boolean;
 }
 
 // File Binding
@@ -140,8 +143,7 @@ export interface FileBindingRequest {
 
 // Health Check
 export interface HealthCheckResponse {
+  service: string;
   status: string;
-  timestamp: string;
   version: string;
-  services: Record<string, string>;
 }
