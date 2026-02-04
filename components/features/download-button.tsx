@@ -3,23 +3,32 @@ import { Download } from "lucide-react";
 
 interface DownloadButtonProps {
   url: string;
-  filename: string;
+  filename?: string;
+  label?: string;
 }
 
-export function DownloadButton({ url, filename }: DownloadButtonProps) {
+export function DownloadButton({ url, filename, label = "Download File" }: DownloadButtonProps) {
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // If it's a full URL, open in new tab
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      window.open(url, '_blank');
+    } else {
+      // Otherwise, create a download link
+      const link = document.createElement('a');
+      link.href = url;
+      if (filename) {
+        link.download = filename;
+      }
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
-    <Button onClick={handleDownload} variant="outline">
-      <Download className="mr-2 h-4 w-4" />
-      Download {filename}
+    <Button onClick={handleDownload} variant="default" className="gap-2">
+      <Download className="h-4 w-4" />
+      {label}
     </Button>
   );
 }
