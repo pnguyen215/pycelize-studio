@@ -28,6 +28,8 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
       const blob = await htmlToImage.toBlob(tableRef.current, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
+        skipFonts: true, // Skip font embedding to avoid font undefined errors
+        cacheBust: true, // Ensure fresh capture
       });
       
       if (blob) {
@@ -43,6 +45,8 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
           const dataUrl = await htmlToImage.toPng(tableRef.current, {
             backgroundColor: '#ffffff',
             pixelRatio: 2,
+            skipFonts: true,
+            cacheBust: true,
           });
           const link = document.createElement("a");
           link.download = "table-screenshot.png";
@@ -53,6 +57,7 @@ export function ColumnList({ columns, dataTypes, title = "Columns" }: ColumnList
       setCapturing(false);
     } catch (err) {
       console.error("Failed to capture:", err);
+      alert("Failed to capture screenshot. Please try again.");
       setCapturing(false);
     }
   };
