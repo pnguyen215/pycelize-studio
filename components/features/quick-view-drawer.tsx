@@ -219,18 +219,38 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
 
           {!isLoading && !error && parsedData && (
             <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader className="bg-background">
-                  <TableRow>
-                    {parsedData.headers.map((header, index) => (
-                      <TableHead key={index} className="sticky top-0 z-10 bg-background whitespace-nowrap border-b">
-                        {header || `Column ${index + 1}`}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-              </Table>
-              <div className="max-h-[450px] overflow-auto">
+              {/* Header with horizontal scroll */}
+              <div 
+                className="overflow-x-auto overflow-y-hidden"
+                onScroll={(e) => {
+                  const bodyScroll = e.currentTarget.nextElementSibling;
+                  if (bodyScroll && bodyScroll.scrollLeft !== e.currentTarget.scrollLeft) {
+                    bodyScroll.scrollLeft = e.currentTarget.scrollLeft;
+                  }
+                }}
+              >
+                <Table>
+                  <TableHeader className="bg-background">
+                    <TableRow>
+                      {parsedData.headers.map((header, index) => (
+                        <TableHead key={index} className="bg-background whitespace-nowrap border-b">
+                          {header || `Column ${index + 1}`}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
+              {/* Body with both horizontal and vertical scroll */}
+              <div 
+                className="max-h-[450px] overflow-auto"
+                onScroll={(e) => {
+                  const headerScroll = e.currentTarget.previousElementSibling;
+                  if (headerScroll && headerScroll.scrollLeft !== e.currentTarget.scrollLeft) {
+                    headerScroll.scrollLeft = e.currentTarget.scrollLeft;
+                  }
+                }}
+              >
                 <Table>
                   <TableBody>
                     {displayedRows.length === 0 ? (
