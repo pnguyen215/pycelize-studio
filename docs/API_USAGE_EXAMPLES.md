@@ -23,18 +23,18 @@ This document provides real-world usage examples for all advanced features of th
 
 ```typescript
 // app/layout.tsx or app/providers.tsx
-import { setupInterceptors } from '@/lib/api/interceptors';
-import { axiosInstance } from '@/lib/api/axios-instance';
+import { setupInterceptors } from "@/lib/api/interceptors";
+import { axiosInstance } from "@/lib/api/axios-instance";
 
 // Setup with desired features
 export function initializeApiClient() {
   setupInterceptors(axiosInstance, {
-    auth: true,        // Enable JWT auth
-    retry: true,       // Enable automatic retry
-    cache: true,       // Enable caching
-    rateLimit: false,  // Disable rate limiting (not needed)
-    offline: true,     // Enable offline support
-    metrics: true,     // Enable metrics
+    auth: true, // Enable JWT auth
+    retry: true, // Enable automatic retry
+    cache: true, // Enable caching
+    rateLimit: false, // Disable rate limiting (not needed)
+    offline: true, // Enable offline support
+    metrics: true, // Enable metrics
   });
 }
 ```
@@ -42,20 +42,20 @@ export function initializeApiClient() {
 ### Make Basic Requests
 
 ```typescript
-import { api } from '@/lib/api/client';
+import { api } from "@/lib/api/client";
 
 // GET request
-const users = await api.get<User[]>('/users');
+const users = await api.get<User[]>("/users");
 
 // POST request
-const newUser = await api.post<User>('/users', {
-  name: 'John Doe',
-  email: 'john@example.com'
+const newUser = await api.post<User>("/users", {
+  name: "John Doe",
+  email: "john@example.com",
 });
 
 // PUT request
 const updated = await api.put<User>(`/users/${userId}`, {
-  name: 'Jane Doe'
+  name: "Jane Doe",
 });
 
 // DELETE request
@@ -70,21 +70,21 @@ await api.delete(`/users/${userId}`);
 
 ```typescript
 // pages/login.tsx
-import { setStoredToken, setStoredRefreshToken } from '@/lib/api/interceptors';
-import { api } from '@/lib/api/client';
+import { setStoredToken, setStoredRefreshToken } from "@/lib/api/interceptors";
+import { api } from "@/lib/api/client";
 
 async function handleLogin(email: string, password: string) {
   try {
-    const response = await api.post('/auth/login', { email, password });
-    
+    const response = await api.post("/auth/login", { email, password });
+
     // Store tokens
     setStoredToken(response.access_token);
     setStoredRefreshToken(response.refresh_token);
-    
+
     // Redirect to dashboard
-    router.push('/dashboard');
+    router.push("/dashboard");
   } catch (error) {
-    console.error('Login failed:', error);
+    console.error("Login failed:", error);
   }
 }
 ```
@@ -92,14 +92,14 @@ async function handleLogin(email: string, password: string) {
 ### Logout & Clear Tokens
 
 ```typescript
-import { clearAuthTokens } from '@/lib/api/interceptors';
+import { clearAuthTokens } from "@/lib/api/interceptors";
 
 async function handleLogout() {
   try {
-    await api.post('/auth/logout');
+    await api.post("/auth/logout");
   } finally {
     clearAuthTokens();
-    router.push('/login');
+    router.push("/login");
   }
 }
 ```
@@ -107,7 +107,7 @@ async function handleLogout() {
 ### Check Authentication Status
 
 ```typescript
-import { isAuthenticated } from '@/lib/api/interceptors';
+import { isAuthenticated } from "@/lib/api/interceptors";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) {
@@ -120,15 +120,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 ### Configure Token Refresh
 
 ```typescript
-import { configureAuth } from '@/lib/api/interceptors';
+import { configureAuth } from "@/lib/api/interceptors";
 
 // Configure in app initialization
 configureAuth({
-  tokenType: 'Bearer',
+  tokenType: "Bearer",
   autoRefresh: true,
-  refreshEndpoint: '/auth/refresh',
-  storageKey: 'auth_token',
-  refreshTokenKey: 'refresh_token'
+  refreshEndpoint: "/auth/refresh",
+  storageKey: "auth_token",
+  refreshTokenKey: "refresh_token",
 });
 ```
 
@@ -140,7 +140,7 @@ configureAuth({
 
 ```typescript
 // app/api-config.ts
-import { configureRetry } from '@/lib/api/interceptors';
+import { configureRetry } from "@/lib/api/interceptors";
 
 export function configureApiRetry() {
   configureRetry({
@@ -153,8 +153,11 @@ export function configureApiRetry() {
       return !error.response || error.response.status >= 500;
     },
     onRetry: (error, retryCount) => {
-      console.log(`Retrying request (attempt ${retryCount}):`, error.config?.url);
-    }
+      console.log(
+        `Retrying request (attempt ${retryCount}):`,
+        error.config?.url
+      );
+    },
   });
 }
 ```
@@ -165,17 +168,17 @@ export function configureApiRetry() {
 // Retry important operations more aggressively
 async function uploadFile(file: File) {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
 
-  return api.post('/upload', formData, {
+  return api.post("/upload", formData, {
     retry: {
       retries: 5,
       retryDelay: 2000,
       exponentialBackoff: true,
       onRetry: (error, count) => {
         console.log(`Upload retry ${count}/5`);
-      }
-    }
+      },
+    },
   });
 }
 ```
@@ -187,8 +190,8 @@ async function uploadFile(file: File) {
 async function deleteUser(userId: string) {
   return api.delete(`/users/${userId}`, {
     retry: {
-      retries: 0 // Disable retry
-    }
+      retries: 0, // Disable retry
+    },
   });
 }
 ```
@@ -202,7 +205,7 @@ async function deleteUser(userId: string) {
 ```typescript
 // Cache expensive data fetches
 async function getAnalytics(startDate: string, endDate: string) {
-  return api.get('/analytics', {
+  return api.get("/analytics", {
     params: { startDate, endDate },
     cache: true,
     cacheTTL: 300000, // 5 minutes
@@ -216,13 +219,13 @@ async function getAnalytics(startDate: string, endDate: string) {
 // Invalidate cache when data changes
 async function updateUser(userId: string, data: Partial<User>) {
   return api.put(`/users/${userId}`, data, {
-    invalidateCache: '/users' // Invalidates all /users/* caches
+    invalidateCache: "/users", // Invalidates all /users/* caches
   });
 }
 
 async function createPost(data: Post) {
-  return api.post('/posts', data, {
-    invalidateCache: /^\/posts/ // Regex pattern
+  return api.post("/posts", data, {
+    invalidateCache: /^\/posts/, // Regex pattern
   });
 }
 ```
@@ -230,15 +233,15 @@ async function createPost(data: Post) {
 ### Manual Cache Management
 
 ```typescript
-import { 
-  invalidateCache, 
-  clearAllCache, 
-  getCacheStats 
-} from '@/lib/api/interceptors';
+import {
+  invalidateCache,
+  clearAllCache,
+  getCacheStats,
+} from "@/lib/api/interceptors";
 
 // Invalidate specific pattern
 function refreshUserData() {
-  invalidateCache('/users/*');
+  invalidateCache("/users/*");
 }
 
 // Clear all cache
@@ -250,10 +253,12 @@ function handleLogout() {
 // View cache statistics
 function CacheStatsComponent() {
   const stats = getCacheStats();
-  
+
   return (
     <div>
-      <p>Cache Size: {stats.size} / {stats.maxSize}</p>
+      <p>
+        Cache Size: {stats.size} / {stats.maxSize}
+      </p>
       <p>Storage: {stats.storage}</p>
     </div>
   );
@@ -267,14 +272,14 @@ function CacheStatsComponent() {
 ### Configure Global Rate Limit
 
 ```typescript
-import { configureRateLimit } from '@/lib/services/rate-limiter';
+import { configureRateLimit } from "@/lib/services/rate-limiter";
 
 // Global rate limit for all requests
-configureRateLimit('global', {
+configureRateLimit("global", {
   maxRequests: 60,
   timeWindow: 60000, // 60 requests per minute
   queueRequests: true,
-  maxQueueSize: 100
+  maxQueueSize: 100,
 });
 ```
 
@@ -282,12 +287,12 @@ configureRateLimit('global', {
 
 ```typescript
 // Configure specific endpoints
-configureRateLimit('/api/search', {
+configureRateLimit("/api/search", {
   maxRequests: 10,
   timeWindow: 1000, // 10 requests per second
 });
 
-configureRateLimit('/api/upload', {
+configureRateLimit("/api/upload", {
   maxRequests: 5,
   timeWindow: 60000, // 5 uploads per minute
 });
@@ -298,13 +303,13 @@ configureRateLimit('/api/upload', {
 ```typescript
 // Apply rate limit to specific request
 async function searchUsers(query: string) {
-  return api.get('/search', {
+  return api.get("/search", {
     params: { q: query },
     rateLimit: {
       maxRequests: 5,
       timeWindow: 1000,
-      pattern: '/search'
-    }
+      pattern: "/search",
+    },
   });
 }
 ```
@@ -312,15 +317,19 @@ async function searchUsers(query: string) {
 ### Monitor Rate Limit Status
 
 ```typescript
-import { getRateLimitStatus } from '@/lib/api/interceptors';
+import { getRateLimitStatus } from "@/lib/api/interceptors";
 
 function RateLimitStatus({ pattern }: { pattern?: string }) {
   const status = getRateLimitStatus(pattern);
-  
+
   return (
     <div>
-      <p>Available: {status.availableTokens} / {status.maxTokens}</p>
-      <p>Queued: {status.queueSize} / {status.maxQueueSize}</p>
+      <p>
+        Available: {status.availableTokens} / {status.maxTokens}
+      </p>
+      <p>
+        Queued: {status.queueSize} / {status.maxQueueSize}
+      </p>
     </div>
   );
 }
@@ -333,36 +342,37 @@ function RateLimitStatus({ pattern }: { pattern?: string }) {
 ### Search with Debouncing & Cancellation
 
 ```typescript
-import { requestCancellation } from '@/lib/services';
-import { useMemo, useCallback } from 'react';
-import debounce from 'lodash/debounce';
+import { requestCancellation } from "@/lib/services";
+import { useMemo, useCallback } from "react";
+import debounce from "lodash/debounce";
 
 function SearchComponent() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
   const debouncedSearch = useMemo(
-    () => debounce(async (searchQuery: string) => {
-      if (!searchQuery) return;
+    () =>
+      debounce(async (searchQuery: string) => {
+        if (!searchQuery) return;
 
-      // Cancel previous search
-      requestCancellation.cancel('search');
+        // Cancel previous search
+        requestCancellation.cancel("search");
 
-      // Create new cancellable request
-      const signal = requestCancellation.createSignal('search');
+        // Create new cancellable request
+        const signal = requestCancellation.createSignal("search");
 
-      try {
-        const data = await api.get('/search', {
-          params: { q: searchQuery },
-          signal
-        });
-        setResults(data);
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Search failed:', error);
+        try {
+          const data = await api.get("/search", {
+            params: { q: searchQuery },
+            signal,
+          });
+          setResults(data);
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.error("Search failed:", error);
+          }
         }
-      }
-    }, 300),
+      }, 300),
     []
   );
 
@@ -381,15 +391,15 @@ function SearchComponent() {
 ```typescript
 function DataFetchingComponent() {
   useEffect(() => {
-    const signal = requestCancellation.createSignal('fetch-data');
+    const signal = requestCancellation.createSignal("fetch-data");
 
     async function fetchData() {
       try {
-        const data = await api.get('/data', { signal });
+        const data = await api.get("/data", { signal });
         // Process data...
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Fetch failed:', error);
+        if (error.name !== "AbortError") {
+          console.error("Fetch failed:", error);
         }
       }
     }
@@ -398,7 +408,7 @@ function DataFetchingComponent() {
 
     // Cancel on unmount
     return () => {
-      requestCancellation.cancel('fetch-data');
+      requestCancellation.cancel("fetch-data");
     };
   }, []);
 
@@ -411,8 +421,8 @@ function DataFetchingComponent() {
 ```typescript
 // Cancel all when navigating away
 function handleNavigate() {
-  requestCancellation.cancelAll('Navigation');
-  router.push('/other-page');
+  requestCancellation.cancelAll("Navigation");
+  router.push("/other-page");
 }
 ```
 
@@ -423,28 +433,32 @@ function handleNavigate() {
 ### Real-time Notifications
 
 ```typescript
-import { WebSocketManager } from '@/lib/services';
-import { useEffect, useState } from 'react';
+import { WebSocketManager } from "@/lib/services";
+import { useEffect, useState } from "react";
 
 function NotificationsComponent() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const ws = useMemo(() => new WebSocketManager({
-    url: 'wss://api.example.com/ws/notifications',
-    autoReconnect: true,
-    heartbeatInterval: 30000
-  }), []);
+  const ws = useMemo(
+    () =>
+      new WebSocketManager({
+        url: "wss://api.example.com/ws/notifications",
+        autoReconnect: true,
+        heartbeatInterval: 30000,
+      }),
+    []
+  );
 
   useEffect(() => {
     ws.connect();
 
-    ws.on('message', (data) => {
-      if (data.type === 'notification') {
-        setNotifications(prev => [data.notification, ...prev]);
+    ws.on("message", (data) => {
+      if (data.type === "notification") {
+        setNotifications((prev) => [data.notification, ...prev]);
       }
     });
 
-    ws.on('stateChange', ({ state }) => {
-      console.log('WebSocket state:', state);
+    ws.on("stateChange", ({ state }) => {
+      console.log("WebSocket state:", state);
     });
 
     return () => {
@@ -454,7 +468,7 @@ function NotificationsComponent() {
 
   return (
     <div>
-      {notifications.map(notif => (
+      {notifications.map((notif) => (
         <div key={notif.id}>{notif.message}</div>
       ))}
     </div>
@@ -467,16 +481,20 @@ function NotificationsComponent() {
 ```typescript
 function ChatRoom({ roomId }: { roomId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const ws = useMemo(() => new WebSocketManager({
-    url: `wss://api.example.com/ws/chat/${roomId}`
-  }), [roomId]);
+  const ws = useMemo(
+    () =>
+      new WebSocketManager({
+        url: `wss://api.example.com/ws/chat/${roomId}`,
+      }),
+    [roomId]
+  );
 
   useEffect(() => {
     ws.connect();
 
-    ws.on('message', (data) => {
-      if (data.type === 'message') {
-        setMessages(prev => [...prev, data.message]);
+    ws.on("message", (data) => {
+      if (data.type === "message") {
+        setMessages((prev) => [...prev, data.message]);
       }
     });
 
@@ -485,9 +503,9 @@ function ChatRoom({ roomId }: { roomId: string }) {
 
   const sendMessage = (text: string) => {
     ws.send({
-      type: 'message',
+      type: "message",
       text,
-      roomId
+      roomId,
     });
   };
 
@@ -507,10 +525,10 @@ function ChatRoom({ roomId }: { roomId: string }) {
 ### Monitor Online/Offline Status
 
 ```typescript
-import { 
-  getOfflineStatus, 
-  onOfflineStatusChange 
-} from '@/lib/api/interceptors';
+import {
+  getOfflineStatus,
+  onOfflineStatusChange,
+} from "@/lib/api/interceptors";
 
 function OfflineIndicator() {
   const [status, setStatus] = useState(getOfflineStatus());
@@ -542,7 +560,7 @@ function OfflineIndicator() {
 ### Sync on Reconnection
 
 ```typescript
-import { syncOfflineQueue } from '@/lib/api/interceptors';
+import { syncOfflineQueue } from "@/lib/api/interceptors";
 
 function SyncButton() {
   const [syncing, setSyncing] = useState(false);
@@ -551,9 +569,9 @@ function SyncButton() {
     setSyncing(true);
     try {
       await syncOfflineQueue();
-      NotificationManager.success('Sync completed');
+      NotificationManager.success("Sync completed");
     } catch (error) {
-      NotificationManager.error('Sync failed');
+      NotificationManager.error("Sync failed");
     } finally {
       setSyncing(false);
     }
@@ -561,7 +579,7 @@ function SyncButton() {
 
   return (
     <button onClick={handleSync} disabled={syncing}>
-      {syncing ? 'Syncing...' : 'Sync Now'}
+      {syncing ? "Syncing..." : "Sync Now"}
     </button>
   );
 }
@@ -574,10 +592,10 @@ function SyncButton() {
 ### Display Metrics Dashboard
 
 ```typescript
-import { 
-  getMetricsSummary, 
-  getAggregatedMetrics 
-} from '@/lib/api/interceptors';
+import {
+  getMetricsSummary,
+  getAggregatedMetrics,
+} from "@/lib/api/interceptors";
 
 function MetricsDashboard() {
   const [metrics, setMetrics] = useState(getAggregatedMetrics());
@@ -596,17 +614,17 @@ function MetricsDashboard() {
         <h3>Total Requests</h3>
         <p>{metrics.totalRequests}</p>
       </div>
-      
+
       <div className="metric-card">
         <h3>Success Rate</h3>
         <p>{(metrics.successRate * 100).toFixed(2)}%</p>
       </div>
-      
+
       <div className="metric-card">
         <h3>Avg Duration</h3>
         <p>{metrics.averageDuration.toFixed(2)}ms</p>
       </div>
-      
+
       <div className="metric-card">
         <h3>Failed Requests</h3>
         <p>{metrics.failedRequests}</p>
@@ -650,7 +668,7 @@ function EndpointPerformanceTable() {
 ### Export Metrics
 
 ```typescript
-import { MetricsCollector } from '@/lib/services';
+import { MetricsCollector } from "@/lib/services";
 
 const collector = new MetricsCollector({
   enabled: true,
@@ -658,11 +676,11 @@ const collector = new MetricsCollector({
   persist: true,
   onExport: (metrics) => {
     // Send to analytics service
-    fetch('/analytics/metrics', {
-      method: 'POST',
-      body: JSON.stringify(metrics)
+    fetch("/analytics/metrics", {
+      method: "POST",
+      body: JSON.stringify(metrics),
     });
-  }
+  },
 });
 
 // Trigger export
@@ -678,8 +696,8 @@ function handleExportMetrics() {
 ### Complete Example: Data Fetching with All Features
 
 ```typescript
-import { api } from '@/lib/api/client';
-import { requestCancellation } from '@/lib/services';
+import { api } from "@/lib/api/client";
+import { requestCancellation } from "@/lib/services";
 
 async function fetchUserDashboard(userId: string) {
   // Create cancellable request
@@ -694,34 +712,34 @@ async function fetchUserDashboard(userId: string) {
       // Retry up to 3 times on failure
       retry: {
         retries: 3,
-        exponentialBackoff: true
+        exponentialBackoff: true,
       },
 
       // Rate limit to 10 requests per second
       rateLimit: {
         maxRequests: 10,
-        timeWindow: 1000
+        timeWindow: 1000,
       },
 
       // Custom notification messages
       notification: {
-        successMessage: 'Dashboard loaded',
-        errorMessage: 'Failed to load dashboard'
+        successMessage: "Dashboard loaded",
+        errorMessage: "Failed to load dashboard",
       },
 
       // Enable metrics collection
       collectMetrics: true,
 
       // Support request cancellation
-      signal
+      signal,
     });
 
     return data;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('Request cancelled');
+    if (error.name === "AbortError") {
+      console.log("Request cancelled");
     } else {
-      console.error('Failed to fetch dashboard:', error);
+      console.error("Failed to fetch dashboard:", error);
     }
     throw error;
   }
@@ -731,9 +749,9 @@ async function fetchUserDashboard(userId: string) {
 ### Production-Ready API Hook
 
 ```typescript
-import { useEffect, useState, useCallback } from 'react';
-import { api } from '@/lib/api/client';
-import { requestCancellation } from '@/lib/services';
+import { useEffect, useState, useCallback } from "react";
+import { api } from "@/lib/api/client";
+import { requestCancellation } from "@/lib/services";
 
 interface UseApiOptions<T> {
   url: string;
@@ -759,13 +777,13 @@ function useApi<T>(options: UseApiOptions<T>) {
       const result = await api.get<T>(options.url, {
         cache: options.cache,
         retry: options.retry ? { retries: 3 } : { retries: 0 },
-        signal
+        signal,
       });
 
       setData(result);
       options.onSuccess?.(result);
     } catch (err) {
-      if (err.name !== 'AbortError') {
+      if (err.name !== "AbortError") {
         const error = err as Error;
         setError(error);
         options.onError?.(error);
@@ -792,8 +810,8 @@ function UserProfile({ userId }: { userId: string }) {
     url: `/users/${userId}`,
     cache: true,
     retry: true,
-    onSuccess: (user) => console.log('User loaded:', user.name),
-    onError: (err) => console.error('Failed:', err.message)
+    onSuccess: (user) => console.log("User loaded:", user.name),
+    onError: (err) => console.error("Failed:", err.message),
   });
 
   if (loading) return <div>Loading...</div>;
@@ -812,13 +830,13 @@ function UserProfile({ userId }: { userId: string }) {
 
 ```typescript
 useEffect(() => {
-  const signal = requestCancellation.createSignal('my-request');
-  const ws = new WebSocketManager({ url: '...' });
-  
+  const signal = requestCancellation.createSignal("my-request");
+  const ws = new WebSocketManager({ url: "..." });
+
   // ... use them ...
 
   return () => {
-    requestCancellation.cancel('my-request');
+    requestCancellation.cancel("my-request");
     ws.disconnect();
   };
 }, []);
@@ -828,17 +846,17 @@ useEffect(() => {
 
 ```typescript
 try {
-  const data = await api.get('/endpoint');
+  const data = await api.get("/endpoint");
 } catch (error) {
-  if (error.message.includes('offline')) {
+  if (error.message.includes("offline")) {
     // Queued for later
-    NotificationManager.info('Request will be sent when online');
-  } else if (error.message.includes('Rate limit')) {
+    NotificationManager.info("Request will be sent when online");
+  } else if (error.message.includes("Rate limit")) {
     // Rate limited
-    NotificationManager.warning('Too many requests, please wait');
+    NotificationManager.warning("Too many requests, please wait");
   } else {
     // Other errors
-    NotificationManager.error('Request failed');
+    NotificationManager.error("Request failed");
   }
 }
 ```
@@ -846,7 +864,7 @@ try {
 ### 3. Configure Features Based on Environment
 
 ```typescript
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = process.env.NODE_ENV === "development";
 
 setupInterceptors(axiosInstance, {
   auth: true,
@@ -854,7 +872,7 @@ setupInterceptors(axiosInstance, {
   cache: !isDevelopment, // Disable cache in development
   rateLimit: false,
   offline: true,
-  metrics: !isDevelopment // Collect metrics in production only
+  metrics: !isDevelopment, // Collect metrics in production only
 });
 ```
 
@@ -870,6 +888,7 @@ NEXT_PUBLIC_PYCELIZE_DEBUGGING=true
 ```
 
 This will log all:
+
 - Request details
 - Response details
 - Cache operations
@@ -881,26 +900,27 @@ This will log all:
 ### Common Issues
 
 **Issue**: Requests not being cached
+
 ```typescript
 // Make sure cache is enabled
-api.get('/endpoint', { cache: true })
+api.get("/endpoint", { cache: true });
 ```
 
 **Issue**: Too many retries
+
 ```typescript
 // Reduce retry count
-configureRetry({ retries: 1 })
+configureRetry({ retries: 1 });
 ```
 
 **Issue**: Rate limit errors
+
 ```typescript
 // Increase limits or enable queuing
-configureRateLimit('pattern', {
+configureRateLimit("pattern", {
   maxRequests: 100,
-  queueRequests: true
-})
+  queueRequests: true,
+});
 ```
 
 ---
-
-For more information, see the [API Client README](../lib/api/README.md).
