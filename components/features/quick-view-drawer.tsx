@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { CopyButton } from "./copy-button"
 
 interface QuickViewDrawerProps {
   file: File | null
@@ -35,10 +43,16 @@ interface ParsedData {
   rows: string[][]
 }
 
+interface SheetData {
+  name: string
+  data: ParsedData
+}
+
 export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [rowCount, setRowCount] = React.useState(10)
-  const [parsedData, setParsedData] = React.useState<ParsedData | null>(null)
+  const [sheets, setSheets] = React.useState<SheetData[]>([])
+  const [activeSheetIndex, setActiveSheetIndex] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -47,6 +61,11 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
     const extension = file.name.split('.').pop()?.toLowerCase()
     return ['csv', 'xlsx', 'xls'].includes(extension || '')
   }, [file])
+
+  const parsedData = React.useMemo(() => {
+    if (sheets.length === 0) return null
+    return sheets[activeSheetIndex]?.data || null
+  }, [sheets, activeSheetIndex])
 
   const parseFile = React.useCallback(async (file: File) => {
     setIsLoading(true)
@@ -82,59 +101,69 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
         const headers = data[0]
         const rows = data.slice(1)
         
-        setParsedData({ headers, rows })
+        setSheets([{ name: 'Sheet 1', data: { headers, rows } }])
+        setActiveSheetIndex(0)
       } else if (extension === 'xlsx' || extension === 'xls') {
         // Parse Excel using ExcelJS
         const arrayBuffer = await file.arrayBuffer()
         const workbook = new ExcelJS.Workbook()
         await workbook.xlsx.load(arrayBuffer)
         
-        // Get first worksheet
-        const worksheet = workbook.worksheets[0]
-        
-        if (!worksheet) {
+        if (workbook.worksheets.length === 0) {
           throw new Error('No worksheets found in Excel file')
         }
         
-        // Convert to array of arrays (limit to first 1000 rows)
-        const data: string[][] = []
-        let rowCount = 0
+        // Parse all worksheets
+        const allSheets: SheetData[] = []
         
-        worksheet.eachRow((row) => {
-          if (rowCount >= 1000) return
+        for (const worksheet of workbook.worksheets) {
+          // Convert to array of arrays (limit to first 1000 rows)
+          const data: string[][] = []
+          let rowCount = 0
           
-          const rowData: string[] = []
-          row.eachCell({ includeEmpty: true }, (cell) => {
-            // Convert cell value to string
-            const value = cell.value
-            if (value === null || value === undefined) {
-              rowData.push('')
-            } else if (typeof value === 'object' && 'text' in value) {
-              // Handle rich text
-              rowData.push(value.text || '')
-            } else if (value instanceof Date) {
-              rowData.push(value.toLocaleDateString())
-            } else {
-              rowData.push(String(value))
-            }
+          worksheet.eachRow((row) => {
+            if (rowCount >= 1000) return
+            
+            const rowData: string[] = []
+            row.eachCell({ includeEmpty: true }, (cell) => {
+              // Convert cell value to string
+              const value = cell.value
+              if (value === null || value === undefined) {
+                rowData.push('')
+              } else if (typeof value === 'object' && 'text' in value) {
+                // Handle rich text
+                rowData.push(value.text || '')
+              } else if (value instanceof Date) {
+                rowData.push(value.toLocaleDateString())
+              } else {
+                rowData.push(String(value))
+              }
+            })
+            
+            data.push(rowData)
+            rowCount++
           })
           
-          data.push(rowData)
-          rowCount++
-        })
+          if (data.length > 0) {
+            const headers = data[0]
+            const rows = data.slice(1)
+            allSheets.push({
+              name: worksheet.name || `Sheet ${allSheets.length + 1}`,
+              data: { headers, rows }
+            })
+          }
+        }
         
-        if (data.length === 0) {
+        if (allSheets.length === 0) {
           throw new Error('Excel file is empty')
         }
         
-        const headers = data[0]
-        const rows = data.slice(1)
-        
-        setParsedData({ headers, rows })
+        setSheets(allSheets)
+        setActiveSheetIndex(0)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse file')
-      setParsedData(null)
+      setSheets([])
     } finally {
       setIsLoading(false)
     }
@@ -180,6 +209,28 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
         
         <div className="px-4 pb-4 overflow-auto flex-1">
           <div className="mb-4 flex flex-col gap-4">
+            {/* Sheet selector for Excel files with multiple sheets */}
+            {sheets.length > 1 && (
+              <div className="flex-1">
+                <Label htmlFor="sheet-select">Select Sheet</Label>
+                <Select
+                  value={String(activeSheetIndex)}
+                  onValueChange={(value) => setActiveSheetIndex(Number(value))}
+                >
+                  <SelectTrigger id="sheet-select" className="w-full mt-2">
+                    <SelectValue placeholder="Select a sheet" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sheets.map((sheet, index) => (
+                      <SelectItem key={index} value={String(index)}>
+                        {sheet.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="row-count">Number of rows to preview</Label>
@@ -235,11 +286,16 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                       {parsedData.headers.map((header, index) => (
                         <TableHead 
                           key={index} 
-                          className="bg-background border-b"
+                          className="bg-background border-b group relative"
                           style={{ width: '150px', minWidth: '150px' }}
                         >
-                          <div className="truncate" title={header || `Column ${index + 1}`}>
-                            {header || `Column ${index + 1}`}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="truncate flex-1" title={header || `Column ${index + 1}`}>
+                              {header || `Column ${index + 1}`}
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <CopyButton text={header || `Column ${index + 1}`} />
+                            </div>
                           </div>
                         </TableHead>
                       ))}
@@ -274,10 +330,18 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                           {parsedData.headers.map((_, cellIndex) => (
                             <TableCell 
                               key={cellIndex}
+                              className="group relative"
                               style={{ width: '150px', minWidth: '150px' }}
                             >
-                              <div className="truncate" title={row[cellIndex] || ''}>
-                                {row[cellIndex] || ''}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="truncate flex-1" title={row[cellIndex] || ''}>
+                                  {row[cellIndex] || ''}
+                                </div>
+                                {row[cellIndex] && (
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <CopyButton text={row[cellIndex]} />
+                                  </div>
+                                )}
                               </div>
                             </TableCell>
                           ))}
