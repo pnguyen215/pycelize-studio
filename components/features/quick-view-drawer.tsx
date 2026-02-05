@@ -15,8 +15,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import {
   Table,
   TableBody,
@@ -151,12 +151,10 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
     return parsedData.rows.slice(0, Math.min(rowCount, parsedData.rows.length))
   }, [parsedData, rowCount])
 
-  const handleRowCountChange = (value: string) => {
-    const num = parseInt(value, 10)
-    if (!isNaN(num) && num > 0 && num <= 10000) {
+  const handleRowCountChange = (value: number[]) => {
+    const num = value[0]
+    if (num >= 1 && num <= 10000) {
       setRowCount(num)
-    } else if (value === '') {
-      setRowCount(10) // Reset to default on empty
     }
   }
 
@@ -181,21 +179,29 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
         </DrawerHeader>
         
         <div className="px-4 pb-4 overflow-auto flex-1">
-          <div className="mb-4 flex items-end gap-4">
-            <div className="flex-1 max-w-xs">
-              <Label htmlFor="row-count">Number of rows to preview</Label>
-              <Input
+          <div className="mb-4 flex flex-col gap-4">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="row-count">Number of rows to preview</Label>
+                <span className="text-sm font-medium">{rowCount}</span>
+              </div>
+              <Slider
                 id="row-count"
-                type="number"
-                min="1"
-                max="10000"
-                value={rowCount}
-                onChange={(e) => handleRowCountChange(e.target.value)}
-                className="mt-1"
+                min={1}
+                max={10000}
+                step={1}
+                value={[rowCount]}
+                onValueChange={handleRowCountChange}
+                className="w-full"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Maximum 10,000 rows
-              </p>
+              <div className="flex justify-between mt-1">
+                <p className="text-xs text-muted-foreground">
+                  1 row
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  10,000 rows
+                </p>
+              </div>
             </div>
           </div>
 
