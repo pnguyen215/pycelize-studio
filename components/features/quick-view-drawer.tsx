@@ -219,17 +219,19 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
 
           {!isLoading && !error && parsedData && (
             <div className="rounded-md border overflow-hidden">
-              <div className="max-h-[500px] overflow-auto">
+              <Table>
+                <TableHeader className="bg-background">
+                  <TableRow>
+                    {parsedData.headers.map((header, index) => (
+                      <TableHead key={index} className="sticky top-0 z-10 bg-background whitespace-nowrap border-b">
+                        {header || `Column ${index + 1}`}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+              </Table>
+              <div className="max-h-[450px] overflow-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-background border-b shadow-sm">
-                    <TableRow>
-                      {parsedData.headers.map((header, index) => (
-                        <TableHead key={index} className="whitespace-nowrap bg-background">
-                          {header || `Column ${index + 1}`}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
                   <TableBody>
                     {displayedRows.length === 0 ? (
                       <TableRow>
