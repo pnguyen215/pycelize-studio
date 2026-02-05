@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import * as XLSX from "xlsx"
+import * as ExcelJS from "exceljs"
 import Papa from "papaparse"
 import { Eye } from "lucide-react"
 import {
@@ -84,22 +84,44 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
         
         setParsedData({ headers, rows })
       } else if (extension === 'xlsx' || extension === 'xls') {
-        // Parse Excel using xlsx
+        // Parse Excel using ExcelJS
         const arrayBuffer = await file.arrayBuffer()
-        const workbook = XLSX.read(arrayBuffer, { 
-          type: 'array',
-          sheetRows: 1000, // Limit rows read for performance and security
+        const workbook = new ExcelJS.Workbook()
+        await workbook.xlsx.load(arrayBuffer)
+        
+        // Get first worksheet
+        const worksheet = workbook.worksheets[0]
+        
+        if (!worksheet) {
+          throw new Error('No worksheets found in Excel file')
+        }
+        
+        // Convert to array of arrays (limit to first 1000 rows)
+        const data: string[][] = []
+        let rowCount = 0
+        
+        worksheet.eachRow((row) => {
+          if (rowCount >= 1000) return
+          
+          const rowData: string[] = []
+          row.eachCell({ includeEmpty: true }, (cell) => {
+            // Convert cell value to string
+            const value = cell.value
+            if (value === null || value === undefined) {
+              rowData.push('')
+            } else if (typeof value === 'object' && 'text' in value) {
+              // Handle rich text
+              rowData.push(value.text || '')
+            } else if (value instanceof Date) {
+              rowData.push(value.toLocaleDateString())
+            } else {
+              rowData.push(String(value))
+            }
+          })
+          
+          data.push(rowData)
+          rowCount++
         })
-        
-        // Get first sheet
-        const firstSheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[firstSheetName]
-        
-        // Convert to array of arrays
-        const data = XLSX.utils.sheet_to_json(worksheet, { 
-          header: 1,
-          defval: '',
-        }) as string[][]
         
         if (data.length === 0) {
           throw new Error('Excel file is empty')
