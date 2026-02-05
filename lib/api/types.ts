@@ -1,3 +1,37 @@
+import { AxiosRequestConfig } from 'axios';
+
+// Request Configuration
+/**
+ * Extended Axios request configuration with notification control.
+ * Allows fine-grained control over notification behavior per API call.
+ */
+export interface ApiRequestConfig extends AxiosRequestConfig {
+  /**
+   * Configuration for notification behavior on this specific request.
+   * 
+   * @default { enabled: true }
+   */
+  notification?: {
+    /**
+     * Whether to show notifications for this request.
+     * When false, success and error toasts will be suppressed.
+     * 
+     * @default true
+     */
+    enabled?: boolean;
+
+    /**
+     * Custom success message to display instead of API response message.
+     */
+    successMessage?: string;
+
+    /**
+     * Custom error message to display instead of API error message.
+     */
+    errorMessage?: string;
+  };
+}
+
 // Base API Response
 export interface StandardResponse<T> {
   data: T;
