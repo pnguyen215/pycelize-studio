@@ -1,11 +1,14 @@
 import { AxiosRequestConfig } from 'axios';
+import type { RetryConfig } from './interceptors/retry.interceptor';
+import type { CacheInterceptorConfig } from './interceptors/cache.interceptor';
+import type { RateLimitInterceptorConfig } from './interceptors/rate-limit.interceptor';
 
 // Request Configuration
 /**
- * Extended Axios request configuration with notification control.
- * Allows fine-grained control over notification behavior per API call.
+ * Extended Axios request configuration with advanced features.
+ * Includes support for notifications, retry, caching, and rate limiting.
  */
-export interface ApiRequestConfig extends AxiosRequestConfig {
+export interface ApiRequestConfig extends AxiosRequestConfig, CacheInterceptorConfig, RateLimitInterceptorConfig {
   /**
    * Configuration for notification behavior on this specific request.
    * 
@@ -30,6 +33,17 @@ export interface ApiRequestConfig extends AxiosRequestConfig {
      */
     errorMessage?: string;
   };
+
+  /**
+   * Retry configuration for this request.
+   * Enables automatic retry with exponential backoff on failures.
+   */
+  retry?: RetryConfig;
+
+  /**
+   * AbortSignal for request cancellation support
+   */
+  signal?: AbortSignal;
 }
 
 // Base API Response
