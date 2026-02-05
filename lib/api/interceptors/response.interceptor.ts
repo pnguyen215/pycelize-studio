@@ -36,7 +36,7 @@ import type { ApiRequestConfig } from '../types';
  * - Custom success messages can be provided via `config.notification.successMessage`
  * 
  * @param {AxiosResponse} response - The Axios response object
- * @returns {unknown} The extracted response data (typically response.data)
+ * @returns {AxiosResponse['data']} The extracted response data (typically response.data)
  * 
  * @example
  * // Automatic success notification
@@ -54,7 +54,7 @@ import type { ApiRequestConfig } from '../types';
  *   notification: { successMessage: 'File uploaded successfully!' }
  * });
  */
-export function responseInterceptor(response: AxiosResponse): unknown {
+export function responseInterceptor(response: AxiosResponse): AxiosResponse['data'] | Promise<AxiosResponse['data']> {
   // Extract request configuration with notification settings
   const config = response.config as InternalAxiosRequestConfig & ApiRequestConfig;
 

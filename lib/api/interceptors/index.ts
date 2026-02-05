@@ -35,8 +35,12 @@ export function setupInterceptors(instance: AxiosInstance): AxiosInstance {
   // Register request interceptors
   instance.interceptors.request.use(requestInterceptor, requestErrorHandler);
 
-  // Register response interceptors
-  instance.interceptors.response.use(responseInterceptor, errorInterceptor);
+  // Register response interceptors with proper typing
+  // The responseInterceptor extracts response.data, so we cast accordingly
+  instance.interceptors.response.use(
+    responseInterceptor as Parameters<typeof instance.interceptors.response.use>[0],
+    errorInterceptor
+  );
 
   return instance;
 }
