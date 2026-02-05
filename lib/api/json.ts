@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { api } from "./client";
 import type {
   StandardResponse,
   DownloadUrlResponse,
@@ -7,13 +7,17 @@ import type {
 } from "./types";
 
 export const jsonApi = {
-  // Generate standard JSON mapping - returns download URL
+  /**
+   * Generate standard JSON mapping
+   * @param request - The request object
+   * @returns Download URL
+   */
   generateJSON: async (
     request: JSONGenerationRequest
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
-    form.append("file", request.file);
 
+    form.append("file", request.file);
     if (request.columns) {
       form.append("columns", JSON.stringify(request.columns));
     }
@@ -33,22 +37,29 @@ export const jsonApi = {
       form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate", form);
+    return api.post("/json/generate", form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
-  // Generate JSON using template - returns download URL
+  /**
+   * Generate JSON using template
+   * @param request - The request object
+   * @returns Download URL
+   */
   generateTemplateJSON: async (
     request: JSONTemplateRequest
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
-    form.append("file", request.file);
-
     const template =
       typeof request.template === "object"
         ? JSON.stringify(request.template)
         : request.template;
-    form.append("template", template);
 
+    form.append("file", request.file);
+    form.append("template", template);
     if (request.columnMapping) {
       form.append("column_mapping", JSON.stringify(request.columnMapping));
     }
@@ -62,6 +73,10 @@ export const jsonApi = {
       form.append("output_filename", request.outputFilename);
     }
 
-    return apiClient.post("/json/generate-with-template", form);
+    return api.post("/json/generate-with-template", form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 };
