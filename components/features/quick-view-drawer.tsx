@@ -229,12 +229,18 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                   }
                 }}
               >
-                <Table>
+                <Table className="table-fixed" style={{ minWidth: `${parsedData.headers.length * 150}px` }}>
                   <TableHeader className="bg-background">
                     <TableRow>
                       {parsedData.headers.map((header, index) => (
-                        <TableHead key={index} className="bg-background whitespace-nowrap border-b">
-                          {header || `Column ${index + 1}`}
+                        <TableHead 
+                          key={index} 
+                          className="bg-background border-b"
+                          style={{ width: '150px', minWidth: '150px' }}
+                        >
+                          <div className="truncate" title={header || `Column ${index + 1}`}>
+                            {header || `Column ${index + 1}`}
+                          </div>
                         </TableHead>
                       ))}
                     </TableRow>
@@ -251,7 +257,7 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                   }
                 }}
               >
-                <Table>
+                <Table className="table-fixed" style={{ minWidth: `${parsedData.headers.length * 150}px` }}>
                   <TableBody>
                     {displayedRows.length === 0 ? (
                       <TableRow>
@@ -266,8 +272,13 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                       displayedRows.map((row, rowIndex) => (
                         <TableRow key={rowIndex}>
                           {parsedData.headers.map((_, cellIndex) => (
-                            <TableCell key={cellIndex} className="whitespace-nowrap">
-                              {row[cellIndex] || ''}
+                            <TableCell 
+                              key={cellIndex}
+                              style={{ width: '150px', minWidth: '150px' }}
+                            >
+                              <div className="truncate" title={row[cellIndex] || ''}>
+                                {row[cellIndex] || ''}
+                              </div>
                             </TableCell>
                           ))}
                         </TableRow>
