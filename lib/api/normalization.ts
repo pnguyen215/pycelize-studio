@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { api } from "./client";
 import type {
   StandardResponse,
   DownloadUrlResponse,
@@ -7,21 +7,38 @@ import type {
 } from "./types";
 
 export const normalizationApi = {
-  // Get available normalization types
+  /**
+   * Get available normalization types
+   * @returns Normalization types
+   */
   getTypes: async (): Promise<StandardResponse<NormalizationTypesResponse>> => {
-    return apiClient.get("/normalization/types");
+    return api.get("/normalization/types", {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
-  // Apply normalizations to file - returns download URL
+  /**
+   * Apply normalizations to file
+   * @param request - The request object
+   * @returns Download URL
+   */
   normalize: async (
     request: NormalizationRequest
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
+
     form.append("file", request.file);
     form.append("normalizations", request.normalizations); // Already JSON string
     if (request.outputFilename) {
       form.append("output_filename", request.outputFilename);
     }
-    return apiClient.post("/normalization/apply", form);
+
+    return api.post("/normalization/apply", form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 };
