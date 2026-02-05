@@ -9,11 +9,15 @@ import type {
 export const normalizationApi = {
   /**
    * Get available normalization types
+   * @param options - The options object
+   * @param options.notify - Whether to show notifications
    * @returns Normalization types
    */
-  getTypes: async (): Promise<StandardResponse<NormalizationTypesResponse>> => {
+  getTypes: async (
+    options: { notify?: boolean } = { notify: true }
+  ): Promise<StandardResponse<NormalizationTypesResponse>> => {
     return api.get("/normalization/types", {
-      notification: { enabled: true },
+      notification: { enabled: options.notify },
       retry: { retries: 2 },
       rateLimit: { maxRequests: 10, timeWindow: 1000 },
     });

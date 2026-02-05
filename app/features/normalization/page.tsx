@@ -56,7 +56,7 @@ export default function NormalizationPage() {
   useEffect(() => {
     const fetchTypes = async () => {
       try {
-        const response = await normalizationApi.getTypes();
+        const response = await normalizationApi.getTypes({ notify: false });
         if (response.data) {
           setNormalizationTypes(response.data);
         }
