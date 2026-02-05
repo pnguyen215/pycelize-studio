@@ -54,7 +54,7 @@ import type { ApiRequestConfig } from '../types';
  *   notification: { successMessage: 'File uploaded successfully!' }
  * });
  */
-export function responseInterceptor(response: AxiosResponse): AxiosResponse['data'] | Promise<AxiosResponse['data']> {
+export function responseInterceptor(response: AxiosResponse): AxiosResponse['data'] {
   // Extract request configuration with notification settings
   const config = response.config as InternalAxiosRequestConfig & ApiRequestConfig;
 

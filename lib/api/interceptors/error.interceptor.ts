@@ -98,6 +98,7 @@ export function errorInterceptor(error: unknown): Promise<never> {
   }
 
   // Extract request configuration with notification settings
+  // Safely cast to our extended type, ensuring we handle undefined config
   const config = error.config as (InternalAxiosRequestConfig & ApiRequestConfig) | undefined;
 
   // Debug logging for development and troubleshooting
@@ -107,6 +108,7 @@ export function errorInterceptor(error: unknown): Promise<never> {
       statusText: error.response?.statusText,
       data: error.response?.data,
       message: error.message,
+      config: config ? 'present' : 'undefined',
     });
   }
 
@@ -122,6 +124,7 @@ export function errorInterceptor(error: unknown): Promise<never> {
 
   // Handle error notifications
   // Notifications are enabled by default unless explicitly disabled
+  // Using optional chaining to safely access nested properties
   const notificationEnabled = config?.notification?.enabled !== false;
 
   if (notificationEnabled) {
