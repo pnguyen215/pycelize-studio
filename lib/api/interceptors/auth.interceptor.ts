@@ -1,17 +1,17 @@
 /**
  * Authentication Interceptor
- * 
+ *
  * This module handles authentication for all API requests, including:
  * - JWT token attachment to requests
  * - Token refresh on expiration
  * - Authentication state management
  * - Token storage and retrieval
- * 
+ *
  * @module lib/api/interceptors/auth.interceptor
  */
 
-import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { EEnv } from '@/configs/env';
+import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import { EEnv } from "@/configs/env";
 
 /**
  * Authentication configuration interface
@@ -57,12 +57,12 @@ export interface AuthConfig {
  * Default authentication configuration
  */
 const defaultAuthConfig: Required<AuthConfig> = {
-  token: '',
-  tokenType: 'Bearer',
-  storageKey: 'auth_token',
-  refreshTokenKey: 'refresh_token',
+  token: "",
+  tokenType: "Bearer",
+  storageKey: "auth_token",
+  refreshTokenKey: "refresh_token",
   autoRefresh: true,
-  refreshEndpoint: '/auth/refresh',
+  refreshEndpoint: "/auth/refresh",
 };
 
 /**
@@ -85,7 +85,7 @@ let failedQueue: Array<{
 
 /**
  * Processes the queue of failed requests after token refresh
- * 
+ *
  * @param {Error | null} error - Error if refresh failed, null if successful
  * @param {string | null} token - New token if refresh successful
  */
@@ -103,42 +103,42 @@ function processQueue(error: Error | null, token: string | null = null): void {
 
 /**
  * Retrieves the authentication token from storage
- * 
+ *
  * @returns {string | null} The stored token or null if not found
  */
 export function getStoredToken(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   return localStorage.getItem(currentAuthConfig.storageKey);
 }
 
 /**
  * Stores the authentication token
- * 
+ *
  * @param {string} token - The token to store
  */
 export function setStoredToken(token: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(currentAuthConfig.storageKey, token);
   currentAuthConfig.token = token;
 }
 
 /**
  * Retrieves the refresh token from storage
- * 
+ *
  * @returns {string | null} The stored refresh token or null if not found
  */
 export function getStoredRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   return localStorage.getItem(currentAuthConfig.refreshTokenKey);
 }
 
 /**
  * Stores the refresh token
- * 
+ *
  * @param {string} token - The refresh token to store
  */
 export function setStoredRefreshToken(token: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(currentAuthConfig.refreshTokenKey, token);
 }
 
@@ -146,15 +146,15 @@ export function setStoredRefreshToken(token: string): void {
  * Removes authentication tokens from storage
  */
 export function clearAuthTokens(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.removeItem(currentAuthConfig.storageKey);
   localStorage.removeItem(currentAuthConfig.refreshTokenKey);
-  currentAuthConfig.token = '';
+  currentAuthConfig.token = "";
 }
 
 /**
  * Configures the authentication interceptor
- * 
+ *
  * @param {Partial<AuthConfig>} config - Authentication configuration options
  */
 export function configureAuth(config: Partial<AuthConfig>): void {
@@ -174,15 +174,15 @@ export function configureAuth(config: Partial<AuthConfig>): void {
 
 /**
  * Refreshes the authentication token
- * 
+ *
  * @returns {Promise<string>} Promise resolving to the new token
  * @throws {Error} If token refresh fails
  */
 async function refreshAuthToken(): Promise<string> {
   const refreshToken = getStoredRefreshToken();
-  
+
   if (!refreshToken) {
-    throw new Error('No refresh token available');
+    throw new Error("No refresh token available");
   }
 
   try {
@@ -190,23 +190,23 @@ async function refreshAuthToken(): Promise<string> {
     const response = await fetch(
       `${EEnv.NEXT_PUBLIC_PYCELIZE_API_URL}${currentAuthConfig.refreshEndpoint}`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
       }
     );
 
     if (!response.ok) {
-      throw new Error('Token refresh failed');
+      throw new Error("Token refresh failed");
     }
 
     const data = await response.json();
     const newToken = data.access_token || data.token;
 
     if (!newToken) {
-      throw new Error('No token in refresh response');
+      throw new Error("No token in refresh response");
     }
 
     // Store the new token
@@ -226,9 +226,9 @@ async function refreshAuthToken(): Promise<string> {
 
 /**
  * Authentication Request Interceptor
- * 
+ *
  * Attaches the authentication token to outgoing requests.
- * 
+ *
  * @param {InternalAxiosRequestConfig} config - The Axios request configuration
  * @returns {InternalAxiosRequestConfig} The modified request configuration
  */
@@ -245,7 +245,7 @@ export function authRequestInterceptor(
 
   // Debug logging
   if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-    console.debug('🔐 Auth Request:', {
+    console.debug("🔐 Auth Request:", {
       url: config.url,
       hasAuth: !!token,
       tokenType: currentAuthConfig.tokenType,
@@ -257,10 +257,10 @@ export function authRequestInterceptor(
 
 /**
  * Authentication Response Interceptor Error Handler
- * 
+ *
  * Handles 401 Unauthorized responses by attempting to refresh the token
  * and retrying the original request.
- * 
+ *
  * @param {AxiosError} error - The Axios error
  * @returns {Promise<AxiosResponse>} Promise resolving to the retried response
  * @throws {Error} If token refresh fails or auto-refresh is disabled
@@ -268,7 +268,9 @@ export function authRequestInterceptor(
 export async function authResponseErrorInterceptor(
   error: AxiosError
 ): Promise<AxiosResponse> {
-  const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  const originalRequest = error.config as InternalAxiosRequestConfig & {
+    _retry?: boolean;
+  };
 
   // Only handle 401 errors with auto-refresh enabled
   if (
@@ -286,7 +288,9 @@ export async function authResponseErrorInterceptor(
             originalRequest.headers.Authorization = `${currentAuthConfig.tokenType} ${token}`;
           }
           // Import axios to retry the request
-          return import('axios').then((axios) => axios.default.request(originalRequest));
+          return import("axios").then((axios) =>
+            axios.default.request(originalRequest)
+          );
         })
         .catch((err) => Promise.reject(err));
     }
@@ -304,7 +308,7 @@ export async function authResponseErrorInterceptor(
       }
 
       // Import axios to retry the request
-      const axios = await import('axios');
+      const axios = await import("axios");
       return axios.default.request(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError as Error, null);
@@ -320,7 +324,7 @@ export async function authResponseErrorInterceptor(
 
 /**
  * Checks if the user is currently authenticated
- * 
+ *
  * @returns {boolean} True if a token is available
  */
 export function isAuthenticated(): boolean {

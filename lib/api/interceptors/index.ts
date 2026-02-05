@@ -1,32 +1,32 @@
 /**
  * Interceptors Index
- * 
+ *
  * This module provides a centralized export point for all Axios interceptors.
  * It also includes utility functions to register interceptors on an Axios instance.
- * 
+ *
  * @module lib/api/interceptors
  */
 
 // Core interceptors
-export { requestInterceptor, requestErrorHandler } from './request.interceptor';
-export { responseInterceptor } from './response.interceptor';
-export { errorInterceptor } from './error.interceptor';
+export { requestInterceptor, requestErrorHandler } from "./request.interceptor";
+export { responseInterceptor } from "./response.interceptor";
+export { errorInterceptor } from "./error.interceptor";
 
 // Advanced feature interceptors
-export { 
-  authRequestInterceptor, 
+export {
+  authRequestInterceptor,
   authResponseErrorInterceptor,
   configureAuth,
   setStoredToken,
   clearAuthTokens,
   isAuthenticated,
-} from './auth.interceptor';
+} from "./auth.interceptor";
 
-export { 
+export {
   retryInterceptor,
   configureRetry,
   isRetryableError,
-} from './retry.interceptor';
+} from "./retry.interceptor";
 
 export {
   cacheRequestInterceptor,
@@ -34,12 +34,12 @@ export {
   invalidateCache,
   clearAllCache,
   getCacheStats,
-} from './cache.interceptor';
+} from "./cache.interceptor";
 
 export {
   rateLimitInterceptor,
   getRateLimitStatus,
-} from './rate-limit.interceptor';
+} from "./rate-limit.interceptor";
 
 export {
   offlineRequestInterceptor,
@@ -49,7 +49,7 @@ export {
   clearOfflineQueue,
   onOfflineStatusChange,
   offOfflineStatusChange,
-} from './offline.interceptor';
+} from "./offline.interceptor";
 
 export {
   metricsRequestInterceptor,
@@ -58,18 +58,31 @@ export {
   getMetricsSummary,
   getAggregatedMetrics,
   clearMetrics,
-} from './metrics.interceptor';
+} from "./metrics.interceptor";
 
-import { AxiosInstance } from 'axios';
-import { requestInterceptor, requestErrorHandler } from './request.interceptor';
-import { responseInterceptor } from './response.interceptor';
-import { errorInterceptor } from './error.interceptor';
-import { authRequestInterceptor, authResponseErrorInterceptor } from './auth.interceptor';
-import { retryInterceptor } from './retry.interceptor';
-import { cacheRequestInterceptor, cacheResponseInterceptor } from './cache.interceptor';
-import { rateLimitInterceptor } from './rate-limit.interceptor';
-import { offlineRequestInterceptor, offlineErrorInterceptor } from './offline.interceptor';
-import { metricsRequestInterceptor, metricsResponseInterceptor, metricsErrorInterceptor } from './metrics.interceptor';
+import { AxiosInstance } from "axios";
+import { requestInterceptor, requestErrorHandler } from "./request.interceptor";
+import { responseInterceptor } from "./response.interceptor";
+import { errorInterceptor } from "./error.interceptor";
+import {
+  authRequestInterceptor,
+  authResponseErrorInterceptor,
+} from "./auth.interceptor";
+import { retryInterceptor } from "./retry.interceptor";
+import {
+  cacheRequestInterceptor,
+  cacheResponseInterceptor,
+} from "./cache.interceptor";
+import { rateLimitInterceptor } from "./rate-limit.interceptor";
+import {
+  offlineRequestInterceptor,
+  offlineErrorInterceptor,
+} from "./offline.interceptor";
+import {
+  metricsRequestInterceptor,
+  metricsResponseInterceptor,
+  metricsErrorInterceptor,
+} from "./metrics.interceptor";
 
 /**
  * Interceptor setup options
@@ -115,7 +128,7 @@ export interface InterceptorOptions {
 /**
  * Registers core interceptors on the provided Axios instance.
  * This includes basic request/response handling, errors, and notifications.
- * 
+ *
  * @param {AxiosInstance} instance - The Axios instance to configure
  * @returns {AxiosInstance} The configured Axios instance (for chaining)
  */
@@ -125,7 +138,9 @@ export function setupCoreInterceptors(instance: AxiosInstance): AxiosInstance {
 
   // Register response interceptors with proper typing
   instance.interceptors.response.use(
-    responseInterceptor as Parameters<typeof instance.interceptors.response.use>[0],
+    responseInterceptor as Parameters<
+      typeof instance.interceptors.response.use
+    >[0],
     errorInterceptor
   );
 
@@ -135,15 +150,15 @@ export function setupCoreInterceptors(instance: AxiosInstance): AxiosInstance {
 /**
  * Registers all interceptors on the provided Axios instance with full feature set.
  * This includes authentication, retry, caching, rate limiting, offline support, and metrics.
- * 
+ *
  * @param {AxiosInstance} instance - The Axios instance to configure
  * @param {InterceptorOptions} options - Options to enable/disable specific interceptors
  * @returns {AxiosInstance} The configured Axios instance (for chaining)
- * 
+ *
  * @example
  * import { axiosInstance } from './axios-instance';
  * import { setupInterceptors } from './interceptors';
- * 
+ *
  * // Setup with all features enabled
  * const client = setupInterceptors(axiosInstance, {
  *   auth: true,
@@ -170,7 +185,7 @@ export function setupInterceptors(
 
   // Request interceptors (order matters - first registered executes last)
   // The order should be: metrics -> auth -> rate limit -> offline -> cache -> core request
-  
+
   if (opts.metrics) {
     instance.interceptors.request.use(metricsRequestInterceptor);
   }
@@ -188,7 +203,11 @@ export function setupInterceptors(
   }
 
   if (opts.cache) {
-    instance.interceptors.request.use(cacheRequestInterceptor as Parameters<typeof instance.interceptors.request.use>[0]);
+    instance.interceptors.request.use(
+      cacheRequestInterceptor as Parameters<
+        typeof instance.interceptors.request.use
+      >[0]
+    );
   }
 
   // Core request interceptor (always enabled)
@@ -196,10 +215,12 @@ export function setupInterceptors(
 
   // Response interceptors (order matters - first registered executes first)
   // The order should be: core response -> cache -> metrics
-  
+
   // Core response interceptor (always enabled)
   instance.interceptors.response.use(
-    responseInterceptor as Parameters<typeof instance.interceptors.response.use>[0],
+    responseInterceptor as Parameters<
+      typeof instance.interceptors.response.use
+    >[0],
     errorInterceptor
   );
 
@@ -208,12 +229,15 @@ export function setupInterceptors(
   }
 
   if (opts.metrics) {
-    instance.interceptors.response.use(metricsResponseInterceptor, metricsErrorInterceptor);
+    instance.interceptors.response.use(
+      metricsResponseInterceptor,
+      metricsErrorInterceptor
+    );
   }
 
   // Error interceptors (handle errors in specific order)
   // The order should be: auth refresh -> retry -> offline -> metrics
-  
+
   if (opts.auth) {
     instance.interceptors.response.use(undefined, authResponseErrorInterceptor);
   }
@@ -228,4 +252,3 @@ export function setupInterceptors(
 
   return instance;
 }
-

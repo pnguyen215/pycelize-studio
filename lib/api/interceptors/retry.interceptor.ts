@@ -1,16 +1,16 @@
 /**
  * Retry Interceptor
- * 
+ *
  * This module provides automatic retry logic for failed requests with:
  * - Exponential backoff strategy
  * - Configurable retry conditions
  * - Customizable retry policies per request
- * 
+ *
  * @module lib/api/interceptors/retry.interceptor
  */
 
-import { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { EEnv } from '@/configs/env';
+import { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { EEnv } from "@/configs/env";
 
 /**
  * Retry configuration interface
@@ -55,7 +55,8 @@ export interface RetryConfig {
 /**
  * Default retry configuration
  */
-const defaultRetryConfig: Required<Omit<RetryConfig, 'onRetry'>> & Pick<RetryConfig, 'onRetry'> = {
+const defaultRetryConfig: Required<Omit<RetryConfig, "onRetry">> &
+  Pick<RetryConfig, "onRetry"> = {
   retries: 3,
   retryDelay: 1000,
   exponentialBackoff: true,
@@ -63,7 +64,7 @@ const defaultRetryConfig: Required<Omit<RetryConfig, 'onRetry'>> & Pick<RetryCon
   retryCondition: (error: AxiosError) => {
     // Retry on network errors or specific HTTP status codes
     const retryStatusCodes = [408, 429, 500, 502, 503, 504];
-    
+
     return (
       !error.response || // Network error
       retryStatusCodes.includes(error.response.status)
@@ -79,7 +80,7 @@ let globalRetryConfig = { ...defaultRetryConfig };
 
 /**
  * Configures global retry behavior
- * 
+ *
  * @param {Partial<RetryConfig>} config - Retry configuration options
  */
 export function configureRetry(config: Partial<RetryConfig>): void {
@@ -91,29 +92,32 @@ export function configureRetry(config: Partial<RetryConfig>): void {
 
 /**
  * Calculates the delay before the next retry attempt
- * 
+ *
  * @param {number} retryCount - Current retry attempt number (0-based)
  * @param {RetryConfig} config - Retry configuration
  * @returns {number} Delay in milliseconds
  */
-function calculateRetryDelay(retryCount: number, config: Required<Omit<RetryConfig, 'onRetry'>>): number {
+function calculateRetryDelay(
+  retryCount: number,
+  config: Required<Omit<RetryConfig, "onRetry">>
+): number {
   if (!config.exponentialBackoff) {
     return config.retryDelay;
   }
 
   // Exponential backoff: delay * (2 ^ retryCount) with jitter
   const exponentialDelay = config.retryDelay * Math.pow(2, retryCount);
-  
+
   // Add jitter to prevent thundering herd problem
   const jitter = Math.random() * 0.3 * exponentialDelay;
-  
+
   // Cap at max delay
   return Math.min(exponentialDelay + jitter, config.maxRetryDelay);
 }
 
 /**
  * Delays execution for the specified duration
- * 
+ *
  * @param {number} ms - Delay in milliseconds
  * @returns {Promise<void>} Promise that resolves after the delay
  */
@@ -123,14 +127,14 @@ function delay(ms: number): Promise<void> {
 
 /**
  * Retry Error Interceptor
- * 
+ *
  * Automatically retries failed requests based on configured conditions
  * and retry policies.
- * 
+ *
  * @param {AxiosError} error - The Axios error from the failed request
  * @returns {Promise<unknown>} Promise resolving to the retry attempt
  * @throws {AxiosError} If all retry attempts are exhausted
- * 
+ *
  * @example
  * // Automatic retry on network errors and 5xx status codes
  * try {
@@ -138,7 +142,7 @@ function delay(ms: number): Promise<void> {
  * } catch (error) {
  *   // Retries exhausted
  * }
- * 
+ *
  * @example
  * // Custom retry configuration per request
  * const data = await api.get('/endpoint', {
@@ -187,7 +191,7 @@ export async function retryInterceptor(error: AxiosError): Promise<unknown> {
 
   // Debug logging
   if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-    console.debug('🔄 Retrying request:', {
+    console.debug("🔄 Retrying request:", {
       url: config.url,
       attempt: config._retryCount,
       maxRetries: retryConfig.retries,
@@ -205,13 +209,13 @@ export async function retryInterceptor(error: AxiosError): Promise<unknown> {
   await delay(retryDelay);
 
   // Retry the request
-  const axios = await import('axios');
+  const axios = await import("axios");
   return axios.default.request(config);
 }
 
 /**
  * Checks if an error is retryable based on default conditions
- * 
+ *
  * @param {AxiosError} error - The error to check
  * @returns {boolean} True if the error is retryable
  */
@@ -221,10 +225,12 @@ export function isRetryableError(error: AxiosError): boolean {
 
 /**
  * Gets the current retry count for a request config
- * 
+ *
  * @param {InternalAxiosRequestConfig} config - The request configuration
  * @returns {number} Current retry count
  */
-export function getRetryCount(config: InternalAxiosRequestConfig & { _retryCount?: number }): number {
+export function getRetryCount(
+  config: InternalAxiosRequestConfig & { _retryCount?: number }
+): number {
   return config._retryCount || 0;
 }

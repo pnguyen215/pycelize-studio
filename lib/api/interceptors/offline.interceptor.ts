@@ -1,15 +1,18 @@
 /**
  * Offline Interceptor
- * 
+ *
  * This module handles offline scenarios by queuing requests and
  * syncing when connection is restored.
- * 
+ *
  * @module lib/api/interceptors/offline.interceptor
  */
 
-import { InternalAxiosRequestConfig, AxiosError } from 'axios';
-import { defaultOfflineManager, OfflineManager } from '@/lib/services/offline-manager';
-import { EEnv } from '@/configs/env';
+import { InternalAxiosRequestConfig, AxiosError } from "axios";
+import {
+  defaultOfflineManager,
+  OfflineManager,
+} from "@/lib/services/offline-manager";
+import { EEnv } from "@/configs/env";
 
 /**
  * Offline interceptor configuration
@@ -29,7 +32,7 @@ let offlineManager: OfflineManager = defaultOfflineManager;
 
 /**
  * Configures the offline interceptor with a custom manager
- * 
+ *
  * @param manager - Custom offline manager instance
  */
 export function configureOfflineManager(manager: OfflineManager): void {
@@ -38,11 +41,13 @@ export function configureOfflineManager(manager: OfflineManager): void {
 
 /**
  * Checks if request should be queued when offline
- * 
+ *
  * @param config - Request configuration
  * @returns True if request should be queued
  */
-function shouldQueueRequest(config: InternalAxiosRequestConfig & OfflineInterceptorConfig): boolean {
+function shouldQueueRequest(
+  config: InternalAxiosRequestConfig & OfflineInterceptorConfig
+): boolean {
   // Check explicit configuration
   if (config.queueWhenOffline !== undefined) {
     return config.queueWhenOffline;
@@ -50,14 +55,19 @@ function shouldQueueRequest(config: InternalAxiosRequestConfig & OfflineIntercep
 
   // By default, queue mutations but not reads
   const method = config.method?.toUpperCase();
-  return method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH';
+  return (
+    method === "POST" ||
+    method === "PUT" ||
+    method === "DELETE" ||
+    method === "PATCH"
+  );
 }
 
 /**
  * Offline Request Interceptor
- * 
+ *
  * Queues requests when offline if configured to do so.
- * 
+ *
  * @param config - Axios request configuration
  * @returns Request configuration or throws error if offline
  * @throws Error if offline and request cannot be queued
@@ -69,7 +79,7 @@ export async function offlineRequestInterceptor(
 
   if (!isOnline) {
     if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-      console.debug('📡 Offline detected:', {
+      console.debug("🌐 Offline detected:", {
         url: config.url,
         method: config.method,
       });
@@ -77,24 +87,24 @@ export async function offlineRequestInterceptor(
 
     if (shouldQueueRequest(config)) {
       const queued = offlineManager.enqueue(config);
-      
+
       if (queued) {
         if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-          console.debug('📡 Request queued for offline:', {
+          console.debug("🌐 Request queued for offline:", {
             url: config.url,
             queueSize: offlineManager.getQueueSize(),
           });
         }
 
         // Throw a special error to indicate request was queued
-        const error = new Error('Request queued for offline sync');
+        const error = new Error("Request queued for offline sync");
         (error as Error & { isOfflineQueue?: boolean }).isOfflineQueue = true;
         throw error;
       } else {
-        throw new Error('Failed to queue offline request');
+        throw new Error("Failed to queue offline request");
       }
     } else {
-      throw new Error('Network unavailable');
+      throw new Error("Network unavailable");
     }
   }
 
@@ -103,34 +113,38 @@ export async function offlineRequestInterceptor(
 
 /**
  * Offline Error Interceptor
- * 
+ *
  * Handles network errors by potentially queuing the request.
- * 
+ *
  * @param error - Axios error
  * @returns Rejected promise
  */
 export async function offlineErrorInterceptor(
   error: AxiosError
 ): Promise<never> {
-  const config = error.config as (InternalAxiosRequestConfig & OfflineInterceptorConfig) | undefined;
+  const config = error.config as
+    | (InternalAxiosRequestConfig & OfflineInterceptorConfig)
+    | undefined;
 
   // Check if this is a network error
-  const isNetworkError = !error.response && error.message.includes('Network Error');
+  const isNetworkError =
+    !error.response && error.message.includes("Network Error");
 
   if (isNetworkError && config && shouldQueueRequest(config)) {
     const queued = offlineManager.enqueue(config);
 
     if (queued) {
       if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-        console.debug('📡 Network error - request queued:', {
+        console.debug("🌐 Network error - request queued:", {
           url: config.url,
           queueSize: offlineManager.getQueueSize(),
         });
       }
 
       // Return a special error indicating the request was queued
-      const queuedError = new Error('Request queued due to network error');
-      (queuedError as Error & { isOfflineQueue?: boolean }).isOfflineQueue = true;
+      const queuedError = new Error("Request queued due to network error");
+      (queuedError as Error & { isOfflineQueue?: boolean }).isOfflineQueue =
+        true;
       return Promise.reject(queuedError);
     }
   }
@@ -168,13 +182,17 @@ export function clearOfflineQueue(): void {
 /**
  * Registers a listener for online status changes
  */
-export function onOfflineStatusChange(listener: (isOnline: boolean) => void): void {
+export function onOfflineStatusChange(
+  listener: (isOnline: boolean) => void
+): void {
   offlineManager.onStatusChange(listener);
 }
 
 /**
- * Unregisters a listener
+ * Unregister a listener for offline status changes
  */
-export function offOfflineStatusChange(listener: (isOnline: boolean) => void): void {
+export function offOfflineStatusChange(
+  listener: (isOnline: boolean) => void
+): void {
   offlineManager.offStatusChange(listener);
 }

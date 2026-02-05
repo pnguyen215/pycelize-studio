@@ -1,14 +1,18 @@
 /**
  * Metrics Interceptor
- * 
+ *
  * This module tracks request metrics for monitoring and analytics.
- * 
+ *
  * @module lib/api/interceptors/metrics.interceptor
  */
 
-import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { defaultMetricsCollector, MetricsCollector, RequestMetrics } from '@/lib/services/metrics-collector';
-import { EEnv } from '@/configs/env';
+import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import {
+  defaultMetricsCollector,
+  MetricsCollector,
+  RequestMetrics,
+} from "@/lib/services/metrics-collector";
+import { EEnv } from "@/configs/env";
 
 /**
  * Metrics interceptor configuration
@@ -28,7 +32,7 @@ let metricsCollector: MetricsCollector = defaultMetricsCollector;
 
 /**
  * Configures the metrics interceptor with a custom collector
- * 
+ *
  * @param collector - Custom metrics collector instance
  */
 export function configureMetricsCollector(collector: MetricsCollector): void {
@@ -37,9 +41,9 @@ export function configureMetricsCollector(collector: MetricsCollector): void {
 
 /**
  * Metrics Request Interceptor
- * 
+ *
  * Marks the start time for request duration tracking.
- * 
+ *
  * @param config - Axios request configuration
  * @returns Modified request configuration
  */
@@ -59,32 +63,35 @@ export function metricsRequestInterceptor(
 
 /**
  * Metrics Response Interceptor
- * 
+ *
  * Records successful request metrics.
- * 
+ *
  * @param response - Axios response
  * @returns Original response
  */
 export function metricsResponseInterceptor(
   response: AxiosResponse
 ): AxiosResponse {
-  const config = response.config as InternalAxiosRequestConfig & 
-    MetricsInterceptorConfig & 
-    { _startTime?: number; _retryCount?: number; _useCache?: boolean };
+  const config = response.config as InternalAxiosRequestConfig &
+    MetricsInterceptorConfig & {
+      _startTime?: number;
+      _retryCount?: number;
+      _useCache?: boolean;
+    };
 
   // Skip if metrics collection disabled or no start time
-  if (config.collectMetrics === false || !config._startTime) {
+  if (config?.collectMetrics === false || !config?._startTime) {
     return response;
   }
 
-  const duration = Date.now() - config._startTime;
+  const duration = Date.now() - config?._startTime;
 
   const metric: RequestMetrics = {
-    url: config.url || '',
-    method: config.method?.toUpperCase() || 'GET',
+    url: config.url || "",
+    method: config.method?.toUpperCase() || "GET",
     status: response.status,
     duration,
-    timestamp: config._startTime,
+    timestamp: config?._startTime,
     success: true,
     cached: config._useCache,
     retries: config._retryCount || 0,
@@ -93,7 +100,7 @@ export function metricsResponseInterceptor(
   metricsCollector.record(metric);
 
   if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-    console.debug('📊 Request Metrics:', {
+    console.debug("📊 Request Metrics:", {
       url: metric.url,
       method: metric.method,
       duration: `${metric.duration}ms`,
@@ -108,29 +115,31 @@ export function metricsResponseInterceptor(
 
 /**
  * Metrics Error Interceptor
- * 
+ *
  * Records failed request metrics.
- * 
+ *
  * @param error - Axios error
  * @returns Rejected promise
  */
-export function metricsErrorInterceptor(
-  error: AxiosError
-): Promise<never> {
-  const config = error.config as (InternalAxiosRequestConfig & 
-    MetricsInterceptorConfig & 
-    { _startTime?: number; _retryCount?: number }) | undefined;
+export function metricsErrorInterceptor(error: AxiosError): Promise<never> {
+  const config = error.config as
+    | (InternalAxiosRequestConfig &
+        MetricsInterceptorConfig & {
+          _startTime?: number;
+          _retryCount?: number;
+        })
+    | undefined;
 
   // Record metric if we have config and start time
-  if (config && config._startTime && config.collectMetrics !== false) {
-    const duration = Date.now() - config._startTime;
+  if (config && config?._startTime && config?.collectMetrics !== false) {
+    const duration = Date.now() - config?._startTime;
 
     const metric: RequestMetrics = {
-      url: config.url || '',
-      method: config.method?.toUpperCase() || 'GET',
+      url: config.url || "",
+      method: config.method?.toUpperCase() || "GET",
       status: error.response?.status,
       duration,
-      timestamp: config._startTime,
+      timestamp: config?._startTime,
       success: false,
       error: error.message,
       retries: config._retryCount || 0,
@@ -139,7 +148,7 @@ export function metricsErrorInterceptor(
     metricsCollector.record(metric);
 
     if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
-      console.debug('📊 Request Metrics (Error):', {
+      console.debug("📊 Request Metrics (Error):", {
         url: metric.url,
         method: metric.method,
         duration: `${metric.duration}ms`,
