@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { QuickViewDrawer } from "@/components/features/quick-view-drawer";
 
 interface FileUploadProps {
   accept?: string;
@@ -27,9 +28,12 @@ export function FileUpload({
         multiple={multiple}
       />
       {value && (
-        <p className="text-sm text-muted-foreground mt-1">
-          Selected: {value.name} ({(value.size / 1024).toFixed(2)} KB)
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground mt-1">
+            Selected: {value.name} ({(value.size / 1024).toFixed(2)} KB)
+          </p>
+          <QuickViewDrawer file={value} />
+        </div>
       )}
     </div>
   );
