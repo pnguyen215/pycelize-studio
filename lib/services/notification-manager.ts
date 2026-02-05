@@ -280,6 +280,102 @@ export class NotificationManager {
 
     return promise;
   }
+
+  /**
+   * Common notification function that automatically determines the notification type
+   * based on HTTP status code or handles promise-based async operations.
+   * 
+   * This method supports two modes:
+   * 1. Immediate notification - Based on HTTP status code (when response is already received)
+   * 2. Promise-based notification - For ongoing async operations (file uploads, processing, etc.)
+   * 
+   * HTTP Status Code Mapping:
+   * - 2xx (Success) → Success notification
+   * - 3xx (Redirection/Processing) → Loading notification
+   * - 4xx/5xx (Client/Server Error) → Error notification
+   * 
+   * @static
+   * @param options - Configuration object for the notification
+   * @returns Toast ID for immediate notifications, or the promise for async operations
+   * 
+   * @example
+   * // Immediate notification based on HTTP status code
+   * NotificationManager.notify({
+   *   statusCode: 200,
+   *   message: "User created successfully"
+   * });
+   * 
+   * @example
+   * // Error notification
+   * NotificationManager.notify({
+   *   statusCode: 404,
+   *   message: "User not found"
+   * });
+   * 
+   * @example
+   * // Promise-based notification for async operations
+   * NotificationManager.notify({
+   *   promise: uploadFile(file),
+   *   messages: {
+   *     loading: "Uploading file...",
+   *     success: "File uploaded successfully",
+   *     error: "Failed to upload file"
+   *   }
+   * });
+   * 
+   * @example
+   * // Promise-based with custom status code handling
+   * const promise = fetch('/api/users').then(res => {
+   *   NotificationManager.notify({
+   *     statusCode: res.status,
+   *     message: res.status === 200 ? "Success" : "Error"
+   *   });
+   *   return res.json();
+   * });
+   */
+  public static notify<T>(
+    options:
+      | {
+          statusCode: number;
+          message: string;
+          config?: NotificationConfig;
+        }
+      | {
+          promise: Promise<T>;
+          messages: {
+            loading: string;
+            success: string;
+            error: string;
+          };
+          config?: NotificationConfig;
+        }
+  ): string | number | undefined | Promise<T> {
+    // Promise-based notification
+    if ('promise' in options) {
+      return this.promise(options.promise, options.messages, options.config);
+    }
+
+    // Immediate notification based on HTTP status code
+    const { statusCode, message, config } = options;
+
+    // 2xx: Success
+    if (statusCode >= 200 && statusCode < 300) {
+      return this.success(message, config);
+    }
+
+    // 3xx: Redirection/Processing/Pending state (show as loading)
+    if (statusCode >= 300 && statusCode < 400) {
+      return this.loading(message, config);
+    }
+
+    // 4xx/5xx: Client Error or Server Error
+    if (statusCode >= 400) {
+      return this.error(message, config);
+    }
+
+    // Default to info for any other status codes (1xx, etc.)
+    return this.info(message, config);
+  }
 }
 
 /**

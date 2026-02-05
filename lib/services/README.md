@@ -93,6 +93,197 @@ NotificationManager.info('Update available', {
 });
 ```
 
+#### HTTP Status Code Based Notifications
+
+The `notify` function automatically determines the notification type based on HTTP status codes:
+
+```typescript
+import { NotificationManager } from '@/lib/services/notification-manager';
+
+// 2xx - Success notification
+NotificationManager.notify({
+  statusCode: 200,
+  message: 'User created successfully'
+});
+
+// 2xx - Success (204 No Content)
+NotificationManager.notify({
+  statusCode: 204,
+  message: 'User deleted successfully'
+});
+
+// 3xx - Loading notification (for redirects/processing)
+NotificationManager.notify({
+  statusCode: 302,
+  message: 'Redirecting...'
+});
+
+// 4xx - Error notification (client errors)
+NotificationManager.notify({
+  statusCode: 404,
+  message: 'User not found'
+});
+
+// 4xx - Error notification (validation error)
+NotificationManager.notify({
+  statusCode: 422,
+  message: 'Invalid data provided'
+});
+
+// 5xx - Error notification (server errors)
+NotificationManager.notify({
+  statusCode: 500,
+  message: 'Server error occurred'
+});
+```
+
+**Status Code Mapping:**
+- **2xx (Success)** → Success notification ✅
+- **3xx (Redirection/Processing)** → Loading notification ⏳
+- **4xx (Client Error)** → Error notification ❌
+- **5xx (Server Error)** → Error notification ❌
+
+#### Promise-Based Notifications with `notify`
+
+For async operations like file uploads, data processing, or long-running tasks:
+
+```typescript
+// File upload with automatic loading → success/error transitions
+NotificationManager.notify({
+  promise: uploadFile(file),
+  messages: {
+    loading: 'Uploading file...',
+    success: 'File uploaded successfully',
+    error: 'Failed to upload file'
+  }
+});
+
+// Excel processing
+NotificationManager.notify({
+  promise: processExcelFile(file),
+  messages: {
+    loading: 'Processing Excel file...',
+    success: 'Excel file processed successfully',
+    error: 'Failed to process Excel file'
+  }
+});
+
+// CSV conversion
+NotificationManager.notify({
+  promise: convertCsvToJson(file),
+  messages: {
+    loading: 'Converting CSV to JSON...',
+    success: 'Conversion completed',
+    error: 'Conversion failed'
+  }
+});
+```
+
+#### Real-World API Integration
+
+```typescript
+// Example: Fetch API with status code handling
+async function fetchUsers() {
+  try {
+    const response = await fetch('/api/users');
+    const data = await response.json();
+    
+    // Show notification based on status code
+    NotificationManager.notify({
+      statusCode: response.status,
+      message: response.ok ? 'Users loaded successfully' : data.message || 'Failed to load users'
+    });
+    
+    return data;
+  } catch (error) {
+    NotificationManager.notify({
+      statusCode: 500,
+      message: 'Network error occurred'
+    });
+  }
+}
+
+// Example: POST request with promise notification
+async function createUser(userData: User) {
+  return NotificationManager.notify({
+    promise: fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    }).then(res => res.json()),
+    messages: {
+      loading: 'Creating user...',
+      success: 'User created successfully',
+      error: 'Failed to create user'
+    }
+  });
+}
+
+// Example: File upload with progress
+async function handleFileUpload(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return NotificationManager.notify({
+    promise: fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    }).then(res => {
+      // After promise resolves, check status code
+      if (!res.ok) {
+        throw new Error('Upload failed');
+      }
+      return res.json();
+    }),
+    messages: {
+      loading: `Uploading ${file.name}...`,
+      success: `${file.name} uploaded successfully`,
+      error: `Failed to upload ${file.name}`
+    }
+  });
+}
+```
+
+#### Using with Axios
+
+```typescript
+import axios from 'axios';
+import { NotificationManager } from '@/lib/services/notification-manager';
+
+// GET request with status code notification
+async function getUsers() {
+  try {
+    const response = await axios.get('/api/users');
+    
+    NotificationManager.notify({
+      statusCode: response.status,
+      message: 'Users loaded successfully'
+    });
+    
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      NotificationManager.notify({
+        statusCode: error.response.status,
+        message: error.response.data.message || 'Failed to load users'
+      });
+    }
+  }
+}
+
+// POST request with promise notification
+function createUser(userData: User) {
+  return NotificationManager.notify({
+    promise: axios.post('/api/users', userData).then(res => res.data),
+    messages: {
+      loading: 'Creating user...',
+      success: 'User created successfully',
+      error: 'Failed to create user'
+    }
+  });
+}
+```
+
 ### API Reference
 
 #### Methods
@@ -105,6 +296,29 @@ NotificationManager.info('Update available', {
 - **`message(message, config?)`** - Display generic notification
 - **`dismiss(toastId?)`** - Dismiss specific toast
 - **`promise(promise, messages, config?)`** - Handle promise with notifications
+- **`notify(options)`** - Smart notification based on HTTP status code or promise
+
+#### `notify` Method Signatures
+
+```typescript
+// Immediate notification based on HTTP status code
+NotificationManager.notify({
+  statusCode: number;
+  message: string;
+  config?: NotificationConfig;
+});
+
+// Promise-based notification for async operations
+NotificationManager.notify({
+  promise: Promise<T>;
+  messages: {
+    loading: string;
+    success: string;
+    error: string;
+  };
+  config?: NotificationConfig;
+});
+```
 
 #### Configuration Options
 
@@ -115,6 +329,29 @@ interface NotificationConfig {
   options?: ExternalToast; // Advanced Sonner options
 }
 ```
+
+### When to Use Each Method
+
+| Method | Use Case |
+|--------|----------|
+| `success()` | Explicitly show success message |
+| `error()` | Explicitly show error message |
+| `info()` | Neutral information or tips |
+| `warning()` | Cautionary messages |
+| `loading()` | Manual loading state management |
+| `promise()` | Async operations with known message templates |
+| `notify()` | **Dynamic notification based on HTTP status or async operations** |
+
+**Use `notify()` when:**
+- ✅ You have HTTP status codes and want automatic type selection
+- ✅ You're handling API responses with varying status codes
+- ✅ You want unified notification handling across your app
+- ✅ You're working with promise-based async operations
+
+**Use specific methods when:**
+- ✅ You know the exact notification type needed
+- ✅ You don't have status codes to work with
+- ✅ You want explicit control over notification type
 
 ### Integration with API Client
 
