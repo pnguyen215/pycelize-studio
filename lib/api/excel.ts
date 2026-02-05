@@ -1,4 +1,4 @@
-import { apiClient, api } from "./client";
+import { api } from "./client";
 import type {
   StandardResponse,
   ExcelInfoResponse,
