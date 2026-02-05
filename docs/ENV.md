@@ -1,4 +1,4 @@
-# Configuration Module
+# Environment Keys
 
 This module provides centralized, strongly-typed access to environment variables across the application.
 
@@ -7,6 +7,7 @@ This module provides centralized, strongly-typed access to environment variables
 ### `env.ts`
 
 Centralized environment configuration that:
+
 - Handles both server-side (Node.js) and client-side (browser) environments
 - Provides strongly-typed access to environment variables
 - Prevents scattered `process.env` access throughout the codebase
@@ -15,7 +16,7 @@ Centralized environment configuration that:
 ## Usage
 
 ```typescript
-import { EEnv } from '@/configs/env';
+import { EEnv } from "@/configs/env";
 
 // Access environment variables
 const apiUrl = EEnv.NEXT_PUBLIC_PYCELIZE_API_URL;
