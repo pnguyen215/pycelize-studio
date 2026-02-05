@@ -1,11 +1,11 @@
 /**
  * Rate Limiter Service
- * 
+ *
  * This module provides rate limiting functionality to prevent API abuse with:
  * - Token bucket algorithm
  * - Request queuing
  * - Configurable limits per endpoint
- * 
+ *
  * @module lib/services/rate-limiter
  */
 
@@ -49,7 +49,7 @@ interface QueuedRequest {
 
 /**
  * Rate Limiter Class using Token Bucket Algorithm
- * 
+ *
  * The token bucket algorithm allows bursts of requests up to the bucket capacity,
  * then enforces a steady rate of requests over time.
  */
@@ -80,7 +80,8 @@ export class RateLimiter {
     const elapsed = now - this.lastRefill;
 
     // Calculate tokens to add based on elapsed time
-    const tokensToAdd = (elapsed / this.config.timeWindow) * this.config.maxRequests;
+    const tokensToAdd =
+      (elapsed / this.config.timeWindow) * this.config.maxRequests;
 
     this.tokens = Math.min(this.config.maxRequests, this.tokens + tokensToAdd);
     this.lastRefill = now;
@@ -117,7 +118,7 @@ export class RateLimiter {
 
   /**
    * Attempts to acquire a token for making a request
-   * 
+   *
    * @returns Promise resolving to true if request can proceed
    * @throws Error if queue is full and queueRequests is disabled
    */
@@ -132,12 +133,12 @@ export class RateLimiter {
 
     // If queuing is disabled, reject immediately
     if (!this.config.queueRequests) {
-      throw new Error('Rate limit exceeded. Request rejected.');
+      throw new Error("Rate limit exceeded. Request rejected.");
     }
 
     // Check queue size limit
     if (this.queue.length >= this.config.maxQueueSize) {
-      throw new Error('Rate limit queue is full. Request rejected.');
+      throw new Error("Rate limit queue is full. Request rejected.");
     }
 
     // Queue the request
@@ -209,12 +210,15 @@ const defaultRateLimiter = new RateLimiter();
 
 /**
  * Gets or creates a rate limiter for an endpoint pattern
- * 
+ *
  * @param pattern - Endpoint pattern (URL or regex)
  * @param config - Rate limit configuration
  * @returns Rate limiter instance
  */
-export function getRateLimiter(pattern?: string, config?: RateLimitConfig): RateLimiter {
+export function getRateLimiter(
+  pattern?: string,
+  config?: RateLimitConfig
+): RateLimiter {
   if (!pattern) {
     return defaultRateLimiter;
   }
@@ -228,11 +232,14 @@ export function getRateLimiter(pattern?: string, config?: RateLimitConfig): Rate
 
 /**
  * Configures rate limiting for a specific endpoint pattern
- * 
+ *
  * @param pattern - Endpoint pattern
  * @param config - Rate limit configuration
  */
-export function configureRateLimit(pattern: string, config: RateLimitConfig): void {
+export function configureRateLimit(
+  pattern: string,
+  config: RateLimitConfig
+): void {
   const limiter = getRateLimiter(pattern, config);
   limiter.updateConfig(config);
 }

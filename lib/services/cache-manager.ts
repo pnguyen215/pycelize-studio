@@ -1,12 +1,12 @@
 /**
  * Cache Manager Service
- * 
+ *
  * This module provides a flexible caching system for HTTP responses with:
  * - Multiple storage strategies (memory, localStorage)
  * - TTL (Time-To-Live) support
  * - Cache invalidation
  * - Size limits
- * 
+ *
  * @module lib/services/cache-manager
  */
 
@@ -38,7 +38,7 @@ interface CacheEntry<T> {
 /**
  * Cache storage strategy
  */
-export type CacheStorage = 'memory' | 'localStorage' | 'sessionStorage';
+export type CacheStorage = "memory" | "localStorage" | "sessionStorage";
 
 /**
  * Cache configuration
@@ -107,8 +107,8 @@ class LocalStorageCache {
   constructor(private prefix: string) {}
 
   get<T>(key: string): CacheEntry<T> | null {
-    if (typeof window === 'undefined') return null;
-    
+    if (typeof window === "undefined") return null;
+
     try {
       const item = localStorage.getItem(`${this.prefix}${key}`);
       return item ? JSON.parse(item) : null;
@@ -118,31 +118,31 @@ class LocalStorageCache {
   }
 
   set<T>(key: string, entry: CacheEntry<T>): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     try {
       localStorage.setItem(`${this.prefix}${key}`, JSON.stringify(entry));
     } catch (error) {
       // Handle quota exceeded or other errors
-      console.warn('Cache storage failed:', error);
+      console.warn("Cache storage failed:", error);
     }
   }
 
   delete(key: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     localStorage.removeItem(`${this.prefix}${key}`);
   }
 
   clear(): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     const keys = this.keys();
     keys.forEach((key) => this.delete(key));
   }
 
   keys(): string[] {
-    if (typeof window === 'undefined') return [];
-    
+    if (typeof window === "undefined") return [];
+
     const allKeys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -165,8 +165,8 @@ class SessionStorageCache {
   constructor(private prefix: string) {}
 
   get<T>(key: string): CacheEntry<T> | null {
-    if (typeof window === 'undefined') return null;
-    
+    if (typeof window === "undefined") return null;
+
     try {
       const item = sessionStorage.getItem(`${this.prefix}${key}`);
       return item ? JSON.parse(item) : null;
@@ -176,30 +176,30 @@ class SessionStorageCache {
   }
 
   set<T>(key: string, entry: CacheEntry<T>): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     try {
       sessionStorage.setItem(`${this.prefix}${key}`, JSON.stringify(entry));
     } catch (error) {
-      console.warn('Cache storage failed:', error);
+      console.warn("Cache storage failed:", error);
     }
   }
 
   delete(key: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     sessionStorage.removeItem(`${this.prefix}${key}`);
   }
 
   clear(): void {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     const keys = this.keys();
     keys.forEach((key) => this.delete(key));
   }
 
   keys(): string[] {
-    if (typeof window === 'undefined') return [];
-    
+    if (typeof window === "undefined") return [];
+
     const allKeys: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
@@ -217,7 +217,7 @@ class SessionStorageCache {
 
 /**
  * Cache Manager Class
- * 
+ *
  * Provides a unified interface for caching HTTP responses with multiple
  * storage strategies and automatic expiration.
  */
@@ -227,18 +227,18 @@ export class CacheManager {
 
   constructor(config: CacheConfig = {}) {
     this.config = {
-      storage: config.storage || 'memory',
+      storage: config.storage || "memory",
       defaultTTL: config.defaultTTL || 300000, // 5 minutes
       maxSize: config.maxSize || 100,
-      keyPrefix: config.keyPrefix || 'api_cache_',
+      keyPrefix: config.keyPrefix || "api_cache_",
     };
 
     // Initialize storage based on strategy
     switch (this.config.storage) {
-      case 'localStorage':
+      case "localStorage":
         this.storage = new LocalStorageCache(this.config.keyPrefix);
         break;
-      case 'sessionStorage':
+      case "sessionStorage":
         this.storage = new SessionStorageCache(this.config.keyPrefix);
         break;
       default:
@@ -250,7 +250,7 @@ export class CacheManager {
    * Generates a cache key from URL and params
    */
   private generateKey(url: string, params?: Record<string, unknown>): string {
-    const paramStr = params ? JSON.stringify(params) : '';
+    const paramStr = params ? JSON.stringify(params) : "";
     return `${url}:${paramStr}`;
   }
 
@@ -267,7 +267,7 @@ export class CacheManager {
    */
   private enforceSizeLimit(): void {
     const keys = this.storage.keys();
-    
+
     if (keys.length >= this.config.maxSize) {
       // Remove oldest entries
       const entries = keys
@@ -288,7 +288,7 @@ export class CacheManager {
 
   /**
    * Retrieves data from cache
-   * 
+   *
    * @param url - Request URL
    * @param params - Request parameters
    * @returns Cached data or null if not found/expired
@@ -311,7 +311,7 @@ export class CacheManager {
 
   /**
    * Stores data in cache
-   * 
+   *
    * @param url - Request URL
    * @param params - Request parameters
    * @param data - Data to cache
@@ -337,7 +337,7 @@ export class CacheManager {
 
   /**
    * Invalidates a specific cache entry
-   * 
+   *
    * @param url - Request URL
    * @param params - Request parameters
    */
@@ -348,11 +348,12 @@ export class CacheManager {
 
   /**
    * Invalidates all cache entries matching a URL pattern
-   * 
+   *
    * @param urlPattern - URL pattern to match (regex or string)
    */
   public invalidatePattern(urlPattern: string | RegExp): void {
-    const pattern = typeof urlPattern === 'string' ? new RegExp(urlPattern) : urlPattern;
+    const pattern =
+      typeof urlPattern === "string" ? new RegExp(urlPattern) : urlPattern;
     const keys = this.storage.keys();
 
     keys.forEach((key) => {

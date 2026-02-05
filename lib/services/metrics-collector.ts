@@ -1,11 +1,11 @@
 /**
  * Metrics Collector Service
- * 
+ *
  * This module provides request metrics and analytics with:
  * - Request timing tracking
  * - Success/error rate monitoring
  * - Endpoint performance statistics
- * 
+ *
  * @module lib/services/metrics-collector
  */
 
@@ -87,20 +87,21 @@ export interface MetricsConfig {
 
 /**
  * Metrics Collector Class
- * 
+ *
  * Collects and aggregates HTTP request metrics for monitoring
  * and analytics purposes.
  */
 export class MetricsCollector {
   private metrics: RequestMetrics[] = [];
-  private config: Required<Omit<MetricsConfig, 'onExport'>> & Pick<MetricsConfig, 'onExport'>;
+  private config: Required<Omit<MetricsConfig, "onExport">> &
+    Pick<MetricsConfig, "onExport">;
 
   constructor(config: MetricsConfig = {}) {
     this.config = {
       enabled: config.enabled !== false,
       maxSize: config.maxSize || 1000,
       persist: config.persist || false,
-      storageKey: config.storageKey || 'api_metrics',
+      storageKey: config.storageKey || "api_metrics",
       onExport: config.onExport,
     };
 
@@ -113,7 +114,7 @@ export class MetricsCollector {
    * Loads metrics from storage
    */
   private loadMetrics(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const stored = localStorage.getItem(this.config.storageKey);
@@ -121,7 +122,7 @@ export class MetricsCollector {
         this.metrics = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to load metrics:', error);
+      console.error("Failed to load metrics:", error);
     }
   }
 
@@ -129,12 +130,15 @@ export class MetricsCollector {
    * Saves metrics to storage
    */
   private saveMetrics(): void {
-    if (!this.config.persist || typeof window === 'undefined') return;
+    if (!this.config.persist || typeof window === "undefined") return;
 
     try {
-      localStorage.setItem(this.config.storageKey, JSON.stringify(this.metrics));
+      localStorage.setItem(
+        this.config.storageKey,
+        JSON.stringify(this.metrics)
+      );
     } catch (error) {
-      console.error('Failed to save metrics:', error);
+      console.error("Failed to save metrics:", error);
     }
   }
 
@@ -151,7 +155,7 @@ export class MetricsCollector {
 
   /**
    * Records a request metric
-   * 
+   *
    * @param metric - Request metrics to record
    */
   public record(metric: RequestMetrics): void {
@@ -167,7 +171,7 @@ export class MetricsCollector {
 
   /**
    * Gets all recorded metrics
-   * 
+   *
    * @returns Array of request metrics
    */
   public getMetrics(): RequestMetrics[] {
@@ -176,7 +180,7 @@ export class MetricsCollector {
 
   /**
    * Gets aggregated metrics
-   * 
+   *
    * @param since - Optional timestamp to filter metrics from
    * @returns Aggregated metrics
    */
@@ -204,10 +208,10 @@ export class MetricsCollector {
 
     // Calculate endpoint-specific metrics
     const endpoints: Record<string, EndpointMetrics> = {};
-    
+
     filtered.forEach((metric) => {
       const key = `${metric.method}:${metric.url}`;
-      
+
       if (!endpoints[key]) {
         endpoints[key] = {
           count: 0,
@@ -222,7 +226,7 @@ export class MetricsCollector {
 
       const ep = endpoints[key];
       ep.count++;
-      
+
       if (metric.success) {
         ep.successCount++;
       } else {
@@ -239,9 +243,10 @@ export class MetricsCollector {
       const endpointMetrics = filtered.filter(
         (m) => `${m.method}:${m.url}` === key
       );
-      
+
       ep.averageDuration =
-        endpointMetrics.reduce((sum, m) => sum + m.duration, 0) / endpointMetrics.length;
+        endpointMetrics.reduce((sum, m) => sum + m.duration, 0) /
+        endpointMetrics.length;
       ep.successRate = ep.successCount / ep.count;
     });
 
@@ -259,12 +264,15 @@ export class MetricsCollector {
 
   /**
    * Gets metrics for a specific endpoint
-   * 
+   *
    * @param method - HTTP method
    * @param url - Request URL
    * @returns Endpoint metrics
    */
-  public getEndpointMetrics(method: string, url: string): EndpointMetrics | null {
+  public getEndpointMetrics(
+    method: string,
+    url: string
+  ): EndpointMetrics | null {
     const key = `${method}:${url}`;
     const aggregated = this.getAggregated();
     return aggregated.endpoints[key] || null;
@@ -284,8 +292,8 @@ export class MetricsCollector {
    */
   public clear(): void {
     this.metrics = [];
-    
-    if (this.config.persist && typeof window !== 'undefined') {
+
+    if (this.config.persist && typeof window !== "undefined") {
       localStorage.removeItem(this.config.storageKey);
     }
   }
@@ -295,11 +303,13 @@ export class MetricsCollector {
    */
   public getSummary(): string {
     const aggregated = this.getAggregated();
-    
+
     return `
 API Metrics Summary:
 - Total Requests: ${aggregated.totalRequests}
-- Successful: ${aggregated.successfulRequests} (${(aggregated.successRate * 100).toFixed(2)}%)
+- Successful: ${aggregated.successfulRequests} (${(
+      aggregated.successRate * 100
+    ).toFixed(2)}%)
 - Failed: ${aggregated.failedRequests}
 - Average Duration: ${aggregated.averageDuration.toFixed(2)}ms
 - Min Duration: ${aggregated.minDuration.toFixed(2)}ms

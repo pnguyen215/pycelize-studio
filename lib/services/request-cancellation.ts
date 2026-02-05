@@ -1,8 +1,8 @@
 /**
  * Request Cancellation Utilities
- * 
+ *
  * This module provides utilities for cancelling HTTP requests using AbortController.
- * 
+ *
  * @module lib/services/request-cancellation
  */
 
@@ -14,7 +14,7 @@ export class RequestCancellation {
 
   /**
    * Creates a new AbortController for a request
-   * 
+   *
    * @param key - Unique key for this request
    * @returns AbortSignal to attach to the request
    */
@@ -30,13 +30,13 @@ export class RequestCancellation {
 
   /**
    * Cancels a specific request
-   * 
+   *
    * @param key - Request key to cancel
    * @param reason - Optional cancellation reason
    */
   public cancel(key: string, reason?: string): void {
     const controller = this.controllers.get(key);
-    
+
     if (controller) {
       controller.abort(reason);
       this.controllers.delete(key);
@@ -45,7 +45,7 @@ export class RequestCancellation {
 
   /**
    * Cancels all pending requests
-   * 
+   *
    * @param reason - Optional cancellation reason
    */
   public cancelAll(reason?: string): void {
@@ -57,7 +57,7 @@ export class RequestCancellation {
 
   /**
    * Checks if a request is pending
-   * 
+   *
    * @param key - Request key to check
    * @returns True if request is pending
    */
@@ -67,7 +67,7 @@ export class RequestCancellation {
 
   /**
    * Gets count of pending requests
-   * 
+   *
    * @returns Number of pending requests
    */
   public pendingCount(): number {

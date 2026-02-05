@@ -1,15 +1,15 @@
 /**
  * Offline Support Service
- * 
+ *
  * This module provides offline functionality with:
  * - Network status detection
  * - Request queuing when offline
  * - Automatic sync when back online
- * 
+ *
  * @module lib/services/offline-manager
  */
 
-import type { InternalAxiosRequestConfig } from 'axios';
+import type { InternalAxiosRequestConfig } from "axios";
 
 /**
  * Queued request interface
@@ -57,7 +57,7 @@ export interface OfflineConfig {
 
 /**
  * Offline Manager Class
- * 
+ *
  * Manages request queuing and synchronization for offline scenarios.
  */
 export class OfflineManager {
@@ -73,19 +73,19 @@ export class OfflineManager {
       maxQueueSize: config.maxQueueSize || 50,
       maxAge: config.maxAge || 3600000, // 1 hour
       maxRetries: config.maxRetries || 3,
-      storageKey: config.storageKey || 'offline_request_queue',
+      storageKey: config.storageKey || "offline_request_queue",
     };
 
     // Initialize online status
-    this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    this.isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
     // Load persisted queue
     this.loadQueue();
 
     // Set up online/offline listeners
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', this.handleOnline);
-      window.addEventListener('offline', this.handleOffline);
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", this.handleOnline);
+      window.addEventListener("offline", this.handleOffline);
     }
   }
 
@@ -117,7 +117,7 @@ export class OfflineManager {
    * Loads queue from storage
    */
   private loadQueue(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const stored = localStorage.getItem(this.config.storageKey);
@@ -126,7 +126,7 @@ export class OfflineManager {
         this.cleanQueue();
       }
     } catch (error) {
-      console.error('Failed to load offline queue:', error);
+      console.error("Failed to load offline queue:", error);
     }
   }
 
@@ -134,12 +134,12 @@ export class OfflineManager {
    * Saves queue to storage
    */
   private saveQueue(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       localStorage.setItem(this.config.storageKey, JSON.stringify(this.queue));
     } catch (error) {
-      console.error('Failed to save offline queue:', error);
+      console.error("Failed to save offline queue:", error);
     }
   }
 
@@ -155,7 +155,7 @@ export class OfflineManager {
 
   /**
    * Adds request to offline queue
-   * 
+   *
    * @param config - Request configuration
    * @returns True if added successfully
    */
@@ -164,7 +164,7 @@ export class OfflineManager {
 
     // Check queue size limit
     if (this.queue.length >= this.config.maxQueueSize) {
-      console.warn('Offline queue is full');
+      console.warn("Offline queue is full");
       return false;
     }
 
@@ -189,7 +189,7 @@ export class OfflineManager {
     this.syncInProgress = true;
     this.cleanQueue();
 
-    const axios = await import('axios').then((m) => m.default);
+    const axios = await import("axios").then((m) => m.default);
     const itemsToSync = [...this.queue];
     this.queue = [];
 
@@ -204,7 +204,7 @@ export class OfflineManager {
             retries: item.retries + 1,
           });
         } else {
-          console.error('Failed to sync request after max retries:', error);
+          console.error("Failed to sync request after max retries:", error);
         }
       }
     }
@@ -237,7 +237,7 @@ export class OfflineManager {
 
   /**
    * Registers a listener for online status changes
-   * 
+   *
    * @param listener - Listener function
    */
   public onStatusChange(listener: (isOnline: boolean) => void): void {
@@ -245,8 +245,8 @@ export class OfflineManager {
   }
 
   /**
-   * Unregisters a listener
-   * 
+   * Unregister a listener
+   *
    * @param listener - Listener function
    */
   public offStatusChange(listener: (isOnline: boolean) => void): void {
@@ -257,9 +257,9 @@ export class OfflineManager {
    * Cleans up resources
    */
   public destroy(): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('online', this.handleOnline);
-      window.removeEventListener('offline', this.handleOffline);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("online", this.handleOnline);
+      window.removeEventListener("offline", this.handleOffline);
     }
     this.listeners.clear();
   }

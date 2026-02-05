@@ -1,33 +1,39 @@
 /**
  * WebSocket Manager Service
- * 
+ *
  * This module provides WebSocket connectivity with:
  * - Automatic reconnection
  * - Event handling
  * - Connection state management
  * - Heartbeat/ping-pong support
- * 
+ *
  * @module lib/services/websocket-manager
  */
 
-import { EEnv } from '@/configs/env';
+import { EEnv } from "@/configs/env";
 
 /**
  * WebSocket connection state
  */
 export enum WebSocketState {
-  CONNECTING = 'CONNECTING',
-  CONNECTED = 'CONNECTED',
-  DISCONNECTING = 'DISCONNECTING',
-  DISCONNECTED = 'DISCONNECTED',
-  RECONNECTING = 'RECONNECTING',
-  ERROR = 'ERROR',
+  CONNECTING = "CONNECTING",
+  CONNECTED = "CONNECTED",
+  DISCONNECTING = "DISCONNECTING",
+  DISCONNECTED = "DISCONNECTED",
+  RECONNECTING = "RECONNECTING",
+  ERROR = "ERROR",
 }
 
 /**
  * WebSocket event types
  */
-export type WebSocketEventType = 'open' | 'close' | 'error' | 'message' | 'reconnect' | 'stateChange';
+export type WebSocketEventType =
+  | "open"
+  | "close"
+  | "error"
+  | "message"
+  | "reconnect"
+  | "stateChange";
 
 /**
  * WebSocket event handler
@@ -87,15 +93,19 @@ export interface WebSocketConfig {
 
 /**
  * WebSocket Manager Class
- * 
+ *
  * Manages WebSocket connections with automatic reconnection,
  * event handling, and heartbeat support.
  */
 export class WebSocketManager {
   private socket: WebSocket | null = null;
   private state: WebSocketState = WebSocketState.DISCONNECTED;
-  private config: Required<Omit<WebSocketConfig, 'protocols'>> & Pick<WebSocketConfig, 'protocols'>;
-  private eventHandlers = new Map<WebSocketEventType, Set<WebSocketEventHandler>>();
+  private config: Required<Omit<WebSocketConfig, "protocols">> &
+    Pick<WebSocketConfig, "protocols">;
+  private eventHandlers = new Map<
+    WebSocketEventType,
+    Set<WebSocketEventHandler>
+  >();
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
@@ -108,7 +118,7 @@ export class WebSocketManager {
       reconnectDelay: config.reconnectDelay || 1000,
       maxReconnectDelay: config.maxReconnectDelay || 30000,
       heartbeatInterval: config.heartbeatInterval ?? 30000,
-      heartbeatMessage: config.heartbeatMessage || 'ping',
+      heartbeatMessage: config.heartbeatMessage || "ping",
       protocols: config.protocols,
     };
   }
@@ -118,7 +128,7 @@ export class WebSocketManager {
    */
   private getDefaultWebSocketUrl(): string {
     const apiUrl = EEnv.NEXT_PUBLIC_PYCELIZE_API_URL;
-    return apiUrl.replace(/^http/, 'ws').replace('/api/v1', '/ws');
+    return apiUrl.replace(/^http/, "ws").replace("/api/v1", "/ws");
   }
 
   /**
@@ -127,7 +137,7 @@ export class WebSocketManager {
   private setState(newState: WebSocketState): void {
     if (this.state !== newState) {
       this.state = newState;
-      this.emit('stateChange', { state: newState });
+      this.emit("stateChange", { state: newState });
     }
   }
 
@@ -175,7 +185,7 @@ export class WebSocketManager {
 
     this.reconnectTimer = setTimeout(() => {
       this.connect();
-      this.emit('reconnect', { attempt: this.reconnectAttempts });
+      this.emit("reconnect", { attempt: this.reconnectAttempts });
     }, delay);
   }
 
@@ -196,13 +206,13 @@ export class WebSocketManager {
         this.setState(WebSocketState.CONNECTED);
         this.reconnectAttempts = 0;
         this.startHeartbeat();
-        this.emit('open', {});
+        this.emit("open", {});
       };
 
       this.socket.onclose = (event) => {
         this.setState(WebSocketState.DISCONNECTED);
         this.stopHeartbeat();
-        this.emit('close', { code: event.code, reason: event.reason });
+        this.emit("close", { code: event.code, reason: event.reason });
 
         if (!event.wasClean && this.config.autoReconnect) {
           this.attemptReconnect();
@@ -211,27 +221,27 @@ export class WebSocketManager {
 
       this.socket.onerror = (event) => {
         this.setState(WebSocketState.ERROR);
-        this.emit('error', { error: event });
+        this.emit("error", { error: event });
       };
 
       this.socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          this.emit('message', data);
+          this.emit("message", data);
         } catch {
           // Handle non-JSON messages
-          this.emit('message', event.data);
+          this.emit("message", event.data);
         }
       };
     } catch (error) {
       this.setState(WebSocketState.ERROR);
-      this.emit('error', { error });
+      this.emit("error", { error });
     }
   }
 
   /**
    * Disconnects from WebSocket server
-   * 
+   *
    * @param code - Close code
    * @param reason - Close reason
    */
@@ -254,25 +264,28 @@ export class WebSocketManager {
 
   /**
    * Sends data through WebSocket
-   * 
+   *
    * @param data - Data to send (will be JSON stringified if object)
    */
   public send(data: unknown): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      throw new Error('WebSocket is not connected');
+      throw new Error("WebSocket is not connected");
     }
 
-    const message = typeof data === 'string' ? data : JSON.stringify(data);
+    const message = typeof data === "string" ? data : JSON.stringify(data);
     this.socket.send(message);
   }
 
   /**
    * Registers an event handler
-   * 
+   *
    * @param event - Event type
    * @param handler - Event handler function
    */
-  public on<T = unknown>(event: WebSocketEventType, handler: WebSocketEventHandler<T>): void {
+  public on<T = unknown>(
+    event: WebSocketEventType,
+    handler: WebSocketEventHandler<T>
+  ): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -280,12 +293,15 @@ export class WebSocketManager {
   }
 
   /**
-   * Unregisters an event handler
-   * 
+   * Unregister an event handler
+   *
    * @param event - Event type
    * @param handler - Event handler function
    */
-  public off<T = unknown>(event: WebSocketEventType, handler: WebSocketEventHandler<T>): void {
+  public off<T = unknown>(
+    event: WebSocketEventType,
+    handler: WebSocketEventHandler<T>
+  ): void {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.delete(handler as WebSocketEventHandler);
@@ -294,7 +310,7 @@ export class WebSocketManager {
 
   /**
    * Emits an event to all registered handlers
-   * 
+   *
    * @param event - Event type
    * @param data - Event data
    */
