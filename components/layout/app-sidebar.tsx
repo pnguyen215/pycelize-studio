@@ -4,9 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  Home, Activity, FileText, Columns, GitBranch, Link as LinkIcon,
-  Link2, FileSpreadsheet, ArrowRightLeft, Wand2, FileInput,
-  Database, Code2, Braces, FileJson, AlertTriangle
+  Home,
+  Activity,
+  FileText,
+  Columns,
+  GitBranch,
+  Link as LinkIcon,
+  Link2,
+  FileSpreadsheet,
+  ArrowRightLeft,
+  Wand2,
+  FileInput,
+  Database,
+  Code2,
+  Braces,
+  FileJson,
+  AlertTriangle,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -14,48 +27,94 @@ const navigationGroups = [
     group: "System",
     items: [
       { name: "Dashboard", path: "/", icon: Home },
-      { name: "Health Check", path: "/features/health", icon: Activity }
-    ]
+      { name: "Health Check", path: "/features/health", icon: Activity },
+    ],
   },
   {
     group: "Excel Operations",
     items: [
       { name: "File Info", path: "/features/excel-info", icon: FileText },
-      { name: "Extract Columns (JSON)", path: "/features/column-extraction", icon: Columns },
-      { name: "Extract Columns (File)", path: "/features/column-extraction-file", icon: Columns },
-      { name: "Map Columns", path: "/features/column-mapping", icon: GitBranch },
-      { name: "Binding (Single Key)", path: "/features/excel-binding-single", icon: LinkIcon },
-      { name: "Binding (Multi Key)", path: "/features/excel-binding-multi", icon: Link2 }
-    ]
+      {
+        name: "Extract Columns (JSON)",
+        path: "/features/column-extraction",
+        icon: Columns,
+      },
+      {
+        name: "Extract Columns (File)",
+        path: "/features/column-extraction-file",
+        icon: Columns,
+      },
+      {
+        name: "Map Columns",
+        path: "/features/column-mapping",
+        icon: GitBranch,
+      },
+      {
+        name: "Binding (Single Key)",
+        path: "/features/excel-binding-single",
+        icon: LinkIcon,
+      },
+      {
+        name: "Binding (Multi Key)",
+        path: "/features/excel-binding-multi",
+        icon: Link2,
+      },
+    ],
   },
   {
     group: "CSV Operations",
     items: [
       { name: "CSV Info", path: "/features/csv-info", icon: FileSpreadsheet },
-      { name: "CSV to Excel", path: "/features/csv-convert", icon: ArrowRightLeft }
-    ]
+      {
+        name: "CSV to Excel",
+        path: "/features/csv-convert",
+        icon: ArrowRightLeft,
+      },
+    ],
   },
   {
     group: "Data Transformation",
     items: [
       { name: "Normalization", path: "/features/normalization", icon: Wand2 },
-      { name: "File Binding", path: "/features/file-binding", icon: FileInput, disabled: true }
-    ]
+      {
+        name: "File Binding",
+        path: "/features/file-binding",
+        icon: FileInput,
+        disabled: true,
+      },
+    ],
   },
   {
     group: "SQL Generation",
     items: [
-      { name: "Standard SQL", path: "/features/sql-generation", icon: Database },
-      { name: "Custom Template SQL", path: "/features/sql-custom", icon: Code2 }
-    ]
+      {
+        name: "Standard SQL",
+        path: "/features/sql-generation",
+        icon: Database,
+      },
+      {
+        name: "SQL Template",
+        path: "/features/sql-custom",
+        icon: Code2,
+      },
+    ],
   },
   {
     group: "JSON Generation",
     items: [
-      { name: "Standard JSON", path: "/features/json-generation", icon: Braces },
-      { name: "Template JSON", path: "/features/json-template", icon: FileJson }
-    ]
-  }
+      {
+        name: "Standard JSON",
+        path: "/features/json-generation",
+        icon: Braces,
+        disabled: true,
+      },
+      {
+        name: "JSON Template",
+        path: "/features/json-template",
+        icon: FileJson,
+      },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -78,7 +137,7 @@ export function AppSidebar() {
                   const Icon = item.icon;
                   const isActive = pathname === item.path;
                   const isDisabled = item.disabled;
-                  
+
                   if (isDisabled) {
                     return (
                       <div
@@ -91,7 +150,7 @@ export function AppSidebar() {
                       </div>
                     );
                   }
-                  
+
                   return (
                     <Link
                       key={item.path}
