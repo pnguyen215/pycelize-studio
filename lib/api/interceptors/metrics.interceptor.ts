@@ -93,7 +93,7 @@ export function metricsResponseInterceptor(
     duration,
     timestamp: config?._startTime,
     success: true,
-    cached: config._useCache,
+    cached: config?._useCache,
     retries: config._retryCount || 0,
   };
 

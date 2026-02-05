@@ -177,7 +177,7 @@ export function cacheResponseInterceptor(
     CacheInterceptorConfig & { _useCache?: boolean };
 
   // Only cache if marked as cacheable
-  if (!config._useCache) {
+  if (!config?._useCache) {
     return response;
   }
 

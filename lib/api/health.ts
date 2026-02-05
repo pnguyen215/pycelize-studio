@@ -8,9 +8,8 @@ export const healthApi = {
    */
   check: async (): Promise<StandardResponse<HealthCheckResponse>> => {
     return api.get("/health", {
-      notification: { enabled: true },
+      notification: { enabled: false },
       retry: { retries: 3 },
-      rateLimit: { maxRequests: 10, timeWindow: 1000 },
     });
   },
 };
