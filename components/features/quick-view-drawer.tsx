@@ -218,13 +218,13 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
           )}
 
           {!isLoading && !error && parsedData && (
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
+            <div className="rounded-md border overflow-hidden">
+              <div className="max-h-[500px] overflow-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-background border-b shadow-sm">
                     <TableRow>
                       {parsedData.headers.map((header, index) => (
-                        <TableHead key={index} className="whitespace-nowrap">
+                        <TableHead key={index} className="whitespace-nowrap bg-background">
                           {header || `Column ${index + 1}`}
                         </TableHead>
                       ))}
