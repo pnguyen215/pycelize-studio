@@ -53,6 +53,12 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
     setError(null)
     
     try {
+      // File size limit: 10MB for security and performance
+      const MAX_FILE_SIZE = 10 * 1024 * 1024
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error('File size exceeds 10MB limit')
+      }
+      
       const extension = file.name.split('.').pop()?.toLowerCase()
       
       if (extension === 'csv') {
@@ -61,6 +67,7 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
         const result = Papa.parse(text, {
           header: false,
           skipEmptyLines: true,
+          preview: 1000, // Limit parsing to first 1000 rows for performance
         })
         
         if (result.errors.length > 0) {
@@ -79,7 +86,10 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
       } else if (extension === 'xlsx' || extension === 'xls') {
         // Parse Excel using xlsx
         const arrayBuffer = await file.arrayBuffer()
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+        const workbook = XLSX.read(arrayBuffer, { 
+          type: 'array',
+          sheetRows: 1000, // Limit rows read for performance and security
+        })
         
         // Get first sheet
         const firstSheetName = workbook.SheetNames[0]
@@ -121,8 +131,10 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
 
   const handleRowCountChange = (value: string) => {
     const num = parseInt(value, 10)
-    if (!isNaN(num) && num > 0) {
+    if (!isNaN(num) && num > 0 && num <= 10000) {
       setRowCount(num)
+    } else if (value === '') {
+      setRowCount(10) // Reset to default on empty
     }
   }
 
@@ -154,10 +166,14 @@ export function QuickViewDrawer({ file }: QuickViewDrawerProps) {
                 id="row-count"
                 type="number"
                 min="1"
+                max="10000"
                 value={rowCount}
                 onChange={(e) => handleRowCountChange(e.target.value)}
                 className="mt-1"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Maximum 10,000 rows
+              </p>
             </div>
           </div>
 
