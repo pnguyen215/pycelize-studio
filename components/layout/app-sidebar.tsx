@@ -38,6 +38,7 @@ const navigationGroups = [
         name: "Extract Columns (JSON)",
         path: "/features/column-extraction",
         icon: Columns,
+        disabled: true,
       },
       {
         name: "Extract Columns (File)",
