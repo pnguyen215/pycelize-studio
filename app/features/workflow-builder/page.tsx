@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/features/file-upload";
-import { Play, Save, Plus, AlertCircle } from "lucide-react";
+import { Play, Save, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { WorkflowConfig, WorkflowStepConfig } from "@/lib/api/types";
 import { Workflow, WorkflowContext, WorkflowExecutor, StepFactory } from "@/lib/workflow";
@@ -12,6 +12,7 @@ import { StepListPanel } from "@/components/features/workflow/StepListPanel";
 import { StepConfigurationPanel } from "@/components/features/workflow/StepConfigurationPanel";
 import { ExecutionStatusView } from "@/components/features/workflow/ExecutionStatusView";
 import { ExecutionControlPanel } from "@/components/features/workflow/ExecutionControlPanel";
+import { WorkflowOverviewPanel } from "@/components/features/workflow/WorkflowOverviewPanel";
 
 export default function WorkflowBuilderPage() {
   const [inputFile, setInputFile] = useState<File | null>(null);
@@ -20,6 +21,7 @@ export default function WorkflowBuilderPage() {
   const [workflowContext, setWorkflowContext] = useState<WorkflowContext | null>(null);
   const [executor, setExecutor] = useState<WorkflowExecutor | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isWorkflowConfirmed, setIsWorkflowConfirmed] = useState(false);
 
   // Initialize workflow when file is uploaded
   const handleFileUpload = useCallback((file: File | null) => {
@@ -72,6 +74,7 @@ export default function WorkflowBuilderPage() {
       
       setWorkflow(updatedWorkflow);
       setSelectedStepIndex(steps.length - 1);
+      setIsWorkflowConfirmed(false); // Reset confirmation when workflow changes
       toast.success("Step added to workflow");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to add step");
@@ -92,6 +95,7 @@ export default function WorkflowBuilderPage() {
       
       setWorkflow(updatedWorkflow);
       setSelectedStepIndex(-1);
+      setIsWorkflowConfirmed(false); // Reset confirmation when workflow changes
       toast.success("Step removed");
     }
   }, [workflow]);
@@ -109,14 +113,63 @@ export default function WorkflowBuilderPage() {
       updatedWorkflow.setSteps(steps);
       
       setWorkflow(updatedWorkflow);
+      setIsWorkflowConfirmed(false); // Reset confirmation when step config changes
       toast.success("Step updated");
     }
   }, [workflow]);
+
+  // Confirm workflow steps
+  const handleConfirmWorkflow = useCallback(() => {
+    if (!workflow || workflow.getStepCount() === 0) {
+      toast.error("Please add at least one step");
+      return;
+    }
+
+    // Validate workflow
+    const validation = workflow.validate();
+    if (!validation.valid) {
+      const errors = Object.entries(validation.errors)
+        .map(([stepId, errors]) => `Step ${stepId}: ${errors.join(", ")}`)
+        .join("\n");
+      toast.error(`Please configure all steps properly:\n${errors}`);
+      return;
+    }
+
+    setIsWorkflowConfirmed(true);
+    toast.success("Workflow confirmed! Ready to execute.");
+  }, [workflow]);
+
+  // Edit a step (from overview panel)
+  const handleEditStep = useCallback((stepIndex: number) => {
+    setSelectedStepIndex(stepIndex);
+    setIsWorkflowConfirmed(false); // Unconfirm when editing
+    toast.info("Edit the step configuration, then confirm again");
+  }, []);
+
+  // Retry a failed step
+  const handleRetryStep = useCallback(async (stepIndex: number) => {
+    if (!executor) {
+      toast.error("No active executor to retry");
+      return;
+    }
+
+    setIsExecuting(true);
+    try {
+      await executor.retry(stepIndex);
+    } catch (error) {
+      console.error("Retry error:", error);
+    }
+  }, [executor]);
 
   // Execute the workflow
   const handleExecute = useCallback(async () => {
     if (!workflow || !inputFile) {
       toast.error("Please upload a file and add steps");
+      return;
+    }
+
+    if (!isWorkflowConfirmed) {
+      toast.error("Please confirm the workflow before executing");
       return;
     }
 
@@ -139,7 +192,7 @@ export default function WorkflowBuilderPage() {
     // Set callbacks
     newExecutor.setCallbacks({
       onStepStart: (step, stepIndex) => {
-        setWorkflowContext(new WorkflowContext(workflow.getId(), inputFile));
+        setWorkflowContext(newExecutor.getContext());
         toast.info(`Executing: ${step.getName()}`);
       },
       onStepComplete: (step, result) => {
@@ -283,12 +336,54 @@ export default function WorkflowBuilderPage() {
         </div>
       )}
 
+      {/* Confirm Workflow Button */}
+      {workflow && workflow.getStepCount() > 0 && !isWorkflowConfirmed && !isExecuting && (
+        <Card className="border-2 border-primary">
+          <CardHeader>
+            <CardTitle>3. Confirm Workflow Steps</CardTitle>
+            <CardDescription>
+              Review and confirm all steps before execution
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={handleConfirmWorkflow}
+              size="lg"
+              className="w-full"
+            >
+              <CheckCircle2 className="mr-2 h-5 w-5" />
+              Confirm Workflow Configuration
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Workflow Overview Panel - Shows after confirmation */}
+      {workflow && workflow.getStepCount() > 0 && isWorkflowConfirmed && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Workflow Overview</CardTitle>
+            <CardDescription>
+              Visual overview of all workflow steps and their status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WorkflowOverviewPanel
+              workflow={workflow}
+              workflowContext={workflowContext}
+              onEditStep={handleEditStep}
+              onRetryStep={handleRetryStep}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Execution Controls */}
-      {workflow && workflow.getStepCount() > 0 && (
+      {workflow && workflow.getStepCount() > 0 && isWorkflowConfirmed && (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>3. Execute Workflow</CardTitle>
+              <CardTitle>4. Execute Workflow</CardTitle>
               <CardDescription>
                 Run the workflow or control its execution
               </CardDescription>
@@ -308,9 +403,9 @@ export default function WorkflowBuilderPage() {
           {workflowContext && (
             <Card>
               <CardHeader>
-                <CardTitle>Execution Status</CardTitle>
+                <CardTitle>Execution Results</CardTitle>
                 <CardDescription>
-                  View the progress and results of each step
+                  View detailed results and download output files
                 </CardDescription>
               </CardHeader>
               <CardContent>
