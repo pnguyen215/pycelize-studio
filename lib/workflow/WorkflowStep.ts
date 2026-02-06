@@ -3,6 +3,7 @@ import type {
   StepResult,
   WorkflowStepStatus,
 } from "@/lib/api/types";
+import { apiClient } from "@/lib/api/client";
 
 /**
  * Abstract base class for workflow steps
@@ -113,11 +114,26 @@ export abstract class WorkflowStep {
     downloadUrl: string,
     fileName: string
   ): Promise<File> {
-    const response = await fetch(downloadUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download file: ${response.statusText}`);
+    try {
+      // Use axios to download the file with proper headers
+      const response = await apiClient.get(downloadUrl, {
+        responseType: 'blob',
+        notification: { enabled: false },
+      } as any);
+      
+      if (response.status !== 200) {
+        throw new Error(`Failed to download file: ${response.statusText}`);
+      }
+      
+      const blob = response.data;
+      return new File([blob], fileName, { type: blob.type });
+    } catch (error) {
+      console.error('Error downloading file from URL:', downloadUrl, error);
+      throw new Error(
+        `Failed to download file: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
     }
-    const blob = await response.blob();
-    return new File([blob], fileName, { type: blob.type });
   }
 }

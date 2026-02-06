@@ -2,6 +2,7 @@ import type { StepResult } from "@/lib/api/types";
 import { Workflow } from "./Workflow";
 import { WorkflowContext } from "./WorkflowContext";
 import { WorkflowStep } from "./WorkflowStep";
+import { apiClient } from "@/lib/api/client";
 
 /**
  * Callback function types for workflow execution events
@@ -109,12 +110,26 @@ export class WorkflowExecutor {
           if (result.output.downloadUrl) {
             const fileName =
               result.output.fileName || `step-${i + 1}-output.xlsx`;
-            const nextFile = await this.downloadUrlToFile(
-              result.output.downloadUrl,
-              fileName
-            );
-            this.context.setCurrentFile(nextFile);
-            this.context.setCurrentFileUrl(result.output.downloadUrl);
+            
+            console.log(`[Workflow] Downloading output from step ${i + 1}:`, result.output.downloadUrl);
+            
+            try {
+              const nextFile = await this.downloadUrlToFile(
+                result.output.downloadUrl,
+                fileName
+              );
+              this.context.setCurrentFile(nextFile);
+              this.context.setCurrentFileUrl(result.output.downloadUrl);
+              
+              console.log(`[Workflow] Successfully downloaded file for next step:`, fileName);
+            } catch (downloadError) {
+              console.error(`[Workflow] Failed to download file from step ${i + 1}:`, downloadError);
+              throw new Error(
+                `Failed to download output from step "${step.getName()}": ${
+                  downloadError instanceof Error ? downloadError.message : 'Unknown error'
+                }`
+              );
+            }
           }
         } catch (error) {
           // Handle step error
@@ -201,12 +216,35 @@ export class WorkflowExecutor {
     downloadUrl: string,
     fileName: string
   ): Promise<File> {
-    const response = await fetch(downloadUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download file: ${response.statusText}`);
+    try {
+      // Determine if this is a full URL or a relative path
+      // If it's a full URL (starts with http:// or https://), use it directly
+      // Otherwise, treat it as a relative path
+      const isFullUrl = downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://');
+      
+      // Use axios to download the file with proper headers
+      const response = await apiClient.get(downloadUrl, {
+        responseType: 'blob',
+        // Disable notifications for file downloads
+        notification: { enabled: false },
+        // If it's a full URL, we need to use it as-is
+        baseURL: isFullUrl ? undefined : undefined,
+      } as any);
+      
+      if (response.status !== 200) {
+        throw new Error(`Failed to download file: ${response.statusText}`);
+      }
+      
+      const blob = response.data;
+      return new File([blob], fileName, { type: blob.type });
+    } catch (error) {
+      console.error('Error downloading file from URL:', downloadUrl, error);
+      throw new Error(
+        `Failed to download intermediate file: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
     }
-    const blob = await response.blob();
-    return new File([blob], fileName, { type: blob.type });
   }
 
   /**
