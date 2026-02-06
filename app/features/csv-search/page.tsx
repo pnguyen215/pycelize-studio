@@ -12,7 +12,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/features/file-upload";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { MetricCard } from "@/components/features/metric-card";
-import { QuickViewDrawer } from "@/components/features/quick-view-drawer";
 import { SearchFilterDrawer } from "@/components/features/search-filter-drawer";
 import { DownloadLink } from "@/components/features/download-link";
 import { csvApi } from "@/lib/api/csv";
@@ -100,19 +99,17 @@ export default function CSVSearchPage() {
             onChange={handleFileChange}
             value={file}
             label="Select CSV File"
+            showQuickView={false}
           />
           
           {file && !loadingColumns && fileColumns.length > 0 && (
-            <div className="flex gap-2">
-              <QuickViewDrawer file={file} />
-              <SearchFilterDrawer
-                file={file}
-                fileType="csv"
-                columns={fileColumns}
-                onSearch={handleSearch}
-                onFetchOperators={handleFetchOperators}
-              />
-            </div>
+            <SearchFilterDrawer
+              file={file}
+              fileType="csv"
+              columns={fileColumns}
+              onSearch={handleSearch}
+              onFetchOperators={handleFetchOperators}
+            />
           )}
 
           {loadingColumns && (

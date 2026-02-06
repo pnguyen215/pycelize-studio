@@ -8,6 +8,7 @@ interface FileUploadProps {
   value?: File | null;
   multiple?: boolean;
   label?: string;
+  showQuickView?: boolean;
 }
 
 export function FileUpload({ 
@@ -15,7 +16,8 @@ export function FileUpload({
   onChange,
   value,
   multiple = false,
-  label = "Upload File"
+  label = "Upload File",
+  showQuickView = true
 }: FileUploadProps) {
   return (
     <div className="grid w-full items-center gap-1.5">
@@ -32,7 +34,7 @@ export function FileUpload({
           <p className="text-sm text-muted-foreground mt-1">
             Selected: {value.name} ({(value.size / 1024).toFixed(2)} KB)
           </p>
-          <QuickViewDrawer file={value} />
+          {showQuickView && <QuickViewDrawer file={value} />}
         </div>
       )}
     </div>
