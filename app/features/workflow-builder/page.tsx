@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/features/file-upload";
 import { Play, Save, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
 import type { WorkflowConfig, WorkflowStepConfig } from "@/lib/api/types";
 import { Workflow, WorkflowContext, WorkflowExecutor, StepFactory } from "@/lib/workflow";
 import { StepListPanel } from "@/components/features/workflow/StepListPanel";
@@ -15,6 +14,15 @@ import { ExecutionControlPanel } from "@/components/features/workflow/ExecutionC
 import { WorkflowOverviewPanel } from "@/components/features/workflow/WorkflowOverviewPanel";
 import { generateWorkflowId, generateStepId } from "@/lib/utils/id-generator";
 import { saveWorkflow, updateWorkflowStatus } from "@/lib/services/workflow-storage";
+import { NotificationManager } from "@/lib/services/notification-manager";
+import { CacheManager } from "@/lib/services/cache-manager";
+
+// Cache manager for workflow state persistence
+const workflowCache = new CacheManager({
+  storage: "localStorage",
+  keyPrefix: "workflow_",
+  defaultTTL: 24 * 60 * 60 * 1000, // 24 hours
+});
 
 export default function WorkflowBuilderPage() {
   const [inputFile, setInputFile] = useState<File | null>(null);
@@ -24,6 +32,19 @@ export default function WorkflowBuilderPage() {
   const [executor, setExecutor] = useState<WorkflowExecutor | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isWorkflowConfirmed, setIsWorkflowConfirmed] = useState(false);
+
+  // Load workflow confirmation state from cache on mount
+  useEffect(() => {
+    if (workflow) {
+      const cachedConfirmation = workflowCache.get<boolean>(
+        `confirmation_${workflow.getId()}`,
+        undefined
+      );
+      if (cachedConfirmation !== null) {
+        setIsWorkflowConfirmed(cachedConfirmation);
+      }
+    }
+  }, [workflow?.getId()]);
 
   // Initialize workflow when file is uploaded
   const handleFileUpload = useCallback((file: File | null) => {
@@ -44,14 +65,14 @@ export default function WorkflowBuilderPage() {
       
       const newWorkflow = new Workflow(workflowConfig);
       setWorkflow(newWorkflow);
-      toast.success("Workflow initialized");
+      NotificationManager.success("Workflow initialized");
     }
   }, [workflow]);
 
   // Add a new step to the workflow
   const handleAddStep = useCallback((stepType: string) => {
     if (!workflow) {
-      toast.error("Please upload a file first");
+      NotificationManager.error("Please upload a file first");
       return;
     }
 
@@ -77,9 +98,13 @@ export default function WorkflowBuilderPage() {
       setWorkflow(updatedWorkflow);
       setSelectedStepIndex(steps.length - 1);
       setIsWorkflowConfirmed(false); // Reset confirmation when workflow changes
-      toast.success("Step added to workflow");
+      
+      // Clear confirmation cache
+      workflowCache.invalidate(`confirmation_${workflow.getId()}`, undefined);
+      
+      NotificationManager.success("Step added to workflow");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add step");
+      NotificationManager.error(error instanceof Error ? error.message : "Failed to add step");
     }
   }, [workflow]);
 
@@ -98,7 +123,11 @@ export default function WorkflowBuilderPage() {
       setWorkflow(updatedWorkflow);
       setSelectedStepIndex(-1);
       setIsWorkflowConfirmed(false); // Reset confirmation when workflow changes
-      toast.success("Step removed");
+      
+      // Clear confirmation cache
+      workflowCache.invalidate(`confirmation_${workflow.getId()}`, undefined);
+      
+      NotificationManager.success("Step removed");
     }
   }, [workflow]);
 
@@ -116,14 +145,18 @@ export default function WorkflowBuilderPage() {
       
       setWorkflow(updatedWorkflow);
       setIsWorkflowConfirmed(false); // Reset confirmation when step config changes
-      toast.success("Step updated");
+      
+      // Clear confirmation cache
+      workflowCache.invalidate(`confirmation_${workflow.getId()}`, undefined);
+      
+      NotificationManager.success("Step updated");
     }
   }, [workflow]);
 
   // Confirm workflow steps
   const handleConfirmWorkflow = useCallback(() => {
     if (!workflow || workflow.getStepCount() === 0) {
-      toast.error("Please add at least one step");
+      NotificationManager.error("Please add at least one step");
       return;
     }
 
@@ -133,11 +166,14 @@ export default function WorkflowBuilderPage() {
       const errors = Object.entries(validation.errors)
         .map(([stepId, errors]) => `Step ${stepId}: ${errors.join(", ")}`)
         .join("\n");
-      toast.error(`Please configure all steps properly:\n${errors}`);
+      NotificationManager.error(`Please configure all steps properly:\n${errors}`);
       return;
     }
 
     setIsWorkflowConfirmed(true);
+    
+    // Persist confirmation state to localStorage
+    workflowCache.set(`confirmation_${workflow.getId()}`, undefined, true);
     
     // Save workflow to localStorage
     const config = workflow.getConfig();
@@ -146,20 +182,26 @@ export default function WorkflowBuilderPage() {
       status: "draft",
     });
     
-    toast.success("Workflow confirmed and saved! Ready to execute.");
+    NotificationManager.success("Workflow confirmed and saved! Ready to execute.");
   }, [workflow]);
 
   // Edit a step (from overview panel)
   const handleEditStep = useCallback((stepIndex: number) => {
     setSelectedStepIndex(stepIndex);
     setIsWorkflowConfirmed(false); // Unconfirm when editing
-    toast.info("Edit the step configuration, then confirm again");
-  }, []);
+    
+    // Clear confirmation cache
+    if (workflow) {
+      workflowCache.invalidate(`confirmation_${workflow.getId()}`, undefined);
+    }
+    
+    NotificationManager.info("Edit the step configuration, then confirm again");
+  }, [workflow]);
 
   // Retry a failed step
   const handleRetryStep = useCallback(async (stepIndex: number) => {
     if (!executor) {
-      toast.error("No active executor to retry");
+      NotificationManager.error("No active executor to retry");
       return;
     }
 
@@ -174,12 +216,12 @@ export default function WorkflowBuilderPage() {
   // Execute the workflow
   const handleExecute = useCallback(async () => {
     if (!workflow || !inputFile) {
-      toast.error("Please upload a file and add steps");
+      NotificationManager.error("Please upload a file and add steps");
       return;
     }
 
     if (!isWorkflowConfirmed) {
-      toast.error("Please confirm the workflow before executing");
+      NotificationManager.error("Please confirm the workflow before executing");
       return;
     }
 
@@ -189,7 +231,7 @@ export default function WorkflowBuilderPage() {
       const errors = Object.entries(validation.errors)
         .map(([stepId, errors]) => `${stepId}: ${errors.join(", ")}`)
         .join("\n");
-      toast.error(`Workflow validation failed:\n${errors}`);
+      NotificationManager.error(`Workflow validation failed:\n${errors}`);
       return;
     }
 
@@ -206,20 +248,20 @@ export default function WorkflowBuilderPage() {
     newExecutor.setCallbacks({
       onStepStart: (step, stepIndex) => {
         setWorkflowContext(newExecutor.getContext());
-        toast.info(`Executing: ${step.getName()}`);
+        NotificationManager.info(`Executing: ${step.getName()}`);
       },
       onStepComplete: (step, result) => {
         setWorkflowContext(newExecutor.getContext());
-        toast.success(`Completed: ${step.getName()}`);
+        NotificationManager.success(`Completed: ${step.getName()}`);
       },
       onStepError: (step, error) => {
         setWorkflowContext(newExecutor.getContext());
-        toast.error(`Failed: ${step.getName()} - ${error.message}`);
+        NotificationManager.error(`Failed: ${step.getName()} - ${error.message}`);
       },
       onWorkflowComplete: (context) => {
         setWorkflowContext(context);
         updateWorkflowStatus(workflow.getId(), "completed");
-        toast.success("Workflow completed successfully!");
+        NotificationManager.success("Workflow completed successfully!");
         setIsExecuting(false);
       },
       onWorkflowError: (error, context) => {
@@ -230,7 +272,7 @@ export default function WorkflowBuilderPage() {
       onWorkflowCancelled: (context) => {
         setWorkflowContext(context);
         updateWorkflowStatus(workflow.getId(), "cancelled");
-        toast.info("Workflow cancelled");
+        NotificationManager.info("Workflow cancelled");
         setIsExecuting(false);
       },
     });
@@ -250,7 +292,7 @@ export default function WorkflowBuilderPage() {
   const handleCancel = useCallback(() => {
     if (executor) {
       executor.cancel();
-      toast.info("Cancelling workflow...");
+      NotificationManager.info("Cancelling workflow...");
     }
   }, [executor]);
 
