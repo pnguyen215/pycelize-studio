@@ -43,7 +43,6 @@ interface ConditionRow extends SearchCondition {
 
 export function SearchFilterDrawer({
   file,
-  fileType,
   columns,
   onSearch,
   onFetchOperators,
@@ -168,7 +167,7 @@ export function SearchFilterDrawer({
     setError(null)
 
     try {
-      const searchConditions: SearchCondition[] = conditions.map(({ id, ...rest }) => rest)
+      const searchConditions: SearchCondition[] = conditions.map(({ id: _id, ...rest }) => rest)
       await onSearch({
         conditions: searchConditions,
         logic,
@@ -266,7 +265,7 @@ export function SearchFilterDrawer({
             {conditions.length === 0 && (
               <div className="text-center py-8 border rounded-md border-dashed">
                 <p className="text-sm text-muted-foreground">
-                  No conditions added. Click "Add Condition" to start.
+                  No conditions added. Click &quot;Add Condition&quot; to start.
                 </p>
               </div>
             )}

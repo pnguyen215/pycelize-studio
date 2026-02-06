@@ -161,7 +161,7 @@ export default function CSVSearchPage() {
             </CardHeader>
             <CardContent>
               <DownloadLink
-                url={result.data.download_url}
+                downloadUrl={result.data.download_url}
                 filename="search_results.csv"
               />
             </CardContent>
