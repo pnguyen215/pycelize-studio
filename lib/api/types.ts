@@ -398,3 +398,250 @@ export interface ColumnOperatorSuggestion {
 export interface SuggestOperatorsResponse {
   [columnName: string]: ColumnOperatorSuggestion;
 }
+
+/**
+ * Workflow Types
+ */
+
+/**
+ * Workflow Step Status
+ */
+export type WorkflowStepStatus =
+  | "pending"
+  | "running"
+  | "success"
+  | "failed"
+  | "cancelled";
+
+/**
+ * Workflow Step Type - Available operations
+ */
+export type WorkflowStepType =
+  | "extraction"
+  | "extraction-file"
+  | "mapping"
+  | "normalization"
+  | "search"
+  | "binding-single"
+  | "binding-multi"
+  | "file-binding"
+  | "sql-generation"
+  | "sql-custom"
+  | "json-generation"
+  | "json-template"
+  | "csv-convert";
+
+/**
+ * Step Result
+ * Represents the result of a workflow step execution
+ */
+export interface StepResult {
+  stepId: string;
+  stepType: WorkflowStepType;
+  status: WorkflowStepStatus;
+  input: {
+    fileId?: string;
+    fileName?: string;
+    [key: string]: unknown;
+  };
+  output: {
+    fileId?: string;
+    fileName?: string;
+    downloadUrl?: string;
+    [key: string]: unknown;
+  };
+  executedAt: string;
+  error?: {
+    message: string;
+    details?: string;
+  };
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Workflow Step Configuration
+ * Base configuration for all workflow steps
+ */
+export interface WorkflowStepConfig {
+  id: string;
+  type: WorkflowStepType;
+  name: string;
+  description?: string;
+  config: Record<string, unknown>;
+  enabled: boolean;
+}
+
+/**
+ * Extraction Step Configuration
+ */
+export interface ExtractionStepConfig extends WorkflowStepConfig {
+  type: "extraction" | "extraction-file";
+  config: {
+    columns: string[];
+    removeDuplicates: boolean;
+  };
+}
+
+/**
+ * Mapping Step Configuration
+ */
+export interface MappingStepConfig extends WorkflowStepConfig {
+  type: "mapping";
+  config: {
+    mapping: Record<string, { source: string; default?: string }>;
+    outputFilename?: string;
+  };
+}
+
+/**
+ * Normalization Step Configuration
+ */
+export interface NormalizationStepConfig extends WorkflowStepConfig {
+  type: "normalization";
+  config: {
+    normalizations: Array<{
+      column_name: string;
+      normalization_type: string;
+    }>;
+    outputFilename?: string;
+  };
+}
+
+/**
+ * Search Step Configuration
+ */
+export interface SearchStepConfig extends WorkflowStepConfig {
+  type: "search";
+  config: {
+    conditions: SearchCondition[];
+    logic?: "AND" | "OR";
+    outputFormat?: "xlsx" | "csv" | "json";
+    outputFilename?: string;
+  };
+}
+
+/**
+ * Binding Single Key Step Configuration
+ */
+export interface BindingSingleKeyStepConfig extends WorkflowStepConfig {
+  type: "binding-single";
+  config: {
+    bindFile: File;
+    comparisonColumn: string;
+    bindColumns: string[];
+    outputFilename?: string;
+  };
+}
+
+/**
+ * Binding Multi Key Step Configuration
+ */
+export interface BindingMultiKeyStepConfig extends WorkflowStepConfig {
+  type: "binding-multi";
+  config: {
+    bindFile: File;
+    comparisonColumns: string[];
+    bindColumns: string[];
+    outputFilename?: string;
+  };
+}
+
+/**
+ * SQL Generation Step Configuration
+ */
+export interface SQLGenerationStepConfig extends WorkflowStepConfig {
+  type: "sql-generation";
+  config: {
+    tableName: string;
+    databaseType: "postgresql" | "mysql" | "sqlite";
+    columns?: string[];
+    columnMapping?: Record<string, string>;
+    autoIncrement?: {
+      enabled: boolean;
+      columnName: string;
+      incrementType?: string;
+      startValue?: number;
+      sequenceName?: string;
+    };
+    removeDuplicates?: boolean;
+  };
+}
+
+/**
+ * JSON Generation Step Configuration
+ */
+export interface JSONGenerationStepConfig extends WorkflowStepConfig {
+  type: "json-generation";
+  config: {
+    columns?: string[];
+    columnMapping?: Record<string, string>;
+    prettyPrint?: boolean;
+    nullHandling?: "include" | "exclude" | "default";
+    arrayWrapper?: boolean;
+    outputFilename?: string;
+  };
+}
+
+/**
+ * CSV Convert Step Configuration
+ */
+export interface CSVConvertStepConfig extends WorkflowStepConfig {
+  type: "csv-convert";
+  config: {
+    sheetName?: string;
+    outputFilename?: string;
+  };
+}
+
+/**
+ * Workflow Configuration
+ */
+export interface WorkflowConfig {
+  id: string;
+  name: string;
+  description?: string;
+  steps: WorkflowStepConfig[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Workflow Execution Context
+ */
+export interface WorkflowContext {
+  workflowId: string;
+  currentStepIndex: number;
+  currentFile: File | null;
+  currentFileUrl?: string;
+  stepResults: StepResult[];
+  status: "idle" | "running" | "paused" | "completed" | "failed" | "cancelled";
+  startedAt?: string;
+  completedAt?: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Workflow Execution Request
+ */
+export interface WorkflowExecutionRequest {
+  workflow: WorkflowConfig;
+  inputFile: File;
+  resumeFromStep?: number;
+}
+
+/**
+ * Workflow Execution Response
+ */
+export interface WorkflowExecutionResponse {
+  workflowId: string;
+  status: WorkflowContext["status"];
+  stepResults: StepResult[];
+  finalOutput?: {
+    downloadUrl: string;
+    fileName: string;
+  };
+  error?: {
+    stepId: string;
+    message: string;
+  };
+}
