@@ -8,6 +8,9 @@ import type {
   ColumnMappingRequest,
   BindingSingleKeyRequest,
   BindingMultiKeyRequest,
+  SearchRequest,
+  SearchResponse,
+  SuggestOperatorsResponse,
 } from "./types";
 
 export const excelApi = {
@@ -139,6 +142,53 @@ export const excelApi = {
     }
 
     return api.post("/excel/bind-multi-key", form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
+  },
+
+  /**
+   * Search and filter Excel data
+   * @param request - The request object
+   * @returns Search results with download URL
+   */
+  search: async (
+    request: SearchRequest
+  ): Promise<StandardResponse<SearchResponse>> => {
+    const form = new FormData();
+
+    form.append("file", request.file);
+    form.append("conditions", JSON.stringify(request.conditions));
+    if (request.logic) {
+      form.append("logic", request.logic);
+    }
+    if (request.outputFormat) {
+      form.append("output_format", request.outputFormat);
+    }
+    if (request.outputFilename) {
+      form.append("output_filename", request.outputFilename);
+    }
+
+    return api.post("/excel/search", form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
+  },
+
+  /**
+   * Get suggested operators for Excel columns
+   * @param file - The Excel file
+   * @returns Suggested operators for each column
+   */
+  suggestOperators: async (
+    file: File
+  ): Promise<StandardResponse<SuggestOperatorsResponse>> => {
+    const form = new FormData();
+    form.append("file", file);
+
+    return api.post("/excel/search/suggest-operators", form, {
       notification: { enabled: true },
       retry: { retries: 2 },
       rateLimit: { maxRequests: 10, timeWindow: 1000 },

@@ -338,3 +338,63 @@ export interface FileBindingRequest {
   columnMapping: Record<string, string>;
   outputFilename?: string;
 }
+
+/**
+ * Search Condition
+ * @param column - Column name to search in
+ * @param operator - Search operator
+ * @param value - Value to search for
+ */
+export interface SearchCondition {
+  column: string;
+  operator: string;
+  value: string | number | boolean | [number, number] | [string, string] | null;
+}
+
+/**
+ * Search Request
+ * @param file - The file to search
+ * @param conditions - Array of search conditions
+ * @param logic - Logical operator between conditions (AND/OR)
+ * @param outputFormat - Output format (xlsx, csv, json)
+ * @param outputFilename - Optional output filename
+ */
+export interface SearchRequest {
+  file: File;
+  conditions: SearchCondition[];
+  logic?: "AND" | "OR";
+  outputFormat?: "xlsx" | "csv" | "json";
+  outputFilename?: string;
+}
+
+/**
+ * Search Response
+ * @param download_url - Download URL for the filtered results
+ * @param total_rows - Total number of rows in original file
+ * @param filtered_rows - Number of rows after filtering
+ * @param conditions_applied - Number of conditions applied
+ */
+export interface SearchResponse {
+  download_url: string;
+  total_rows: number;
+  filtered_rows: number;
+  conditions_applied: number;
+}
+
+/**
+ * Column Operator Suggestion
+ * @param type - Data type of the column
+ * @param operators - Array of suggested operators for this column
+ */
+export interface ColumnOperatorSuggestion {
+  type: string;
+  operators: string[];
+}
+
+/**
+ * Suggest Operators Response
+ * @param [columnName: string] - Map of column names to their operator suggestions
+ */
+export interface SuggestOperatorsResponse {
+  [columnName: string]: ColumnOperatorSuggestion;
+}
