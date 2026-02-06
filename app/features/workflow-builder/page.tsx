@@ -63,8 +63,15 @@ export default function WorkflowBuilderPage() {
     try {
       const step = StepFactory.createStep(stepConfig);
       workflow.addStep(step);
-      setWorkflow(new Workflow(workflow.getConfig()));
-      setSelectedStepIndex(workflow.getStepCount() - 1);
+      
+      // Properly recreate workflow with all steps
+      const config = workflow.getConfig();
+      const updatedWorkflow = new Workflow(config);
+      const steps = config.steps.map(stepConfig => StepFactory.createStep(stepConfig));
+      updatedWorkflow.setSteps(steps);
+      
+      setWorkflow(updatedWorkflow);
+      setSelectedStepIndex(steps.length - 1);
       toast.success("Step added to workflow");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to add step");
@@ -77,7 +84,13 @@ export default function WorkflowBuilderPage() {
 
     const success = workflow.removeStep(stepId);
     if (success) {
-      setWorkflow(new Workflow(workflow.getConfig()));
+      // Properly recreate workflow with all remaining steps
+      const config = workflow.getConfig();
+      const updatedWorkflow = new Workflow(config);
+      const steps = config.steps.map(stepConfig => StepFactory.createStep(stepConfig));
+      updatedWorkflow.setSteps(steps);
+      
+      setWorkflow(updatedWorkflow);
       setSelectedStepIndex(-1);
       toast.success("Step removed");
     }
