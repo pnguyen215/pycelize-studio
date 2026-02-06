@@ -6,8 +6,6 @@ import { CheckCircle2, XCircle, Circle, Loader2, Ban, Download, Eye } from "luci
 import type { WorkflowContext, Workflow } from "@/lib/workflow";
 import type { StepResult } from "@/lib/api/types";
 import { DownloadButton } from "@/components/features/download-button";
-import { QuickViewDrawer } from "@/components/features/quick-view-drawer";
-import { useState } from "react";
 
 interface ExecutionStatusViewProps {
   workflowContext: WorkflowContext;
@@ -18,7 +16,6 @@ export function ExecutionStatusView({
   workflowContext,
   workflow,
 }: ExecutionStatusViewProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const context = workflowContext.getContext();
   const steps = workflow.getSteps();
   const stepResults = workflowContext.getStepResults();
@@ -71,6 +68,11 @@ export function ExecutionStatusView({
     );
   };
 
+  const handlePreview = (url: string) => {
+    // Open the file in a new tab for preview
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="space-y-4">
       {/* Workflow Status Summary */}
@@ -120,12 +122,11 @@ export function ExecutionStatusView({
                           <DownloadButton
                             url={result.output.downloadUrl}
                             filename={result.output.fileName || "output"}
-                            size="sm"
                           />
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setPreviewUrl(result.output.downloadUrl || null)}
+                            onClick={() => handlePreview(result.output.downloadUrl!)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             Preview
@@ -185,21 +186,13 @@ export function ExecutionStatusView({
             />
             <Button
               variant="outline"
-              onClick={() => setPreviewUrl(context.currentFileUrl || null)}
+              onClick={() => handlePreview(context.currentFileUrl!)}
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview Result
             </Button>
           </div>
         </Card>
-      )}
-
-      {/* Quick View Drawer */}
-      {previewUrl && (
-        <QuickViewDrawer
-          url={previewUrl}
-          onClose={() => setPreviewUrl(null)}
-        />
       )}
     </div>
   );

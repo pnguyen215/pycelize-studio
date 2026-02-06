@@ -22,7 +22,9 @@ export default function WorkflowBuilderPage() {
   const [isExecuting, setIsExecuting] = useState(false);
 
   // Initialize workflow when file is uploaded
-  const handleFileUpload = useCallback((file: File) => {
+  const handleFileUpload = useCallback((file: File | null) => {
+    if (!file) return;
+    
     setInputFile(file);
     
     // Create a new workflow if none exists

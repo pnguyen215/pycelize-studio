@@ -33,7 +33,7 @@ export class JSONGenerationStep extends WorkflowStep {
     };
 
     try {
-      const response = await jsonApi.generate({
+      const response = await jsonApi.generateJSON({
         file: inputFile,
         columns: config.config.columns,
         columnMapping: config.config.columnMapping,

@@ -42,7 +42,7 @@ export class SQLGenerationStep extends WorkflowStep {
     };
 
     try {
-      const response = await sqlApi.generate({
+      const response = await sqlApi.generateSQL({
         file: inputFile,
         tableName: config.config.tableName,
         databaseType: config.config.databaseType,

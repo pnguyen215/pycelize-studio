@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ColumnSelect } from "@/components/features/column-select";
+import { MultiColumnSelect } from "../MultiColumnSelect";
 import { useFileColumns } from "@/lib/hooks/useFileColumns";
 
 interface ExtractionStepConfigProps {
@@ -18,7 +18,7 @@ export function ExtractionStepConfig({
   inputFile,
 }: ExtractionStepConfigProps) {
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
-    (config.columns as string[]) || []
+    (config.columns as string[]) || [""]
   );
   const [removeDuplicates, setRemoveDuplicates] = useState<boolean>(
     (config.removeDuplicates as boolean) || false
@@ -31,8 +31,10 @@ export function ExtractionStepConfig({
   } = useFileColumns(inputFile, inputFile?.name.endsWith(".csv") ? "csv" : "excel");
 
   useEffect(() => {
+    // Filter out empty columns before saving
+    const validColumns = selectedColumns.filter(col => col.trim() !== "");
     onChange({
-      columns: selectedColumns,
+      columns: validColumns,
       removeDuplicates,
     });
   }, [selectedColumns, removeDuplicates]);
@@ -41,12 +43,12 @@ export function ExtractionStepConfig({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Columns to Extract</Label>
-        <ColumnSelect
+        <MultiColumnSelect
           columns={availableColumns}
           selectedColumns={selectedColumns}
           onChange={setSelectedColumns}
           loading={columnsLoading}
-          placeholder="Select columns to extract..."
+          placeholder="Select column..."
         />
         <p className="text-xs text-muted-foreground">
           Select the columns you want to extract from the input file

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ColumnSelect } from "@/components/features/column-select";
+import { MultiColumnSelect } from "../MultiColumnSelect";
 import { useFileColumns } from "@/lib/hooks/useFileColumns";
 import {
   Select,
@@ -48,8 +48,9 @@ export function JSONGenerationStepConfig({
   } = useFileColumns(inputFile, inputFile?.name.endsWith(".csv") ? "csv" : "excel");
 
   useEffect(() => {
+    const validColumns = selectedColumns.filter(col => col.trim() !== "");
     onChange({
-      columns: selectedColumns.length > 0 ? selectedColumns : undefined,
+      columns: validColumns.length > 0 ? validColumns : undefined,
       prettyPrint,
       nullHandling,
       arrayWrapper,
@@ -59,19 +60,37 @@ export function JSONGenerationStepConfig({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Columns (Optional)</Label>
-        <ColumnSelect
-          columns={availableColumns}
-          selectedColumns={selectedColumns}
-          onChange={setSelectedColumns}
-          loading={columnsLoading}
-          placeholder="All columns (leave empty for all)"
-        />
-        <p className="text-xs text-muted-foreground">
-          Leave empty to include all columns
-        </p>
-      </div>
+      {selectedColumns.length > 0 && (
+        <div className="space-y-2">
+          <Label>Columns (Optional)</Label>
+          <MultiColumnSelect
+            columns={availableColumns}
+            selectedColumns={selectedColumns}
+            onChange={setSelectedColumns}
+            loading={columnsLoading}
+            placeholder="Select column..."
+          />
+          <p className="text-xs text-muted-foreground">
+            Leave empty to include all columns
+          </p>
+        </div>
+      )}
+
+      {selectedColumns.length === 0 && (
+        <div className="space-y-2">
+          <Label>Columns</Label>
+          <p className="text-sm text-muted-foreground">
+            All columns will be included. Click below to specify columns.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSelectedColumns([""])}
+            className="text-sm text-primary hover:underline"
+          >
+            Specify columns
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div>
