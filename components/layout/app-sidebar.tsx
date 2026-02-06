@@ -35,6 +35,7 @@ const navigationGroups = [
   {
     group: "Automation",
     items: [
+      { name: "Workflows", path: "/features/workflows", icon: Workflow },
       { name: "Workflow Builder", path: "/features/workflow-builder", icon: Workflow },
     ],
   },
