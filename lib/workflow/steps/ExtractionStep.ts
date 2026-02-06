@@ -1,7 +1,6 @@
 import { WorkflowStep } from "../WorkflowStep";
 import type { StepResult, ExtractionStepConfig } from "@/lib/api/types";
 import { excelApi } from "@/lib/api/excel";
-import { csvApi } from "@/lib/api/csv";
 
 /**
  * Concrete implementation of Column Extraction step
@@ -36,24 +35,12 @@ export class ExtractionStep extends WorkflowStep {
     };
 
     try {
-      let response;
-      
-      // Use appropriate API based on file type
-      if (inputFile.name.endsWith(".csv")) {
-        // For CSV, use CSV extraction API
-        response = await csvApi.extractColumnsToFile({
-          file: inputFile,
-          columns: config.config.columns,
-          removeDuplicates: config.config.removeDuplicates,
-        });
-      } else {
-        // For Excel files, use Excel extraction API
-        response = await excelApi.extractColumnsToFile({
-          file: inputFile,
-          columns: config.config.columns,
-          removeDuplicates: config.config.removeDuplicates,
-        });
-      }
+      // Use Excel extraction API
+      const response = await excelApi.extractColumnsToFile({
+        file: inputFile,
+        columns: config.config.columns,
+        removeDuplicates: config.config.removeDuplicates,
+      });
 
       this.setStatus("success");
       

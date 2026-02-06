@@ -21,6 +21,7 @@ import {
   FileJson,
   AlertTriangle,
   Search,
+  Workflow,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -29,6 +30,12 @@ const navigationGroups = [
     items: [
       { name: "Dashboard", path: "/", icon: Home },
       { name: "Health Check", path: "/features/health", icon: Activity },
+    ],
+  },
+  {
+    group: "Automation",
+    items: [
+      { name: "Workflow Builder", path: "/features/workflow-builder", icon: Workflow },
     ],
   },
   {
