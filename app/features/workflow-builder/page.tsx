@@ -13,6 +13,8 @@ import { StepConfigurationPanel } from "@/components/features/workflow/StepConfi
 import { ExecutionStatusView } from "@/components/features/workflow/ExecutionStatusView";
 import { ExecutionControlPanel } from "@/components/features/workflow/ExecutionControlPanel";
 import { WorkflowOverviewPanel } from "@/components/features/workflow/WorkflowOverviewPanel";
+import { generateWorkflowId, generateStepId } from "@/lib/utils/id-generator";
+import { saveWorkflow, updateWorkflowStatus } from "@/lib/services/workflow-storage";
 
 export default function WorkflowBuilderPage() {
   const [inputFile, setInputFile] = useState<File | null>(null);
@@ -32,7 +34,7 @@ export default function WorkflowBuilderPage() {
     // Create a new workflow if none exists
     if (!workflow) {
       const workflowConfig: WorkflowConfig = {
-        id: `workflow-${Date.now()}`,
+        id: generateWorkflowId(),
         name: "New Workflow",
         description: `Workflow for ${file.name}`,
         steps: [],
@@ -54,7 +56,7 @@ export default function WorkflowBuilderPage() {
     }
 
     const stepConfig: WorkflowStepConfig = {
-      id: `step-${Date.now()}`,
+      id: generateStepId(),
       type: stepType as any,
       name: `${stepType} Step`,
       description: "",
@@ -136,7 +138,15 @@ export default function WorkflowBuilderPage() {
     }
 
     setIsWorkflowConfirmed(true);
-    toast.success("Workflow confirmed! Ready to execute.");
+    
+    // Save workflow to localStorage
+    const config = workflow.getConfig();
+    saveWorkflow({
+      ...config,
+      status: "draft",
+    });
+    
+    toast.success("Workflow confirmed and saved! Ready to execute.");
   }, [workflow]);
 
   // Edit a step (from overview panel)
@@ -184,6 +194,9 @@ export default function WorkflowBuilderPage() {
     }
 
     setIsExecuting(true);
+    
+    // Update workflow status to running
+    updateWorkflowStatus(workflow.getId(), "running");
 
     // Create workflow context and executor
     const context = new WorkflowContext(workflow.getId(), inputFile);
@@ -205,15 +218,18 @@ export default function WorkflowBuilderPage() {
       },
       onWorkflowComplete: (context) => {
         setWorkflowContext(context);
+        updateWorkflowStatus(workflow.getId(), "completed");
         toast.success("Workflow completed successfully!");
         setIsExecuting(false);
       },
       onWorkflowError: (error, context) => {
         setWorkflowContext(context);
+        updateWorkflowStatus(workflow.getId(), "failed");
         setIsExecuting(false);
       },
       onWorkflowCancelled: (context) => {
         setWorkflowContext(context);
+        updateWorkflowStatus(workflow.getId(), "cancelled");
         toast.info("Workflow cancelled");
         setIsExecuting(false);
       },
