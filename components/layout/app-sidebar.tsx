@@ -20,6 +20,7 @@ import {
   Braces,
   FileJson,
   AlertTriangle,
+  Search,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -60,6 +61,11 @@ const navigationGroups = [
         path: "/features/excel-binding-multi",
         icon: Link2,
       },
+      {
+        name: "Search & Filter",
+        path: "/features/excel-search",
+        icon: Search,
+      },
     ],
   },
   {
@@ -70,6 +76,11 @@ const navigationGroups = [
         name: "CSV to Excel",
         path: "/features/csv-convert",
         icon: ArrowRightLeft,
+      },
+      {
+        name: "Search & Filter",
+        path: "/features/csv-search",
+        icon: Search,
       },
     ],
   },
