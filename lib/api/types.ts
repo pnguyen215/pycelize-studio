@@ -490,3 +490,11 @@ export interface SupportedOperation {
   description: string;
   parameters: Record<string, unknown>;
 }
+
+/**
+ * Supported operations response
+ */
+export interface SupportedOperationsResponse {
+  operations: Record<string, string[]>;
+  total_intents: number;
+}

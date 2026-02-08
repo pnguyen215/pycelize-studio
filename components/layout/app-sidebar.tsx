@@ -35,7 +35,7 @@ const navigationGroups = [
   {
     group: "AI Assistant",
     items: [
-      { name: "Chat Bot", path: "/features/chatbot", icon: MessageSquare },
+      { name: "Chat Conversations", path: "/features/chatbot", icon: MessageSquare },
     ],
   },
   {

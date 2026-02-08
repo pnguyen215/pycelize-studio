@@ -1,185 +1,164 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useChatBot } from "@/lib/hooks/useChatBot";
-import { useChatWebSocket, WebSocketMessage } from "@/lib/hooks/useChatWebSocket";
-import { ChatMessages } from "@/components/features/chat/chat-messages";
-import { ChatInput } from "@/components/features/chat/chat-input";
-import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
-import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
-import { MessageSquare, Trash2, Loader2 } from "lucide-react";
+import { chatBotAPI } from "@/lib/api/chatbot";
+import type { ChatConversation } from "@/lib/api/types";
+import { MessageSquare, Plus, Loader2, Calendar, User } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 
-export default function ChatBotPage() {
-  const {
-    chatId,
-    messages,
-    isLoading,
-    pendingWorkflow,
-    workflowProgress,
-    initChat,
-    sendMessage,
-    uploadFile,
-    confirmWorkflow,
-    deleteConversation,
-    setWorkflowProgress,
-  } = useChatBot();
-  
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+export default function ChatConversationsPage() {
+  const router = useRouter();
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
-  // Initialize chat on mount
   useEffect(() => {
-    initChat();
-  }, [initChat]);
+    loadConversations();
+  }, []);
 
-  // WebSocket message handler
-  const handleWebSocketMessage = useCallback(
-    (message: WebSocketMessage) => {
-      console.log("WebSocket message:", message);
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const data = await chatBotAPI.listConversations();
+      setConversations(data);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+      NotificationManager.error("Failed to load conversations");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      switch (message.type) {
-        case "connected":
-          console.log("WebSocket connected");
-          break;
+  const handleCreateConversation = async () => {
+    try {
+      setCreating(true);
+      const conversation = await chatBotAPI.createConversation();
+      router.push(`/features/chatbot/${conversation.chat_id}`);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      NotificationManager.error("Failed to create conversation");
+    } finally {
+      setCreating(false);
+    }
+  };
 
-        case "workflow_started":
-          setWorkflowProgress({
-            operation: message.operation || "Processing",
-            progress: 0,
-            status: "running",
-            message: message.message || "Starting workflow...",
-          });
-          break;
+  const handleOpenConversation = (chatId: string) => {
+    router.push(`/features/chatbot/${chatId}`);
+  };
 
-        case "progress":
-          setWorkflowProgress({
-            operation: message.operation || "Processing",
-            progress: message.progress || 0,
-            status: message.status || "running",
-            message: message.message || "Processing...",
-          });
-          break;
-
-        case "workflow_completed":
-          setWorkflowProgress({
-            operation: message.operation || "Processing",
-            progress: 100,
-            status: "completed",
-            message: message.message || "Workflow completed!",
-          });
-          
-          // Clear progress after 3 seconds
-          setTimeout(() => {
-            setWorkflowProgress(null);
-          }, 3000);
-          
-          NotificationManager.success("Workflow completed successfully!");
-          break;
-
-        case "workflow_failed":
-          setWorkflowProgress({
-            operation: message.operation || "Processing",
-            progress: 0,
-            status: "failed",
-            message: message.error || "Workflow failed",
-          });
-          
-          // Clear progress after 5 seconds
-          setTimeout(() => {
-            setWorkflowProgress(null);
-          }, 5000);
-          
-          NotificationManager.error(message.error || "Workflow failed");
-          break;
-      }
-    },
-    [setWorkflowProgress]
-  );
-
-  // Connect to WebSocket
-  useChatWebSocket(chatId, handleWebSocketMessage);
-
-  const handleDeleteConversation = async () => {
-    await deleteConversation();
-    setShowDeleteDialog(false);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl h-screen flex flex-col">
-      {/* Header */}
-      <Card className="mb-4 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-              <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-            </div>
+    <div className="container mx-auto p-6 max-w-6xl">
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">Pycelize Chat Bot</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                AI-powered file processing assistant
-              </p>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-6 w-6" />
+                Chat Conversations
+              </CardTitle>
+              <CardDescription>
+                View and manage your chat bot conversations
+              </CardDescription>
             </div>
+            <Button onClick={handleCreateConversation} disabled={creating}>
+              {creating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Conversation
+                </>
+              )}
+            </Button>
           </div>
+        </CardHeader>
+      </Card>
 
-          <div className="flex items-center gap-3">
-            {chatId && (
-              <>
-                <Badge variant="secondary" className="font-mono">
-                  ID: {chatId.slice(0, 8)}
-                </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </>
-            )}
-            
-            {!chatId && (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Initializing...
-                </span>
-              </div>
-            )}
-          </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
-      </Card>
-
-      <Separator className="mb-4" />
-
-      {/* Chat Area */}
-      <Card className="flex-1 flex flex-col overflow-hidden">
-        <ChatMessages messages={messages} workflowProgress={workflowProgress} />
-        <ChatInput
-          onSendMessage={sendMessage}
-          onUploadFile={uploadFile}
-          disabled={isLoading || !chatId}
-        />
-      </Card>
-
-      {/* Workflow Confirmation Dialog */}
-      <WorkflowConfirmDialog
-        open={!!pendingWorkflow}
-        workflow={pendingWorkflow}
-        onConfirm={() => confirmWorkflow(true)}
-        onCancel={() => confirmWorkflow(false)}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        open={showDeleteDialog}
-        onConfirm={handleDeleteConversation}
-        onCancel={() => setShowDeleteDialog(false)}
-      />
+      ) : conversations.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium mb-2">No conversations yet</h3>
+              <p className="text-gray-500 mb-4">
+                Create your first conversation to start chatting with the AI assistant
+              </p>
+              <Button onClick={handleCreateConversation} disabled={creating}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Conversation
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {conversations.map((conversation) => (
+            <Card
+              key={conversation.chat_id}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handleOpenConversation(conversation.chat_id)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="h-4 w-4 text-blue-600" />
+                      <CardTitle className="text-lg">
+                        Conversation
+                      </CardTitle>
+                      {conversation.state && (
+                        <Badge variant={conversation.state === "active" ? "default" : "secondary"}>
+                          {conversation.state}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <User className="h-3 w-3" />
+                        <span>{conversation.participant_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(conversation.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {conversation.chat_id.slice(0, 8)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              {conversation.bot_message && (
+                <>
+                  <Separator />
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {conversation.bot_message}
+                    </p>
+                  </CardContent>
+                </>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import type {
   FileUploadResponse,
   WorkflowConfirmResponse,
   ChatHistoryItem,
-  SupportedOperation,
+  SupportedOperationsResponse,
 } from "./types";
 
 /**
@@ -96,8 +96,16 @@ export const chatBotAPI = {
   /**
    * Get supported operations
    */
-  async getSupportedOperations(): Promise<SupportedOperation[]> {
+  async getSupportedOperations(): Promise<SupportedOperationsResponse> {
     const response = await axiosInstance.get("/chat/bot/operations");
+    return response.data;
+  },
+
+  /**
+   * List all conversations
+   */
+  async listConversations(): Promise<ChatConversation[]> {
+    const response = await axiosInstance.get("/chat/bot/conversations");
     return response.data;
   },
 };
