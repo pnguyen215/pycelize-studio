@@ -1,10 +1,10 @@
 /**
  * Chat Bot API Client
- * 
+ *
  * Provides all API endpoints for chat bot conversations and workflows
  */
 
-import { axiosInstance } from "./axios-instance";
+import { api } from "./client";
 import type {
   StandardResponse,
   ChatConversation,
@@ -21,94 +21,134 @@ import type {
  */
 export const chatBotAPI = {
   /**
-   * Create a new chat conversation
+   * Create a new conversation
+   * @returns New conversation
    */
   async createConversation(): Promise<StandardResponse<ChatConversation>> {
-    const response = await axiosInstance.post("/chat/bot/conversations", {});
-    return response.data;
+    return await api.post(
+      "/chat/bot/conversations",
+      {},
+      {
+        notification: { enabled: true },
+        retry: { retries: 2 },
+        rateLimit: { maxRequests: 10, timeWindow: 1000 },
+      }
+    );
   },
 
   /**
    * Send a message to the chat bot
+   * @param chatId - The ID of the conversation
+   * @param message - The message to send
+   * @returns Message response
    */
   async sendMessage(
     chatId: string,
     message: string
   ): Promise<StandardResponse<MessageResponse>> {
-    const response = await axiosInstance.post(
+    return await api.post(
       `/chat/bot/conversations/${chatId}/message`,
-      { message }
+      { message },
+      {
+        notification: { enabled: false },
+        retry: { retries: 2 },
+        rateLimit: { maxRequests: 10, timeWindow: 1000 },
+      }
     );
-    return response.data;
   },
 
   /**
    * Upload a file to the chat
+   * @param chatId - The ID of the conversation
+   * @param file - The file to upload
+   * @returns File upload response
    */
   async uploadFile(
     chatId: string,
     file: File
   ): Promise<StandardResponse<FileUploadResponse>> {
-    const formData = new FormData();
-    formData.append("file", file);
+    const form = new FormData();
+    form.append("file", file);
 
-    const response = await axiosInstance.post(
-      `/chat/bot/conversations/${chatId}/upload`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return response.data;
+    return await api.post(`/chat/bot/conversations/${chatId}/upload`, form, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
   /**
    * Confirm or cancel a workflow
+   * @param chatId - The ID of the conversation
+   * @param confirmed - Whether to confirm or cancel the workflow
+   * @returns Workflow confirm response
    */
   async confirmWorkflow(
     chatId: string,
     confirmed: boolean
   ): Promise<StandardResponse<WorkflowConfirmResponse>> {
-    const response = await axiosInstance.post(
+    return await api.post(
       `/chat/bot/conversations/${chatId}/confirm`,
-      { confirmed }
+      { confirmed },
+      {
+        notification: { enabled: true },
+        retry: { retries: 2 },
+        rateLimit: { maxRequests: 10, timeWindow: 1000 },
+      }
     );
-    return response.data;
   },
 
   /**
    * Get conversation history
+   * @param chatId - The ID of the conversation
+   * @returns Conversation history
    */
-  async getHistory(chatId: string): Promise<StandardResponse<ChatHistoryItem[]>> {
-    const response = await axiosInstance.get(
-      `/chat/bot/conversations/${chatId}/history`
-    );
-    return response.data;
+  async getHistory(
+    chatId: string
+  ): Promise<StandardResponse<ChatHistoryItem[]>> {
+    return await api.get(`/chat/bot/conversations/${chatId}/history`, {
+      notification: { enabled: false },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
   /**
    * Delete a conversation
+   * @param chatId - The ID of the conversation
+   * @returns Void response
    */
   async deleteConversation(chatId: string): Promise<StandardResponse<void>> {
-    const response = await axiosInstance.delete(`/chat/bot/conversations/${chatId}`);
-    return response.data;
+    return await api.delete(`/chat/bot/conversations/${chatId}`, {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
   /**
    * Get supported operations
+   * @returns Supported operations
    */
-  async getSupportedOperations(): Promise<StandardResponse<SupportedOperationsResponse>> {
-    const response = await axiosInstance.get("/chat/bot/operations");
-    return response.data;
+  async getSupportedOperations(): Promise<
+    StandardResponse<SupportedOperationsResponse>
+  > {
+    return await api.get("/chat/bot/operations", {
+      notification: { enabled: false },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 
   /**
    * List all conversations
+   * @returns List of conversations
    */
   async listConversations(): Promise<StandardResponse<WorkflowsListResponse>> {
-    const response = await axiosInstance.get("/chat/workflows");
-    return response.data;
+    return await api.get("/chat/workflows", {
+      notification: { enabled: true },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
   },
 };
