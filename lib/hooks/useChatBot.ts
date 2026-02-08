@@ -169,16 +169,14 @@ export function useChatBot() {
 
         // Add download links if available
         if (response.output_files && response.output_files.length > 0) {
-          response.output_files.forEach((file) => {
-            const fileMessage: ChatMessage = {
-              type: "file",
-              content: `Download: ${file.file_path}`,
-              timestamp: new Date(),
-              file_path: file.file_path,
-              download_url: file.download_url,
-            };
-            setMessages((prev) => [...prev, fileMessage]);
-          });
+          const fileMessages = response.output_files.map((file) => ({
+            type: "file" as const,
+            content: `Download: ${file.file_path}`,
+            timestamp: new Date(),
+            file_path: file.file_path,
+            download_url: file.download_url,
+          }));
+          setMessages((prev) => [...prev, ...fileMessages]);
         }
 
         // Clear pending workflow

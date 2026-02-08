@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { useChatWebSocket, WebSocketMessage } from "@/lib/hooks/useChatWebSocket
 import { ChatMessages } from "@/components/features/chat/chat-messages";
 import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
+import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
 import { MessageSquare, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,6 +28,8 @@ export default function ChatBotPage() {
     deleteConversation,
     setWorkflowProgress,
   } = useChatBot();
+  
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Initialize chat on mount
   useEffect(() => {
@@ -101,9 +104,8 @@ export default function ChatBotPage() {
   useChatWebSocket(chatId, handleWebSocketMessage);
 
   const handleDeleteConversation = async () => {
-    if (confirm("Are you sure you want to delete this conversation?")) {
-      await deleteConversation();
-    }
+    await deleteConversation();
+    setShowDeleteDialog(false);
   };
 
   return (
@@ -132,7 +134,7 @@ export default function ChatBotPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleDeleteConversation}
+                  onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
@@ -170,6 +172,13 @@ export default function ChatBotPage() {
         workflow={pendingWorkflow}
         onConfirm={() => confirmWorkflow(true)}
         onCancel={() => confirmWorkflow(false)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onConfirm={handleDeleteConversation}
+        onCancel={() => setShowDeleteDialog(false)}
       />
     </div>
   );
