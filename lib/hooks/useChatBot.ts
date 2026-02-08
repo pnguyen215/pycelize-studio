@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { chatBotAPI, ChatMessage, WorkflowStep } from "@/lib/api/chatbot";
-import { toast } from "sonner";
+import { chatBotAPI } from "@/lib/api/chatbot";
+import type { ChatMessage, WorkflowStep } from "@/lib/api/types";
+import { NotificationManager } from "@/lib/services/notification-manager";
 
 export interface WorkflowProgress {
   operation: string;
@@ -44,7 +45,7 @@ export function useChatBot() {
       return conversation;
     } catch (error) {
       console.error("Error initializing chat:", error);
-      toast.error("Failed to initialize chat");
+      NotificationManager.error("Failed to initialize chat");
       throw error;
     } finally {
       setIsLoading(false);
@@ -86,7 +87,7 @@ export function useChatBot() {
         }
       } catch (error) {
         console.error("Error sending message:", error);
-        toast.error("Failed to send message");
+        NotificationManager.error("Failed to send message");
       } finally {
         setIsLoading(false);
       }
@@ -131,7 +132,7 @@ export function useChatBot() {
         }
       } catch (error) {
         console.error("Error uploading file:", error);
-        toast.error("Failed to upload file");
+        NotificationManager.error("Failed to upload file");
       } finally {
         setIsLoading(false);
       }
@@ -183,7 +184,7 @@ export function useChatBot() {
         setPendingWorkflow(null);
       } catch (error) {
         console.error("Error confirming workflow:", error);
-        toast.error("Failed to confirm workflow");
+        NotificationManager.error("Failed to confirm workflow");
       } finally {
         setIsLoading(false);
       }
@@ -203,10 +204,10 @@ export function useChatBot() {
       setMessages([]);
       setPendingWorkflow(null);
       setWorkflowProgress(null);
-      toast.success("Conversation deleted");
+      NotificationManager.success("Conversation deleted");
     } catch (error) {
       console.error("Error deleting conversation:", error);
-      toast.error("Failed to delete conversation");
+      NotificationManager.error("Failed to delete conversation");
     }
   }, [chatId]);
 

@@ -5,92 +5,14 @@
  */
 
 import { axiosInstance } from "./axios-instance";
-
-/**
- * Chat message type
- */
-export interface ChatMessage {
-  type: "user" | "system" | "file";
-  content: string;
-  timestamp: Date;
-  file_path?: string;
-  download_url?: string;
-}
-
-/**
- * Workflow step
- */
-export interface WorkflowStep {
-  operation: string;
-  arguments: Record<string, unknown>;
-  description?: string;
-}
-
-/**
- * Chat conversation response
- */
-export interface ChatConversation {
-  chat_id: string;
-  participant_name: string;
-  bot_message: string;
-  created_at: string;
-}
-
-/**
- * Message response
- */
-export interface MessageResponse {
-  bot_response: string;
-  suggested_workflow?: {
-    steps: WorkflowStep[];
-    requires_confirmation: boolean;
-  };
-}
-
-/**
- * File upload response
- */
-export interface FileUploadResponse {
-  file_path: string;
-  download_url: string;
-  bot_response: string;
-  suggested_workflow?: {
-    steps: WorkflowStep[];
-    requires_confirmation: boolean;
-  };
-}
-
-/**
- * Workflow confirmation response
- */
-export interface WorkflowConfirmResponse {
-  bot_response: string;
-  output_files?: Array<{
-    file_path: string;
-    download_url: string;
-  }>;
-}
-
-/**
- * Chat history item
- */
-export interface ChatHistoryItem {
-  message_id: string;
-  participant: string;
-  message: string;
-  timestamp: string;
-  file_path?: string;
-  download_url?: string;
-}
-
-/**
- * Supported operation
- */
-export interface SupportedOperation {
-  operation: string;
-  description: string;
-  parameters: Record<string, unknown>;
-}
+import type {
+  ChatConversation,
+  MessageResponse,
+  FileUploadResponse,
+  WorkflowConfirmResponse,
+  ChatHistoryItem,
+  SupportedOperation,
+} from "./types";
 
 /**
  * Chat Bot API Client
@@ -101,7 +23,7 @@ export const chatBotAPI = {
    */
   async createConversation(): Promise<ChatConversation> {
     const response = await axiosInstance.post("/chat/bot/conversations", {});
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -115,7 +37,7 @@ export const chatBotAPI = {
       `/chat/bot/conversations/${chatId}/message`,
       { message }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -137,7 +59,7 @@ export const chatBotAPI = {
         },
       }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -151,7 +73,7 @@ export const chatBotAPI = {
       `/chat/bot/conversations/${chatId}/confirm`,
       { confirmed }
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -161,7 +83,7 @@ export const chatBotAPI = {
     const response = await axiosInstance.get(
       `/chat/bot/conversations/${chatId}/history`
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -176,6 +98,6 @@ export const chatBotAPI = {
    */
   async getSupportedOperations(): Promise<SupportedOperation[]> {
     const response = await axiosInstance.get("/chat/bot/operations");
-    return response.data.data;
+    return response.data;
   },
 };

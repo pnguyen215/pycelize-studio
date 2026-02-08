@@ -398,3 +398,95 @@ export interface ColumnOperatorSuggestion {
 export interface SuggestOperatorsResponse {
   [columnName: string]: ColumnOperatorSuggestion;
 }
+
+/**
+ * Chat Bot API Types
+ */
+
+/**
+ * Chat message type
+ */
+export interface ChatMessage {
+  type: "user" | "system" | "file";
+  content: string;
+  timestamp: Date;
+  file_path?: string;
+  download_url?: string;
+}
+
+/**
+ * Workflow step
+ */
+export interface WorkflowStep {
+  operation: string;
+  arguments: Record<string, unknown>;
+  description?: string;
+}
+
+/**
+ * Chat conversation response
+ */
+export interface ChatConversation {
+  chat_id: string;
+  participant_name: string;
+  bot_message: string;
+  created_at: string;
+  state?: string;
+  status?: string;
+}
+
+/**
+ * Message response
+ */
+export interface MessageResponse {
+  bot_response: string;
+  suggested_workflow?: {
+    steps: WorkflowStep[];
+    requires_confirmation: boolean;
+  };
+}
+
+/**
+ * File upload response
+ */
+export interface FileUploadResponse {
+  file_path: string;
+  download_url: string;
+  bot_response: string;
+  suggested_workflow?: {
+    steps: WorkflowStep[];
+    requires_confirmation: boolean;
+  };
+}
+
+/**
+ * Workflow confirmation response
+ */
+export interface WorkflowConfirmResponse {
+  bot_response: string;
+  output_files?: Array<{
+    file_path: string;
+    download_url: string;
+  }>;
+}
+
+/**
+ * Chat history item
+ */
+export interface ChatHistoryItem {
+  message_id: string;
+  participant: string;
+  message: string;
+  timestamp: string;
+  file_path?: string;
+  download_url?: string;
+}
+
+/**
+ * Supported operation
+ */
+export interface SupportedOperation {
+  operation: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}

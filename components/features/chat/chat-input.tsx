@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { NotificationManager } from "@/lib/services/notification-manager";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -40,7 +40,7 @@ export function ChatInput({
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      NotificationManager.error("File size must be less than 10MB");
       return;
     }
 
@@ -52,7 +52,7 @@ export function ChatInput({
     ];
 
     if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx?|csv)$/i)) {
-      toast.error("Please upload an Excel (.xlsx, .xls) or CSV file");
+      NotificationManager.error("Please upload an Excel (.xlsx, .xls) or CSV file");
       return;
     }
 

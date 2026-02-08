@@ -1,6 +1,6 @@
 "use client";
 
-import { ChatMessage as ChatMessageType } from "@/lib/api/chatbot";
+import type { ChatMessage as ChatMessageType } from "@/lib/api/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Bot, User, Download } from "lucide-react";

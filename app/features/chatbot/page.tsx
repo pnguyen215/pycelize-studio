@@ -12,7 +12,7 @@ import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
 import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
 import { MessageSquare, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { NotificationManager } from "@/lib/services/notification-manager";
 
 export default function ChatBotPage() {
   const {
@@ -77,7 +77,7 @@ export default function ChatBotPage() {
             setWorkflowProgress(null);
           }, 3000);
           
-          toast.success("Workflow completed successfully!");
+          NotificationManager.success("Workflow completed successfully!");
           break;
 
         case "workflow_failed":
@@ -93,7 +93,7 @@ export default function ChatBotPage() {
             setWorkflowProgress(null);
           }, 5000);
           
-          toast.error(message.error || "Workflow failed");
+          NotificationManager.error(message.error || "Workflow failed");
           break;
       }
     },

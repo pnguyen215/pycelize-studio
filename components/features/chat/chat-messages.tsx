@@ -2,10 +2,10 @@
 
 import { useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChatMessage as ChatMessageType } from "@/lib/api/chatbot";
+import type { ChatMessage as ChatMessageType } from "@/lib/api/types";
 import { ChatMessage } from "./chat-message";
 import { WorkflowProgress } from "./workflow-progress";
-import { WorkflowProgress as WorkflowProgressType } from "@/lib/hooks/useChatBot";
+import type { WorkflowProgress as WorkflowProgressType } from "@/lib/hooks/useChatBot";
 
 interface ChatMessagesProps {
   messages: ChatMessageType[];
