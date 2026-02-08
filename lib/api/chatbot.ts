@@ -13,6 +13,7 @@ import type {
   WorkflowConfirmResponse,
   ChatHistoryItem,
   SupportedOperationsResponse,
+  WorkflowsListResponse,
 } from "./types";
 
 /**
@@ -106,8 +107,8 @@ export const chatBotAPI = {
   /**
    * List all conversations
    */
-  async listConversations(): Promise<StandardResponse<ChatConversation[]>> {
-    const response = await axiosInstance.get("/chat/bot/conversations");
+  async listConversations(): Promise<StandardResponse<WorkflowsListResponse>> {
+    const response = await axiosInstance.get("/chat/workflows");
     return response.data;
   },
 };

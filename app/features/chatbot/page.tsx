@@ -25,7 +25,7 @@ export default function ChatConversationsPage() {
     try {
       setLoading(true);
       const response = await chatBotAPI.listConversations();
-      setConversations(response.data);
+      setConversations(response.data.conversations);
     } catch (error) {
       console.error("Error loading conversations:", error);
       NotificationManager.error("Failed to load conversations");
@@ -124,9 +124,9 @@ export default function ChatConversationsPage() {
                       <CardTitle className="text-lg">
                         Conversation
                       </CardTitle>
-                      {conversation.state && (
-                        <Badge variant={conversation.state === "active" ? "default" : "secondary"}>
-                          {conversation.state}
+                      {conversation.status && (
+                        <Badge variant={conversation.status === "completed" ? "default" : "secondary"}>
+                          {conversation.status}
                         </Badge>
                       )}
                     </div>
@@ -137,7 +137,11 @@ export default function ChatConversationsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="h-3 w-3" />
-                        <span>{formatDate(conversation.created_at)}</span>
+                        <span>Created: {formatDate(conversation.created_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-3 w-3" />
+                        <span>Updated: {formatDate(conversation.updated_at)}</span>
                       </div>
                     </div>
                   </div>

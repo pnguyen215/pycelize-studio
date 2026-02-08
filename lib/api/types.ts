@@ -429,10 +429,21 @@ export interface WorkflowStep {
 export interface ChatConversation {
   chat_id: string;
   participant_name: string;
-  bot_message: string;
+  bot_message?: string;
   created_at: string;
+  updated_at: string;
   state?: string;
   status?: string;
+  partition_key?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Workflows list response (from GET /chat/workflows)
+ */
+export interface WorkflowsListResponse {
+  conversations: ChatConversation[];
+  count: number;
 }
 
 /**

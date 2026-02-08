@@ -34,14 +34,16 @@ export function useChatBot() {
       const conversation = response.data;
       setChatId(conversation.chat_id);
       
-      // Add welcome message
-      setMessages([
-        {
-          type: "system",
-          content: conversation.bot_message,
-          timestamp: new Date(conversation.created_at),
-        },
-      ]);
+      // Add welcome message if available
+      if (conversation.bot_message) {
+        setMessages([
+          {
+            type: "system",
+            content: conversation.bot_message,
+            timestamp: new Date(conversation.created_at),
+          },
+        ]);
+      }
       
       return conversation;
     } catch (error) {
