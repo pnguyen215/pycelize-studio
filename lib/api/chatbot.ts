@@ -12,6 +12,7 @@ import type {
   FileUploadResponse,
   WorkflowConfirmResponse,
   ChatHistoryItem,
+  ChatHistoryResponse,
   SupportedOperationsResponse,
   WorkflowsListResponse,
 } from "./types";
@@ -107,7 +108,7 @@ export const chatBotAPI = {
   async getHistory(
     chatId: string,
     limit: number = 500
-  ): Promise<StandardResponse<ChatHistoryItem[]>> {
+  ): Promise<StandardResponse<ChatHistoryResponse>> {
     return await api.get(`/chat/bot/conversations/${chatId}/history?limit=${limit}`, {
       notification: { enabled: false },
       retry: { retries: 2 },

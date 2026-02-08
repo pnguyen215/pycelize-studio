@@ -483,15 +483,44 @@ export interface WorkflowConfirmResponse {
 }
 
 /**
- * Chat history item
+ * Chat history item (individual message in conversation)
  */
 export interface ChatHistoryItem {
   message_id: string;
-  participant: string;
-  message: string;
-  timestamp: string;
-  file_path?: string;
-  download_url?: string;
+  message_type: string;
+  content: string;
+  created_at: string;
+  metadata?: {
+    file_path?: string;
+    filename?: string;
+    download_url?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * Chat history response (full conversation history)
+ */
+export interface ChatHistoryResponse {
+  chat_id: string;
+  participant_name: string;
+  current_state: string;
+  status: string;
+  messages: ChatHistoryItem[];
+  uploaded_files?: Array<{
+    file_path: string;
+    download_url: string;
+  }>;
+  output_files?: Array<{
+    file_path: string;
+    download_url: string;
+  }>;
+  workflow_steps?: Array<{
+    step_id: string;
+    operation: string;
+    status: string;
+    [key: string]: unknown;
+  }>;
 }
 
 /**

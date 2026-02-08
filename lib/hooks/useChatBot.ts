@@ -64,17 +64,22 @@ export function useChatBot() {
       setChatId(existingChatId);
       
       const response = await chatBotAPI.getHistory(existingChatId, 500);
-      const history = response.data;
+      const historyData = response.data;
       
       // Convert history items to chat messages
-      const loadedMessages: ChatMessage[] = history.map((item) => ({
-        type: item.participant === "user" ? "user" : "system",
-        content: item.message,
-        timestamp: new Date(item.timestamp),
-        file_path: item.file_path,
-        download_url: item.download_url,
-        participant_name: item.participant === "user" ? "You" : "Assistant",
-      }));
+      const loadedMessages: ChatMessage[] = historyData.messages.map((item) => {
+        const isUser = item.message_type === "user";
+        const isFile = item.message_type === "file_upload";
+        
+        return {
+          type: isUser ? "user" : (isFile ? "file" : "system"),
+          content: item.content,
+          timestamp: new Date(item.created_at),
+          file_path: item.metadata?.file_path,
+          download_url: item.metadata?.download_url,
+          participant_name: isUser ? "You" : historyData.participant_name || "Assistant",
+        };
+      });
       
       setMessages(loadedMessages);
       
