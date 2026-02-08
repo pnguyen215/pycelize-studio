@@ -15,6 +15,7 @@ import { MetricCard } from "@/components/features/metric-card";
 import { healthApi } from "@/lib/api/health";
 import { Activity, CheckCircle2, Server, GitBranch } from "lucide-react";
 import type { StandardResponse, HealthCheckResponse } from "@/lib/api/types";
+import { EEnv } from "@/configs/env";
 
 export default function HealthCheckPage() {
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export default function HealthCheckPage() {
       setResult(response);
 
       // Debug logging
-      if (process.env.NEXT_PUBLIC_PYCELIZE_DEBUGGING === "true") {
+      if (EEnv.NEXT_PUBLIC_DEBUGGING_REQUEST) {
         console.debug(
           "Health Check Response:",
           JSON.stringify(response, null, 2)

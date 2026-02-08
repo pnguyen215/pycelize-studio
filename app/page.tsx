@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, FileSpreadsheet, Database, Braces } from "lucide-react";
+import { EEnv } from "@/configs/env";
 
 export default function Home() {
   const features = [
@@ -84,7 +85,7 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">
               Make sure the Pycelize Flask API is running at{" "}
               <code className="bg-muted px-2 py-1 rounded">
-                {process.env.NEXT_PUBLIC_PYCELIZE_API_URL || 'http://localhost:5050/api/v1'}
+                {EEnv.NEXT_PUBLIC_PYCELIZE_API_URL}
               </code>
             </p>
           </div>

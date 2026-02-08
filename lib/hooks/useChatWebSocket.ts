@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { WebSocketManager } from "@/lib/services/websocket-manager";
+import { EEnv } from "@/configs/env";
 
 /**
  * WebSocket message handler
@@ -25,12 +26,8 @@ export function useChatWebSocket(
   useEffect(() => {
     if (!chatId) return;
 
-    // Get the WebSocket URL based on the API URL
-    const apiUrl = process.env.NEXT_PUBLIC_PYCELIZE_API_URL || "http://localhost:5050/api/v1";
-    const wsUrl = apiUrl
-      .replace(/^http/, "ws")
-      .replace("/api/v1", "")
-      + `/chat/${chatId}`;
+    // Get the WebSocket URL from centralized config
+    const wsUrl = `${EEnv.NEXT_PUBLIC_PYCELIZE_WS_URL}/chat/${chatId}`;
 
     // Create WebSocket manager with chat-specific URL
     const wsManager = new WebSocketManager({

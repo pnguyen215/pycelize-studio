@@ -51,6 +51,21 @@ export const EEnv = Object.freeze({
     "http://localhost:5050/api/v1",
 
   /**
+   * WebSocket URL for the Pycelize chat bot service.
+   *
+   * @default "ws://127.0.0.1:5051"
+   * @example
+   * // Development
+   * "ws://127.0.0.1:5051"
+   *
+   * // Production
+   * "wss://ws.pycelize.com"
+   */
+  NEXT_PUBLIC_PYCELIZE_WS_URL:
+    (env.NEXT_PUBLIC_PYCELIZE_WS_URL as string) ||
+    "ws://127.0.0.1:5051",
+
+  /**
    * Debug mode flag for enabling verbose request/response logging.
    * When enabled, logs detailed information about API calls, responses, and errors
    * to the console for development and troubleshooting purposes.
