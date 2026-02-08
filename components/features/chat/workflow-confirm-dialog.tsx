@@ -13,13 +13,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { WorkflowStep } from "@/lib/api/types";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, X, Edit2 } from "lucide-react";
 import { useState } from "react";
 
 interface WorkflowConfirmDialogProps {
   open: boolean;
   workflow: { steps: WorkflowStep[] } | null;
-  onConfirm: () => void;
+  onConfirm: (modifiedWorkflow?: WorkflowStep[]) => void;
   onCancel: () => void;
 }
 
@@ -30,8 +30,14 @@ export function WorkflowConfirmDialog({
   onCancel,
 }: WorkflowConfirmDialogProps) {
   const [confirmedSteps, setConfirmedSteps] = useState<Set<number>>(new Set());
+  const [editingStep, setEditingStep] = useState<number | null>(null);
+  const [modifiedSteps, setModifiedSteps] = useState<WorkflowStep[]>([]);
+  const [editedArguments, setEditedArguments] = useState<string>("");
   
   if (!workflow) return null;
+
+  // Initialize modified steps from workflow
+  const currentSteps = modifiedSteps.length > 0 ? modifiedSteps : workflow.steps;
 
   const handleConfirmStep = (index: number) => {
     setConfirmedSteps((prev) => {
@@ -45,17 +51,53 @@ export function WorkflowConfirmDialog({
     });
   };
 
-  const allConfirmed = confirmedSteps.size === workflow.steps.length;
+  const handleEditStep = (index: number) => {
+    setEditingStep(index);
+    const step = currentSteps[index];
+    setEditedArguments(JSON.stringify(step.arguments, null, 2));
+  };
+
+  const handleSaveEdit = () => {
+    if (editingStep === null) return;
+    
+    try {
+      const parsedArguments = JSON.parse(editedArguments);
+      const newSteps = [...currentSteps];
+      newSteps[editingStep] = {
+        ...newSteps[editingStep],
+        arguments: parsedArguments,
+      };
+      setModifiedSteps(newSteps);
+      setEditingStep(null);
+      setEditedArguments("");
+    } catch (error) {
+      console.error("Invalid JSON:", error);
+      alert("Invalid JSON format. Please fix the syntax and try again.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStep(null);
+    setEditedArguments("");
+  };
+
+  const allConfirmed = confirmedSteps.size === currentSteps.length;
 
   const handleConfirmAll = () => {
     if (allConfirmed) {
-      onConfirm();
+      // Pass modified workflow only if changes were made
+      const workflowToSend = modifiedSteps.length > 0 ? modifiedSteps : undefined;
+      onConfirm(workflowToSend);
       setConfirmedSteps(new Set());
+      setModifiedSteps([]);
     }
   };
 
   const handleCancelAll = () => {
     setConfirmedSteps(new Set());
+    setModifiedSteps([]);
+    setEditingStep(null);
+    setEditedArguments("");
     onCancel();
   };
 
@@ -63,21 +105,25 @@ export function WorkflowConfirmDialog({
     <Dialog open={open} onOpenChange={(open) => {
       if (!open) {
         setConfirmedSteps(new Set());
+        setModifiedSteps([]);
+        setEditingStep(null);
+        setEditedArguments("");
         onCancel();
       }
     }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Confirm Workflow Operations</DialogTitle>
           <DialogDescription>
             Review and confirm each operation individually before executing the workflow.
-            You must confirm all operations to proceed.
+            You can edit operation arguments before confirmation.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {workflow.steps.map((step, index) => {
+          {currentSteps.map((step, index) => {
             const isConfirmed = confirmedSteps.has(index);
+            const isEditing = editingStep === index;
             
             return (
               <Card 
@@ -123,12 +169,53 @@ export function WorkflowConfirmDialog({
                     <Separator className="my-2" />
 
                     <div>
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                        Arguments:
-                      </p>
-                      <pre className="text-xs bg-gray-100 dark:bg-gray-900 p-3 rounded-md overflow-x-auto">
-                        {JSON.stringify(step.arguments, null, 2)}
-                      </pre>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Arguments:
+                        </p>
+                        {!isEditing && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditStep(index)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Edit2 className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editedArguments}
+                            onChange={(e) => setEditedArguments(e.target.value)}
+                            className="w-full h-32 text-xs font-mono bg-gray-100 dark:bg-gray-900 p-3 rounded-md border border-gray-300 dark:border-gray-700"
+                            placeholder="Enter JSON arguments..."
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={handleSaveEdit}
+                            >
+                              Save Changes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <pre className="text-xs bg-gray-100 dark:bg-gray-900 p-3 rounded-md overflow-x-auto">
+                          {JSON.stringify(step.arguments, null, 2)}
+                        </pre>
+                      )}
                     </div>
 
                     <div className="pt-2">
@@ -137,6 +224,7 @@ export function WorkflowConfirmDialog({
                         variant={isConfirmed ? "outline" : "default"}
                         onClick={() => handleConfirmStep(index)}
                         className="w-full"
+                        disabled={isEditing}
                       >
                         {isConfirmed ? (
                           <>
@@ -160,7 +248,7 @@ export function WorkflowConfirmDialog({
 
         <DialogFooter className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            {confirmedSteps.size} of {workflow.steps.length} operations confirmed
+            {confirmedSteps.size} of {currentSteps.length} operations confirmed
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancelAll}>
@@ -168,7 +256,7 @@ export function WorkflowConfirmDialog({
             </Button>
             <Button 
               onClick={handleConfirmAll}
-              disabled={!allConfirmed}
+              disabled={!allConfirmed || editingStep !== null}
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Execute Workflow

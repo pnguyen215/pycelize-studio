@@ -472,6 +472,14 @@ export interface FileUploadResponse {
 }
 
 /**
+ * Workflow confirmation request
+ */
+export interface WorkflowConfirmRequest {
+  confirmed: boolean;
+  modified_workflow?: WorkflowStep[];
+}
+
+/**
  * Workflow confirmation response
  */
 export interface WorkflowConfirmResponse {
@@ -479,6 +487,9 @@ export interface WorkflowConfirmResponse {
   output_files?: Array<{
     file_path: string;
     download_url: string;
+  }>;
+  results?: Array<{
+    output_file_path: string;
   }>;
 }
 

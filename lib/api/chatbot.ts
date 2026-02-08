@@ -15,6 +15,7 @@ import type {
   ChatHistoryResponse,
   SupportedOperationsResponse,
   WorkflowsListResponse,
+  WorkflowStep,
 } from "./types";
 
 /**
@@ -82,15 +83,26 @@ export const chatBotAPI = {
    * Confirm or cancel a workflow
    * @param chatId - The ID of the conversation
    * @param confirmed - Whether to confirm or cancel the workflow
+   * @param modifiedWorkflow - Optional modified workflow steps
    * @returns Workflow confirm response
    */
   async confirmWorkflow(
     chatId: string,
-    confirmed: boolean
+    confirmed: boolean,
+    modifiedWorkflow?: WorkflowStep[]
   ): Promise<StandardResponse<WorkflowConfirmResponse>> {
+    const requestBody: {
+      confirmed: boolean;
+      modified_workflow?: WorkflowStep[];
+    } = { confirmed };
+
+    if (modifiedWorkflow && modifiedWorkflow.length > 0) {
+      requestBody.modified_workflow = modifiedWorkflow;
+    }
+
     return await api.post(
       `/chat/bot/conversations/${chatId}/confirm`,
-      { confirmed },
+      requestBody,
       {
         notification: { enabled: true },
         retry: { retries: 2 },

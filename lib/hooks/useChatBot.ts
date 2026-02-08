@@ -191,13 +191,13 @@ export function useChatBot() {
    * Confirm or cancel workflow
    */
   const confirmWorkflow = useCallback(
-    async (confirmed: boolean) => {
+    async (confirmed: boolean, modifiedWorkflow?: WorkflowStep[]) => {
       if (!chatId) return;
 
       try {
         setIsLoading(true);
 
-        const apiResponse = await chatBotAPI.confirmWorkflow(chatId, confirmed);
+        const apiResponse = await chatBotAPI.confirmWorkflow(chatId, confirmed, modifiedWorkflow);
         const response = apiResponse.data;
 
         // Add confirmation message

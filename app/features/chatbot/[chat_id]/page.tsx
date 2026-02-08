@@ -219,7 +219,7 @@ export default function ChatBotPage() {
       <WorkflowConfirmDialog
         open={!!pendingWorkflow}
         workflow={pendingWorkflow}
-        onConfirm={() => confirmWorkflow(true)}
+        onConfirm={(modifiedWorkflow) => confirmWorkflow(true, modifiedWorkflow)}
         onCancel={() => confirmWorkflow(false)}
       />
 
