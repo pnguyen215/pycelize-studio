@@ -73,6 +73,7 @@ export function useChatBot() {
         timestamp: new Date(item.timestamp),
         file_path: item.file_path,
         download_url: item.download_url,
+        participant_name: item.participant === "user" ? "You" : "Assistant",
       }));
       
       setMessages(loadedMessages);
@@ -102,6 +103,7 @@ export function useChatBot() {
           type: "user",
           content: text,
           timestamp: new Date(),
+          participant_name: "You",
         };
         setMessages((prev) => [...prev, userMessage]);
 
@@ -114,6 +116,7 @@ export function useChatBot() {
           type: "system",
           content: response.bot_response,
           timestamp: new Date(),
+          participant_name: "Assistant",
         };
         setMessages((prev) => [...prev, botMessage]);
 
@@ -146,6 +149,7 @@ export function useChatBot() {
           type: "file",
           content: `Uploaded file: ${file.name}`,
           timestamp: new Date(),
+          participant_name: "You",
         };
         setMessages((prev) => [...prev, fileMessage]);
 
@@ -160,6 +164,7 @@ export function useChatBot() {
           timestamp: new Date(),
           file_path: response.file_path,
           download_url: response.download_url,
+          participant_name: "Assistant",
         };
         setMessages((prev) => [...prev, botMessage]);
 
@@ -195,6 +200,7 @@ export function useChatBot() {
           type: "user",
           content: confirmed ? "✓ Confirmed workflow" : "✗ Cancelled workflow",
           timestamp: new Date(),
+          participant_name: "You",
         };
         setMessages((prev) => [...prev, confirmMessage]);
 
@@ -203,6 +209,7 @@ export function useChatBot() {
           type: "system",
           content: response.bot_response,
           timestamp: new Date(),
+          participant_name: "Assistant",
         };
         setMessages((prev) => [...prev, botMessage]);
 
@@ -214,6 +221,7 @@ export function useChatBot() {
             timestamp: new Date(),
             file_path: file.file_path,
             download_url: file.download_url,
+            participant_name: "Assistant",
           }));
           setMessages((prev) => [...prev, ...fileMessages]);
         }
