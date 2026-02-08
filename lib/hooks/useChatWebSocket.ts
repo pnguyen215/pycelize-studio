@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { WebSocketManager } from "@/lib/services/websocket-manager";
 
 /**
@@ -22,8 +22,6 @@ export function useChatWebSocket(
   chatId: string | null,
   onMessage: (message: WebSocketMessage) => void
 ) {
-  const wsManager = useRef<WebSocketManager | null>(null);
-
   useEffect(() => {
     if (!chatId) return;
 
@@ -35,7 +33,7 @@ export function useChatWebSocket(
       + `/chat/${chatId}`;
 
     // Create WebSocket manager with chat-specific URL
-    wsManager.current = new WebSocketManager({
+    const wsManager = new WebSocketManager({
       url: wsUrl,
       autoReconnect: true,
       maxReconnectAttempts: 5,
@@ -45,7 +43,7 @@ export function useChatWebSocket(
     });
 
     // Register message handler
-    wsManager.current.on("message", (data: unknown) => {
+    wsManager.on("message", (data: unknown) => {
       try {
         const message = data as WebSocketMessage;
         onMessage(message);
@@ -55,19 +53,16 @@ export function useChatWebSocket(
     });
 
     // Register error handler
-    wsManager.current.on("error", (error) => {
+    wsManager.on("error", (error) => {
       console.error("WebSocket error:", error);
     });
 
     // Connect
-    wsManager.current.connect();
+    wsManager.connect();
 
     // Cleanup on unmount
     return () => {
-      wsManager.current?.disconnect();
-      wsManager.current = null;
+      wsManager.disconnect();
     };
   }, [chatId, onMessage]);
-
-  return wsManager.current;
 }

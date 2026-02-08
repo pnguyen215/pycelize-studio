@@ -4,10 +4,7 @@
  * Provides all API endpoints for chat bot conversations and workflows
  */
 
-import { EEnv } from "@/configs/env";
-import axiosInstance from "./axios-instance";
-
-const API_BASE = EEnv.NEXT_PUBLIC_PYCELIZE_API_URL;
+import { axiosInstance } from "./axios-instance";
 
 /**
  * Chat message type

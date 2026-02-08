@@ -3,7 +3,7 @@
 import { ChatMessage as ChatMessageType } from "@/lib/api/chatbot";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Bot, User, FileText, Download } from "lucide-react";
+import { Bot, User, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
