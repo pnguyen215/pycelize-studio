@@ -27,6 +27,7 @@ export default function ChatBotPage() {
     pendingWorkflow,
     workflowProgress,
     initChat,
+    loadConversation,
     sendMessage,
     uploadFile,
     confirmWorkflow,
@@ -39,15 +40,19 @@ export default function ChatBotPage() {
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
     if (chatIdFromUrl && !chatId) {
-      // TODO: Load existing conversation if chat_id from URL
-      // For now, we redirect to create a new conversation
+      // Load existing conversation
+      loadConversation(chatIdFromUrl).catch((error) => {
+        console.error("Failed to load conversation:", error);
+        // If loading fails, redirect to create new conversation
+        router.push("/features/chatbot");
+      });
     } else if (!chatId && !chatIdFromUrl) {
       initChat().then((conversation) => {
         // Redirect to the new chat URL
         router.push(`/features/chatbot/${conversation.chat_id}`);
       });
     }
-  }, [chatIdFromUrl, chatId, initChat, router]);
+  }, [chatIdFromUrl, chatId, initChat, loadConversation, router]);
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback(

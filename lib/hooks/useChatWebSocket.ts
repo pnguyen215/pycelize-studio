@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { WebSocketManager } from "@/lib/services/websocket-manager";
+import { WebSocketPoolManager } from "@/lib/services/websocket-pool-manager";
 import { EEnv } from "@/configs/env";
 
 /**
@@ -29,9 +29,9 @@ export function useChatWebSocket(
     // Get the WebSocket URL from centralized config
     const wsUrl = `${EEnv.NEXT_PUBLIC_PYCELIZE_WS_URL}/chat/${chatId}`;
 
-    // Create WebSocket manager with chat-specific URL
-    const wsManager = new WebSocketManager({
-      url: wsUrl,
+    // Get or create WebSocket connection from pool
+    const poolManager = WebSocketPoolManager.getInstance();
+    const wsManager = poolManager.getConnection(chatId, wsUrl, {
       autoReconnect: true,
       maxReconnectAttempts: 5,
       reconnectDelay: 1000,
@@ -40,26 +40,33 @@ export function useChatWebSocket(
     });
 
     // Register message handler
-    wsManager.on("message", (data: unknown) => {
+    const messageHandler = (data: unknown) => {
       try {
         const message = data as WebSocketMessage;
         onMessage(message);
       } catch (error) {
         console.error("Error handling WebSocket message:", error);
       }
-    });
+    };
 
     // Register error handler
-    wsManager.on("error", (error) => {
+    const errorHandler = (error: unknown) => {
       console.error("WebSocket error:", error);
-    });
+    };
 
-    // Connect
-    wsManager.connect();
+    wsManager.on("message", messageHandler);
+    wsManager.on("error", errorHandler);
 
-    // Cleanup on unmount
+    // Connect if not already connected
+    if (!wsManager.isConnected()) {
+      wsManager.connect();
+    }
+
+    // Cleanup on unmount - close the connection
     return () => {
-      wsManager.disconnect();
+      wsManager.off("message", messageHandler);
+      wsManager.off("error", errorHandler);
+      poolManager.closeConnection(chatId);
     };
   }, [chatId, onMessage]);
 }

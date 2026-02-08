@@ -90,6 +90,21 @@ export const EEnv = Object.freeze({
   NEXT_PUBLIC_FIREBASE_CONFIG: JSON.parse(
     (env.NEXT_PUBLIC_FIREBASE_CONFIG as string) || "{}"
   ) as Record<string, unknown>,
+
+  /**
+   * Maximum number of concurrent WebSocket connections allowed.
+   * When this limit is reached, oldest idle connections will be closed
+   * to make room for new connections.
+   *
+   * @default 10
+   * @example
+   * // .env file
+   * NEXT_PUBLIC_MAX_WEBSOCKET_CONNECTIONS=10
+   */
+  NEXT_PUBLIC_MAX_WEBSOCKET_CONNECTIONS: parseInt(
+    (env.NEXT_PUBLIC_MAX_WEBSOCKET_CONNECTIONS as string) || "10",
+    10
+  ),
 });
 
 /**

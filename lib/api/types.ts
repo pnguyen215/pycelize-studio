@@ -412,6 +412,7 @@ export interface ChatMessage {
   timestamp: Date;
   file_path?: string;
   download_url?: string;
+  participant_name?: string;
 }
 
 /**

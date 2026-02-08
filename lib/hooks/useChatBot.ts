@@ -56,6 +56,38 @@ export function useChatBot() {
   }, []);
 
   /**
+   * Load existing conversation history
+   */
+  const loadConversation = useCallback(async (existingChatId: string) => {
+    try {
+      setIsLoading(true);
+      setChatId(existingChatId);
+      
+      const response = await chatBotAPI.getHistory(existingChatId, 500);
+      const history = response.data;
+      
+      // Convert history items to chat messages
+      const loadedMessages: ChatMessage[] = history.map((item) => ({
+        type: item.participant === "user" ? "user" : "system",
+        content: item.message,
+        timestamp: new Date(item.timestamp),
+        file_path: item.file_path,
+        download_url: item.download_url,
+      }));
+      
+      setMessages(loadedMessages);
+      
+      return loadedMessages;
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      NotificationManager.error("Failed to load conversation");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
    * Send a text message
    */
   const sendMessage = useCallback(
@@ -224,6 +256,7 @@ export function useChatBot() {
     pendingWorkflow,
     workflowProgress,
     initChat,
+    loadConversation,
     sendMessage,
     uploadFile,
     confirmWorkflow,

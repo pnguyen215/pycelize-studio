@@ -101,12 +101,14 @@ export const chatBotAPI = {
   /**
    * Get conversation history
    * @param chatId - The ID of the conversation
+   * @param limit - Maximum number of messages to retrieve (default: 500)
    * @returns Conversation history
    */
   async getHistory(
-    chatId: string
+    chatId: string,
+    limit: number = 500
   ): Promise<StandardResponse<ChatHistoryItem[]>> {
-    return await api.get(`/chat/bot/conversations/${chatId}/history`, {
+    return await api.get(`/chat/bot/conversations/${chatId}/history?limit=${limit}`, {
       notification: { enabled: false },
       retry: { retries: 2 },
       rateLimit: { maxRequests: 10, timeWindow: 1000 },
