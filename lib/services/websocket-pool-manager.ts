@@ -8,7 +8,7 @@
  * @module lib/services/websocket-pool-manager
  */
 
-import { WebSocketManager } from "./websocket-manager";
+import { WebSocketManager, WebSocketConfig } from "./websocket-manager";
 import { EEnv } from "@/configs/env";
 
 interface PooledConnection {
@@ -48,7 +48,7 @@ export class WebSocketPoolManager {
   public getConnection(
     connectionId: string,
     url: string,
-    config?: Parameters<typeof WebSocketManager.prototype.connect>[0]
+    config?: Omit<WebSocketConfig, 'url'>
   ): WebSocketManager {
     // Check if connection already exists
     const existing = this.connections.get(connectionId);
