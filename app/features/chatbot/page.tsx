@@ -24,8 +24,8 @@ export default function ChatConversationsPage() {
   const loadConversations = async () => {
     try {
       setLoading(true);
-      const data = await chatBotAPI.listConversations();
-      setConversations(data);
+      const response = await chatBotAPI.listConversations();
+      setConversations(response.data);
     } catch (error) {
       console.error("Error loading conversations:", error);
       NotificationManager.error("Failed to load conversations");
@@ -37,7 +37,8 @@ export default function ChatConversationsPage() {
   const handleCreateConversation = async () => {
     try {
       setCreating(true);
-      const conversation = await chatBotAPI.createConversation();
+      const response = await chatBotAPI.createConversation();
+      const conversation = response.data;
       router.push(`/features/chatbot/${conversation.chat_id}`);
     } catch (error) {
       console.error("Error creating conversation:", error);

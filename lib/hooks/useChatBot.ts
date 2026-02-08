@@ -30,7 +30,8 @@ export function useChatBot() {
   const initChat = useCallback(async () => {
     try {
       setIsLoading(true);
-      const conversation = await chatBotAPI.createConversation();
+      const response = await chatBotAPI.createConversation();
+      const conversation = response.data;
       setChatId(conversation.chat_id);
       
       // Add welcome message
@@ -71,7 +72,8 @@ export function useChatBot() {
         setMessages((prev) => [...prev, userMessage]);
 
         // Send to backend
-        const response = await chatBotAPI.sendMessage(chatId, text);
+        const apiResponse = await chatBotAPI.sendMessage(chatId, text);
+        const response = apiResponse.data;
 
         // Add bot response
         const botMessage: ChatMessage = {
@@ -114,7 +116,8 @@ export function useChatBot() {
         setMessages((prev) => [...prev, fileMessage]);
 
         // Upload file
-        const response = await chatBotAPI.uploadFile(chatId, file);
+        const apiResponse = await chatBotAPI.uploadFile(chatId, file);
+        const response = apiResponse.data;
 
         // Add bot response
         const botMessage: ChatMessage = {
@@ -150,7 +153,8 @@ export function useChatBot() {
       try {
         setIsLoading(true);
 
-        const response = await chatBotAPI.confirmWorkflow(chatId, confirmed);
+        const apiResponse = await chatBotAPI.confirmWorkflow(chatId, confirmed);
+        const response = apiResponse.data;
 
         // Add confirmation message
         const confirmMessage: ChatMessage = {

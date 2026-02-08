@@ -31,8 +31,8 @@ export function OperationsSelector({ onSelectOperation }: OperationsSelectorProp
   const loadOperations = async () => {
     try {
       setLoading(true);
-      const data = await chatBotAPI.getSupportedOperations();
-      setOperations(data);
+      const response = await chatBotAPI.getSupportedOperations();
+      setOperations(response.data);
     } catch (error) {
       console.error("Error loading operations:", error);
     } finally {

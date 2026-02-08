@@ -6,6 +6,7 @@
 
 import { axiosInstance } from "./axios-instance";
 import type {
+  StandardResponse,
   ChatConversation,
   MessageResponse,
   FileUploadResponse,
@@ -21,7 +22,7 @@ export const chatBotAPI = {
   /**
    * Create a new chat conversation
    */
-  async createConversation(): Promise<ChatConversation> {
+  async createConversation(): Promise<StandardResponse<ChatConversation>> {
     const response = await axiosInstance.post("/chat/bot/conversations", {});
     return response.data;
   },
@@ -32,7 +33,7 @@ export const chatBotAPI = {
   async sendMessage(
     chatId: string,
     message: string
-  ): Promise<MessageResponse> {
+  ): Promise<StandardResponse<MessageResponse>> {
     const response = await axiosInstance.post(
       `/chat/bot/conversations/${chatId}/message`,
       { message }
@@ -46,7 +47,7 @@ export const chatBotAPI = {
   async uploadFile(
     chatId: string,
     file: File
-  ): Promise<FileUploadResponse> {
+  ): Promise<StandardResponse<FileUploadResponse>> {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -68,7 +69,7 @@ export const chatBotAPI = {
   async confirmWorkflow(
     chatId: string,
     confirmed: boolean
-  ): Promise<WorkflowConfirmResponse> {
+  ): Promise<StandardResponse<WorkflowConfirmResponse>> {
     const response = await axiosInstance.post(
       `/chat/bot/conversations/${chatId}/confirm`,
       { confirmed }
@@ -79,7 +80,7 @@ export const chatBotAPI = {
   /**
    * Get conversation history
    */
-  async getHistory(chatId: string): Promise<ChatHistoryItem[]> {
+  async getHistory(chatId: string): Promise<StandardResponse<ChatHistoryItem[]>> {
     const response = await axiosInstance.get(
       `/chat/bot/conversations/${chatId}/history`
     );
@@ -89,14 +90,15 @@ export const chatBotAPI = {
   /**
    * Delete a conversation
    */
-  async deleteConversation(chatId: string): Promise<void> {
-    await axiosInstance.delete(`/chat/bot/conversations/${chatId}`);
+  async deleteConversation(chatId: string): Promise<StandardResponse<void>> {
+    const response = await axiosInstance.delete(`/chat/bot/conversations/${chatId}`);
+    return response.data;
   },
 
   /**
    * Get supported operations
    */
-  async getSupportedOperations(): Promise<SupportedOperationsResponse> {
+  async getSupportedOperations(): Promise<StandardResponse<SupportedOperationsResponse>> {
     const response = await axiosInstance.get("/chat/bot/operations");
     return response.data;
   },
@@ -104,7 +106,7 @@ export const chatBotAPI = {
   /**
    * List all conversations
    */
-  async listConversations(): Promise<ChatConversation[]> {
+  async listConversations(): Promise<StandardResponse<ChatConversation[]>> {
     const response = await axiosInstance.get("/chat/bot/conversations");
     return response.data;
   },
