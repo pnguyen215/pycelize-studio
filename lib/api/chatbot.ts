@@ -11,7 +11,6 @@ import type {
   MessageResponse,
   FileUploadResponse,
   WorkflowConfirmResponse,
-  ChatHistoryItem,
   ChatHistoryResponse,
   SupportedOperationsResponse,
   WorkflowsListResponse,

@@ -105,7 +105,7 @@ export default function ChatBotPage() {
           setTimeout(() => {
             setWorkflowProgress(null);
             if (chatId) {
-              handleRefreshConversation();
+              loadConversation(chatId).catch(console.error);
             }
           }, 3000);
           
@@ -129,7 +129,7 @@ export default function ChatBotPage() {
           break;
       }
     },
-    [setWorkflowProgress, chatId]
+    [setWorkflowProgress, chatId, loadConversation]
   );
 
   // Connect to WebSocket
