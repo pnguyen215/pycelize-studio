@@ -3,22 +3,26 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, LayoutGrid } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
+import { OperationsModal } from "./operations-modal";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   onUploadFile: (file: File) => void;
   disabled?: boolean;
+  showOperations?: boolean;
 }
 
 export function ChatInput({
   onSendMessage,
   onUploadFile,
   disabled = false,
+  showOperations = true,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [showOperationsModal, setShowOperationsModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -67,54 +71,82 @@ export function ChatInput({
     }
   };
 
+  const handleSelectOperation = (operation: string, endpoint: string) => {
+    console.log("Selected operation:", operation, endpoint);
+    setShowOperationsModal(false);
+    // Optionally, you could auto-fill the message input with the selected operation
+    // setMessage(`I want to use ${operation}: ${endpoint}`);
+  };
+
   return (
-    <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
-      <div className="flex gap-2 items-end">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-          onChange={handleFileSelect}
-          disabled={disabled || isUploading}
-        />
-
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isUploading}
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Paperclip className="h-4 w-4" />
-          )}
-        </Button>
-
-        <div className="flex-1">
-          <Input
-            placeholder="Type your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={disabled}
-            className="w-full"
+    <>
+      <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
+        <div className="flex gap-2 items-end">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleFileSelect}
+            disabled={disabled || isUploading}
           />
-        </div>
 
-        <Button
-          onClick={handleSend}
-          disabled={disabled || !message.trim()}
-          size="icon"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+          {showOperations && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setShowOperationsModal(true)}
+              disabled={disabled}
+              title="View supported operations"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || isUploading}
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Paperclip className="h-4 w-4" />
+            )}
+          </Button>
+
+          <div className="flex-1">
+            <Input
+              placeholder="Type your message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={disabled}
+              className="w-full"
+            />
+          </div>
+
+          <Button
+            onClick={handleSend}
+            disabled={disabled || !message.trim()}
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          Upload Excel (.xlsx, .xls) or CSV files up to 10MB
+        </p>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        Upload Excel (.xlsx, .xls) or CSV files up to 10MB
-      </p>
-    </div>
+
+      <OperationsModal
+        open={showOperationsModal}
+        onOpenChange={setShowOperationsModal}
+        onSelectOperation={handleSelectOperation}
+      />
+    </>
   );
 }

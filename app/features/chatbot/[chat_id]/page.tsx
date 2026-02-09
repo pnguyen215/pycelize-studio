@@ -6,15 +6,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useChatBot } from "@/lib/hooks/useChatBot";
 import { useChatWebSocket, WebSocketMessage } from "@/lib/hooks/useChatWebSocket";
 import { ChatMessages } from "@/components/features/chat/chat-messages";
 import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
 import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
-import { OperationsSelector } from "@/components/features/chat/operations-selector";
-import { MessageSquare, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { OutputFilesSection } from "@/components/features/chat/output-files-section";
+import { WorkflowStepsViewer } from "@/components/features/chat/workflow-steps-viewer";
+import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
+import { copyToClipboard } from "@/lib/utils/chat-utils";
 
 export default function ChatBotPage() {
   const router = useRouter();
@@ -26,6 +29,7 @@ export default function ChatBotPage() {
     isLoading,
     pendingWorkflow,
     workflowProgress,
+    conversationData,
     initChat,
     loadConversation,
     sendMessage,
@@ -33,9 +37,12 @@ export default function ChatBotPage() {
     confirmWorkflow,
     deleteConversation,
     setWorkflowProgress,
+    refreshConversation,
   } = useChatBot();
   
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [copiedChatId, setCopiedChatId] = useState(false);
 
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
@@ -132,6 +139,32 @@ export default function ChatBotPage() {
     router.push("/features/chatbot");
   };
 
+  const handleCopyChatId = async () => {
+    if (chatId) {
+      const success = await copyToClipboard(chatId);
+      if (success) {
+        setCopiedChatId(true);
+        NotificationManager.success("Chat ID copied to clipboard");
+        setTimeout(() => setCopiedChatId(false), 2000);
+      } else {
+        NotificationManager.error("Failed to copy Chat ID");
+      }
+    }
+  };
+
+  const handleRefreshConversation = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshConversation();
+      NotificationManager.success("Conversation refreshed");
+    } catch (error) {
+      console.error("Failed to refresh:", error);
+      NotificationManager.error("Failed to refresh conversation");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl h-screen flex flex-col">
       {/* Header */}
@@ -162,9 +195,37 @@ export default function ChatBotPage() {
           <div className="flex items-center gap-3">
             {chatId && (
               <>
-                <Badge variant="secondary" className="font-mono">
-                  ID: {chatId.slice(0, 8)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="font-mono">
+                    ID: {chatId.slice(0, 8)}
+                  </Badge>
+                  <TooltipProvider>
+                    <Tooltip open={copiedChatId}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCopyChatId}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Copied!</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshConversation}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -191,28 +252,27 @@ export default function ChatBotPage() {
       <Separator className="mb-4" />
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-4 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
-          <Card className="flex-1 flex flex-col overflow-hidden">
-            <ChatMessages messages={messages} workflowProgress={workflowProgress} />
-            <ChatInput
-              onSendMessage={sendMessage}
-              onUploadFile={uploadFile}
-              disabled={isLoading || !chatId}
-            />
-          </Card>
-        </div>
-
-        {/* Operations Sidebar */}
-        <div className="w-80 overflow-y-auto">
-          <OperationsSelector 
-            onSelectOperation={(operation, endpoint) => {
-              console.log("Selected:", operation, endpoint);
-              // You can send this as a message or use it for suggestions
-            }}
+        <Card className="flex-1 flex flex-col overflow-hidden mb-4">
+          <ChatMessages messages={messages} workflowProgress={workflowProgress} />
+          <ChatInput
+            onSendMessage={sendMessage}
+            onUploadFile={uploadFile}
+            disabled={isLoading || !chatId}
+            showOperations={true}
           />
-        </div>
+        </Card>
+
+        {/* Output Files Section */}
+        {conversationData?.output_files && conversationData.output_files.length > 0 && (
+          <OutputFilesSection outputFiles={conversationData.output_files} />
+        )}
+
+        {/* Workflow Steps Section */}
+        {conversationData?.workflow_steps && conversationData.workflow_steps.length > 0 && (
+          <WorkflowStepsViewer steps={conversationData.workflow_steps} />
+        )}
       </div>
 
       {/* Workflow Confirmation Dialog */}

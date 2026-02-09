@@ -407,7 +407,8 @@ export interface SuggestOperatorsResponse {
  * Chat message type
  */
 export interface ChatMessage {
-  type: "user" | "system" | "file";
+  message_id?: string;
+  type: "user" | "system" | "file" | "file_upload" | "error";
   content: string;
   timestamp: Date;
   file_path?: string;
@@ -419,9 +420,17 @@ export interface ChatMessage {
  * Workflow step
  */
 export interface WorkflowStep {
+  step_id?: string;
   operation: string;
+  status?: string;
+  progress?: number;
   arguments: Record<string, unknown>;
   description?: string;
+  input_file?: string;
+  output_file?: string;
+  started_at?: string;
+  completed_at?: string;
+  error_message?: string;
 }
 
 /**

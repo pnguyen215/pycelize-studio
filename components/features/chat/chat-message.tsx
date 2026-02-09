@@ -3,9 +3,12 @@
 import type { ChatMessage as ChatMessageType } from "@/lib/api/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Bot, User, Download } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Bot, User, Download, Copy } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/utils/chat-utils";
+import { NotificationManager } from "@/lib/services/notification-manager";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -17,6 +20,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.type === "user";
   const isFile = message.type === "file";
   const participantName = message.participant_name || (isUser ? "You" : "Assistant");
+
+  const handleCopyMessageId = async () => {
+    if (message.message_id) {
+      const success = await copyToClipboard(message.message_id);
+      if (success) {
+        NotificationManager.success("Message ID copied");
+      } else {
+        NotificationManager.error("Failed to copy message ID");
+      }
+    }
+  };
 
   return (
     <div
@@ -77,12 +91,33 @@ export function ChatMessage({ message }: ChatMessageProps) {
           )}
         </Card>
 
-        <span className="text-xs text-gray-500 dark:text-gray-400 px-2">
-          {message.timestamp.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {message.timestamp.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          {message.message_id && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={handleCopyMessageId}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Message ID: {message.message_id.slice(0, 8)}...</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </div>
     </div>
   );

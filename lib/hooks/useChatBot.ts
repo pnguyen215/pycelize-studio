@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { chatBotAPI } from "@/lib/api/chatbot";
-import type { ChatMessage, WorkflowStep } from "@/lib/api/types";
+import type { ChatMessage, WorkflowStep, ChatHistoryResponse } from "@/lib/api/types";
 import { NotificationManager } from "@/lib/services/notification-manager";
 
 export interface WorkflowProgress {
@@ -23,6 +23,7 @@ export function useChatBot() {
     steps: WorkflowStep[];
   } | null>(null);
   const [workflowProgress, setWorkflowProgress] = useState<WorkflowProgress | null>(null);
+  const [conversationData, setConversationData] = useState<ChatHistoryResponse | null>(null);
 
   /**
    * Initialize chat conversation
@@ -66,12 +67,16 @@ export function useChatBot() {
       const response = await chatBotAPI.getHistory(existingChatId, 500);
       const historyData = response.data;
       
+      // Store the full conversation data
+      setConversationData(historyData);
+      
       // Convert history items to chat messages
       const loadedMessages: ChatMessage[] = historyData.messages.map((item) => {
         const isUser = item.message_type === "user";
         const isFile = item.message_type === "file_upload";
         
         return {
+          message_id: item.message_id,
           type: isUser ? "user" : (isFile ? "file" : "system"),
           content: item.content,
           timestamp: new Date(item.created_at),
@@ -255,6 +260,7 @@ export function useChatBot() {
       setMessages([]);
       setPendingWorkflow(null);
       setWorkflowProgress(null);
+      setConversationData(null);
       NotificationManager.success("Conversation deleted");
     } catch (error) {
       console.error("Error deleting conversation:", error);
@@ -262,12 +268,22 @@ export function useChatBot() {
     }
   }, [chatId]);
 
+  /**
+   * Refresh conversation data
+   */
+  const refreshConversation = useCallback(async () => {
+    if (chatId) {
+      await loadConversation(chatId);
+    }
+  }, [chatId, loadConversation]);
+
   return {
     chatId,
     messages,
     isLoading,
     pendingWorkflow,
     workflowProgress,
+    conversationData,
     initChat,
     loadConversation,
     sendMessage,
@@ -275,5 +291,6 @@ export function useChatBot() {
     confirmWorkflow,
     deleteConversation,
     setWorkflowProgress,
+    refreshConversation,
   };
 }
