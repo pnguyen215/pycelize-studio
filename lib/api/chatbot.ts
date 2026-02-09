@@ -31,7 +31,7 @@ export const chatBotAPI = {
       "/chat/bot/conversations",
       {},
       {
-        notification: { enabled: true },
+        notification: { enabled: false },
         retry: { retries: 2 },
         rateLimit: { maxRequests: 10, timeWindow: 1000 },
       }
@@ -121,11 +121,14 @@ export const chatBotAPI = {
     chatId: string,
     limit: number = 500
   ): Promise<StandardResponse<ChatHistoryResponse>> {
-    return await api.get(`/chat/bot/conversations/${chatId}/history?limit=${limit}`, {
-      notification: { enabled: false },
-      retry: { retries: 2 },
-      rateLimit: { maxRequests: 10, timeWindow: 1000 },
-    });
+    return await api.get(
+      `/chat/bot/conversations/${chatId}/history?limit=${limit}`,
+      {
+        notification: { enabled: false },
+        retry: { retries: 2 },
+        rateLimit: { maxRequests: 10, timeWindow: 1000 },
+      }
+    );
   },
 
   /**
@@ -161,7 +164,7 @@ export const chatBotAPI = {
    */
   async listConversations(): Promise<StandardResponse<WorkflowsListResponse>> {
     return await api.get("/chat/workflows", {
-      notification: { enabled: true },
+      notification: { enabled: false },
       retry: { retries: 2 },
       rateLimit: { maxRequests: 10, timeWindow: 1000 },
     });
