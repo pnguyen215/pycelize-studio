@@ -54,11 +54,11 @@ export function OperationsSelector({ onSelectOperation }: OperationsSelectorProp
 
   if (loading) {
     return (
-      <Card className="p-4">
+      <div className="p-4">
         <div className="flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -70,7 +70,7 @@ export function OperationsSelector({ onSelectOperation }: OperationsSelectorProp
   const endpoints = selectedIntent ? operations.operations[selectedIntent] || [] : [];
 
   return (
-    <Card className="p-4">
+    <div>
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="h-5 w-5 text-blue-600" />
         <h3 className="font-semibold">Supported Operations</h3>
@@ -137,6 +137,6 @@ export function OperationsSelector({ onSelectOperation }: OperationsSelectorProp
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

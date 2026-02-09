@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { chatBotAPI } from "@/lib/api/chatbot";
-import type { ChatMessage, WorkflowStep } from "@/lib/api/types";
+import type { ChatMessage, WorkflowStep, ChatHistoryResponse } from "@/lib/api/types";
 import { NotificationManager } from "@/lib/services/notification-manager";
 
 export interface WorkflowProgress {
@@ -18,6 +18,7 @@ export interface WorkflowProgress {
 export function useChatBot() {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversationData, setConversationData] = useState<ChatHistoryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingWorkflow, setPendingWorkflow] = useState<{
     steps: WorkflowStep[];
@@ -66,18 +67,23 @@ export function useChatBot() {
       const response = await chatBotAPI.getHistory(existingChatId, 500);
       const historyData = response.data;
       
+      // Store the full conversation data
+      setConversationData(historyData);
+      
       // Convert history items to chat messages
       const loadedMessages: ChatMessage[] = historyData.messages.map((item) => {
         const isUser = item.message_type === "user";
         const isFile = item.message_type === "file_upload";
         
         return {
+          message_id: item.message_id,
           type: isUser ? "user" : (isFile ? "file" : "system"),
           content: item.content,
           timestamp: new Date(item.created_at),
           file_path: item.metadata?.file_path,
           download_url: item.metadata?.download_url,
           participant_name: isUser ? "You" : historyData.participant_name || "Assistant",
+          metadata: item.metadata,
         };
       });
       
@@ -265,6 +271,7 @@ export function useChatBot() {
   return {
     chatId,
     messages,
+    conversationData,
     isLoading,
     pendingWorkflow,
     workflowProgress,

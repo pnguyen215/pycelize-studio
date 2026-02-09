@@ -407,12 +407,19 @@ export interface SuggestOperatorsResponse {
  * Chat message type
  */
 export interface ChatMessage {
+  message_id?: string;
   type: "user" | "system" | "file";
   content: string;
   timestamp: Date;
   file_path?: string;
   download_url?: string;
   participant_name?: string;
+  metadata?: {
+    file_path?: string;
+    filename?: string;
+    download_url?: string;
+    [key: string]: unknown;
+  };
 }
 
 /**
@@ -527,10 +534,14 @@ export interface ChatHistoryResponse {
     download_url: string;
   }>;
   workflow_steps?: Array<{
-    step_id: string;
+    step_id?: string;
     operation: string;
     status: string;
-    [key: string]: unknown;
+    progress?: number;
+    output_file?: string;
+    completed_at?: string;
+    error_message?: string;
+    arguments?: Record<string, unknown>;
   }>;
 }
 

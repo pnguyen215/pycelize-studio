@@ -10,9 +10,10 @@ import type { WorkflowProgress as WorkflowProgressType } from "@/lib/hooks/useCh
 interface ChatMessagesProps {
   messages: ChatMessageType[];
   workflowProgress?: WorkflowProgressType | null;
+  uploadedFiles?: Array<{ file_path: string; download_url: string }>;
 }
 
-export function ChatMessages({ messages, workflowProgress }: ChatMessagesProps) {
+export function ChatMessages({ messages, workflowProgress, uploadedFiles }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +31,7 @@ export function ChatMessages({ messages, workflowProgress }: ChatMessagesProps) 
     <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
       <div ref={scrollRef} className="space-y-4">
         {messages.map((message, index) => (
-          <ChatMessage key={index} message={message} />
+          <ChatMessage key={index} message={message} uploadedFiles={uploadedFiles} />
         ))}
 
         {workflowProgress && (

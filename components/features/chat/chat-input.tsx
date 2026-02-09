@@ -3,8 +3,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, Grid2x2 } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { OperationsSelector } from "./operations-selector";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -19,6 +21,7 @@ export function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [operationsOpen, setOperationsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -92,6 +95,27 @@ export function ChatInput({
             <Paperclip className="h-4 w-4" />
           )}
         </Button>
+
+        <Popover open={operationsOpen} onOpenChange={setOperationsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={disabled}
+            >
+              <Grid2x2 className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 max-h-[500px] overflow-auto" align="start">
+            <OperationsSelector
+              onSelectOperation={(operation, endpoint) => {
+                console.log("Selected:", operation, endpoint);
+                setOperationsOpen(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
 
         <div className="flex-1">
           <Input

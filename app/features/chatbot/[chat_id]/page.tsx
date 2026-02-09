@@ -8,13 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useChatBot } from "@/lib/hooks/useChatBot";
 import { useChatWebSocket, WebSocketMessage } from "@/lib/hooks/useChatWebSocket";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { ChatMessages } from "@/components/features/chat/chat-messages";
 import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
 import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
-import { OperationsSelector } from "@/components/features/chat/operations-selector";
-import { MessageSquare, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { OutputFiles } from "@/components/features/chat/output-files";
+import { WorkflowSteps } from "@/components/features/chat/workflow-steps";
+import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ChatBotPage() {
   const router = useRouter();
@@ -23,6 +31,7 @@ export default function ChatBotPage() {
   const {
     chatId,
     messages,
+    conversationData,
     isLoading,
     pendingWorkflow,
     workflowProgress,
@@ -36,6 +45,8 @@ export default function ChatBotPage() {
   } = useChatBot();
   
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
@@ -90,9 +101,12 @@ export default function ChatBotPage() {
             message: message.message || "Workflow completed!",
           });
           
-          // Clear progress after 3 seconds
+          // Clear progress after 3 seconds and reload conversation
           setTimeout(() => {
             setWorkflowProgress(null);
+            if (chatId) {
+              handleRefreshConversation();
+            }
           }, 3000);
           
           NotificationManager.success("Workflow completed successfully!");
@@ -115,7 +129,7 @@ export default function ChatBotPage() {
           break;
       }
     },
-    [setWorkflowProgress]
+    [setWorkflowProgress, chatId]
   );
 
   // Connect to WebSocket
@@ -130,6 +144,30 @@ export default function ChatBotPage() {
 
   const handleBackToList = () => {
     router.push("/features/chatbot");
+  };
+
+  const handleCopyChatId = async () => {
+    if (chatId) {
+      const success = await copyToClipboard(chatId);
+      if (success) {
+        NotificationManager.success("Chat ID copied!");
+      }
+    }
+  };
+
+  const handleRefreshConversation = async () => {
+    if (!chatId) return;
+    
+    try {
+      setIsRefreshing(true);
+      await loadConversation(chatId);
+      NotificationManager.success("Conversation refreshed!");
+    } catch (error) {
+      console.error("Failed to refresh conversation:", error);
+      NotificationManager.error("Failed to refresh conversation");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -165,6 +203,40 @@ export default function ChatBotPage() {
                 <Badge variant="secondary" className="font-mono">
                   ID: {chatId.slice(0, 8)}
                 </Badge>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyChatId}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isCopied ? "Copied!" : "Copy Chat ID"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefreshConversation}
+                        disabled={isRefreshing}
+                      >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Refresh Conversation</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -191,27 +263,34 @@ export default function ChatBotPage() {
       <Separator className="mb-4" />
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-4 overflow-hidden">
+      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
-          <Card className="flex-1 flex flex-col overflow-hidden">
-            <ChatMessages messages={messages} workflowProgress={workflowProgress} />
-            <ChatInput
-              onSendMessage={sendMessage}
-              onUploadFile={uploadFile}
-              disabled={isLoading || !chatId}
-            />
-          </Card>
-        </div>
-
-        {/* Operations Sidebar */}
-        <div className="w-80 overflow-y-auto">
-          <OperationsSelector 
-            onSelectOperation={(operation, endpoint) => {
-              console.log("Selected:", operation, endpoint);
-              // You can send this as a message or use it for suggestions
-            }}
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <ChatMessages
+            messages={messages}
+            workflowProgress={workflowProgress}
+            uploadedFiles={conversationData?.uploaded_files}
           />
+          <ChatInput
+            onSendMessage={sendMessage}
+            onUploadFile={uploadFile}
+            disabled={isLoading || !chatId}
+          />
+        </Card>
+
+        {/* Output Files and Workflow Steps */}
+        <div className="flex gap-4 overflow-y-auto max-h-[300px]">
+          {conversationData?.output_files && conversationData.output_files.length > 0 && (
+            <div className="flex-1">
+              <OutputFiles files={conversationData.output_files} />
+            </div>
+          )}
+
+          {conversationData?.workflow_steps && conversationData.workflow_steps.length > 0 && (
+            <div className="flex-1">
+              <WorkflowSteps steps={conversationData.workflow_steps} />
+            </div>
+          )}
         </div>
       </div>
 
