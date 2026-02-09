@@ -535,12 +535,7 @@ export interface ChatHistoryResponse {
     file_path: string;
     download_url: string;
   }>;
-  workflow_steps?: Array<{
-    step_id: string;
-    operation: string;
-    status: string;
-    [key: string]: unknown;
-  }>;
+  workflow_steps?: WorkflowStep[];
 }
 
 /**
