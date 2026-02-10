@@ -252,27 +252,34 @@ export default function ChatBotPage() {
       <Separator className="mb-4" />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Chat Area */}
-        <Card className="flex-1 flex flex-col overflow-hidden mb-4">
-          <ChatMessages messages={messages} workflowProgress={workflowProgress} />
-          <ChatInput
-            onSendMessage={sendMessage}
-            onUploadFile={uploadFile}
-            disabled={isLoading || !chatId}
-            showOperations={true}
-          />
-        </Card>
+      <div className="flex-1 flex gap-4 overflow-hidden">
+        {/* Chat Area - Left Side */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Card className="flex-1 flex flex-col overflow-hidden">
+            <ChatMessages messages={messages} workflowProgress={workflowProgress} />
+            <ChatInput
+              onSendMessage={sendMessage}
+              onUploadFile={uploadFile}
+              disabled={isLoading || !chatId}
+              showOperations={true}
+            />
+          </Card>
+        </div>
 
-        {/* Output Files Section */}
-        {conversationData?.output_files && conversationData.output_files.length > 0 && (
-          <OutputFilesSection outputFiles={conversationData.output_files} />
-        )}
+        {/* Right Sidebar - Output Files and Workflow Steps */}
+        {(conversationData?.output_files?.length || conversationData?.workflow_steps?.length) ? (
+          <div className="w-96 flex flex-col gap-4 overflow-y-auto">
+            {/* Output Files Section */}
+            {conversationData?.output_files && conversationData.output_files.length > 0 && (
+              <OutputFilesSection outputFiles={conversationData.output_files} />
+            )}
 
-        {/* Workflow Steps Section */}
-        {conversationData?.workflow_steps && conversationData.workflow_steps.length > 0 && (
-          <WorkflowStepsViewer steps={conversationData.workflow_steps} />
-        )}
+            {/* Workflow Steps Section */}
+            {conversationData?.workflow_steps && conversationData.workflow_steps.length > 0 && (
+              <WorkflowStepsViewer steps={conversationData.workflow_steps} />
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Workflow Confirmation Dialog */}
