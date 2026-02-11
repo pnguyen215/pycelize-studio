@@ -290,7 +290,11 @@ export default function ChatBotPage() {
                     onClick={handleDumpConversation}
                     disabled={isDumping}
                   >
-                    <Download className={`h-4 w-4 mr-2 ${isDumping ? 'animate-spin' : ''}`} />
+                    {isDumping ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
                     {isDumping ? 'Dumping...' : 'Dump'}
                   </Button>
                 )}

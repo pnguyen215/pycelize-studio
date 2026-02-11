@@ -30,6 +30,9 @@ const CONVERSATION_GRADIENTS = {
   ],
 };
 
+// Height constants for layout calculations
+const HEADER_HEIGHT = 250; // px - combined height of page header and controls
+
 export default function ChatConversationsPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -205,7 +208,7 @@ export default function ChatConversationsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="max-h-[calc(100vh-250px)] overflow-y-auto scroll-smooth">
+        <div className={`max-h-[calc(100vh-${HEADER_HEIGHT}px)] overflow-y-auto scroll-smooth`}>
           {viewMode === 'list' ? (
             // List View
             <div className="grid gap-4">
