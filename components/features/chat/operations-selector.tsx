@@ -19,6 +19,18 @@ import { Loader2, Sparkles, ChevronRight, Play, AlertCircle } from "lucide-react
 import { getOperationMetadata } from "@/lib/config/operations-metadata";
 import { OperationFormFields } from "./operation-form-fields";
 
+// Friendly names for operation intents
+const INTENT_LABELS: Record<string, string> = {
+  bind_data: "Bind Data",
+  convert_format: "Convert Format",
+  extract_columns: "Extract Columns",
+  generate_json: "Generate JSON",
+  generate_sql: "Generate SQL",
+  map_columns: "Map Columns",
+  normalize_data: "Normalize Data",
+  search_filter: "Search Filter",
+};
+
 interface OperationsSelectorProps {
   onSelectOperation?: (operation: string, endpoint: string) => void;
   onApplyOperation?: (workflowStep: WorkflowStep) => void;
@@ -220,7 +232,7 @@ export function OperationsSelector({
               {intents.map((intent) => (
                 <SelectItem key={intent} value={intent}>
                   <div className="flex items-center gap-2">
-                    <span className="capitalize">{intent.replace(/_/g, " ")}</span>
+                    <span>{INTENT_LABELS[intent] || intent.replace(/_/g, " ")}</span>
                     <Badge variant="outline" className="text-xs">
                       {operations.operations[intent].length}
                     </Badge>

@@ -33,121 +33,85 @@ export interface OperationMetadata {
  * Maps operation endpoints to their required inputs
  */
 export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
-  // Excel Operations
-  'excel/info': {
-    name: 'Excel Info',
-    description: 'Get information about an Excel file',
-    category: 'excel',
-    requiresFile: true,
-    fields: []
-  },
-  'excel/extract-columns': {
-    name: 'Extract Columns',
-    description: 'Extract specific columns from Excel file',
-    category: 'excel',
+  // Bind Data Operations
+  'excel/bind-single-key': {
+    name: 'Excel Bind Single Key',
+    description: 'Bind data from one Excel file to another using a single key',
+    category: 'bind_data',
     requiresFile: true,
     fields: [
       {
-        name: 'columns',
-        label: 'Columns',
-        type: 'json',
+        name: 'key_column',
+        label: 'Key Column',
+        type: 'text',
         required: true,
-        placeholder: '["column1", "column2"]',
-        description: 'Array of column names to extract'
+        placeholder: 'id',
+        description: 'Column name to use as binding key'
       },
       {
-        name: 'remove_duplicates',
-        label: 'Remove Duplicates',
-        type: 'checkbox',
-        required: false,
-        defaultValue: false
-      }
-    ]
-  },
-  'excel/extract-columns-to-file': {
-    name: 'Extract Columns to File',
-    description: 'Extract columns and save to a new file',
-    category: 'excel',
-    requiresFile: true,
-    fields: [
-      {
-        name: 'columns',
-        label: 'Columns',
+        name: 'source_columns',
+        label: 'Source Columns',
         type: 'json',
         required: true,
-        placeholder: '["column1", "column2"]',
-        description: 'Array of column names to extract'
-      },
-      {
-        name: 'remove_duplicates',
-        label: 'Remove Duplicates',
-        type: 'checkbox',
-        required: false,
-        defaultValue: false
+        placeholder: '["name", "email", "phone"]',
+        description: 'Columns to bind from source file'
       },
       {
         name: 'output_filename',
         label: 'Output Filename',
         type: 'text',
         required: false,
-        placeholder: 'output.xlsx'
+        placeholder: 'bound_data.xlsx'
       }
     ]
   },
-  'excel/search': {
-    name: 'Excel Search',
-    description: 'Search and filter data in Excel files',
-    category: 'excel',
+  'excel/bind-multi-key': {
+    name: 'Excel Bind Multi Key',
+    description: 'Bind data from one Excel file to another using multiple keys',
+    category: 'bind_data',
     requiresFile: true,
     fields: [
       {
-        name: 'conditions',
-        label: 'Search Conditions',
+        name: 'key_columns',
+        label: 'Key Columns',
         type: 'json',
         required: true,
-        placeholder: '[{"column": "age", "operator": "gt", "value": "18"}]',
-        description: 'Array of search conditions'
+        placeholder: '["id", "type"]',
+        description: 'Array of column names to use as composite binding key'
+      },
+      {
+        name: 'source_columns',
+        label: 'Source Columns',
+        type: 'json',
+        required: true,
+        placeholder: '["name", "email", "phone"]',
+        description: 'Columns to bind from source file'
       },
       {
         name: 'output_filename',
         label: 'Output Filename',
         type: 'text',
         required: false,
-        placeholder: 'filtered.xlsx'
-      }
-    ]
-  },
-  'excel/binding-single': {
-    name: 'Excel Binding Single',
-    description: 'Bind data from one Excel file to another',
-    category: 'excel',
-    requiresFile: true,
-    fields: [
-      {
-        name: 'column_mapping',
-        label: 'Column Mapping',
-        type: 'json',
-        required: true,
-        placeholder: '{"source_col": "target_col"}',
-        description: 'Map source columns to target columns'
+        placeholder: 'bound_data.xlsx'
       }
     ]
   },
 
-  // CSV Operations
-  'csv/info': {
-    name: 'CSV Info',
-    description: 'Get information about a CSV file',
-    category: 'csv',
-    requiresFile: true,
-    fields: []
-  },
-  'csv/convert': {
+  // Convert Format Operations
+  'csv/convert-to-excel': {
     name: 'CSV to Excel',
     description: 'Convert CSV file to Excel format',
-    category: 'csv',
+    category: 'convert_format',
     requiresFile: true,
     fields: [
+      {
+        name: 'sheet_name',
+        label: 'Sheet Name',
+        type: 'text',
+        required: false,
+        placeholder: 'Sheet1',
+        description: 'Name for the Excel sheet'
+      },
       {
         name: 'output_filename',
         label: 'Output Filename',
@@ -157,87 +121,45 @@ export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
       }
     ]
   },
-  'csv/search': {
-    name: 'CSV Search',
-    description: 'Search and filter data in CSV files',
-    category: 'csv',
+
+  // Extract Columns Operations
+  'excel/extract-columns-to-file': {
+    name: 'Extract Columns to File',
+    description: 'Extract specific columns from Excel file and save to a new file',
+    category: 'extract_columns',
     requiresFile: true,
     fields: [
       {
-        name: 'conditions',
-        label: 'Search Conditions',
+        name: 'columns',
+        label: 'Columns',
         type: 'json',
         required: true,
-        placeholder: '[{"column": "name", "operator": "eq", "value": "John"}]',
-        description: 'Array of search conditions'
+        placeholder: '["column1", "column2"]',
+        description: 'Array of column names to extract'
+      },
+      {
+        name: 'remove_duplicates',
+        label: 'Remove Duplicates',
+        type: 'checkbox',
+        required: false,
+        defaultValue: false,
+        description: 'Remove duplicate rows from output'
       },
       {
         name: 'output_filename',
         label: 'Output Filename',
         type: 'text',
         required: false,
-        placeholder: 'filtered.csv'
+        placeholder: 'extracted_columns.xlsx'
       }
     ]
   },
 
-  // SQL Operations
-  'sql/generate': {
-    name: 'Generate SQL',
-    description: 'Generate SQL INSERT statements from file',
-    category: 'sql',
-    requiresFile: true,
-    fields: [
-      {
-        name: 'table_name',
-        label: 'Table Name',
-        type: 'text',
-        required: true,
-        placeholder: 'users'
-      },
-      {
-        name: 'database_type',
-        label: 'Database Type',
-        type: 'select',
-        required: true,
-        options: [
-          { value: 'postgresql', label: 'PostgreSQL' },
-          { value: 'mysql', label: 'MySQL' },
-          { value: 'sqlite', label: 'SQLite' }
-        ]
-      },
-      {
-        name: 'columns',
-        label: 'Columns',
-        type: 'json',
-        required: false,
-        placeholder: '["col1", "col2"]',
-        description: 'Specific columns to include (optional)'
-      }
-    ]
-  },
-  'sql/custom': {
-    name: 'Custom SQL',
-    description: 'Generate SQL using custom template',
-    category: 'sql',
-    requiresFile: true,
-    fields: [
-      {
-        name: 'template',
-        label: 'SQL Template',
-        type: 'textarea',
-        required: true,
-        placeholder: 'INSERT INTO {table} (col1, col2) VALUES ({col1}, {col2});',
-        description: 'Custom SQL template with placeholders'
-      }
-    ]
-  },
-
-  // JSON Operations
+  // Generate JSON Operations
   'json/generate': {
     name: 'Generate JSON',
     description: 'Convert file data to JSON format',
-    category: 'json',
+    category: 'generate_json',
     requiresFile: true,
     fields: [
       {
@@ -245,18 +167,16 @@ export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
         label: 'Pretty Print',
         type: 'checkbox',
         required: false,
-        defaultValue: true
+        defaultValue: true,
+        description: 'Format JSON with indentation'
       },
       {
-        name: 'null_handling',
-        label: 'Null Handling',
-        type: 'select',
+        name: 'array_format',
+        label: 'Array Format',
+        type: 'checkbox',
         required: false,
-        options: [
-          { value: 'include', label: 'Include' },
-          { value: 'exclude', label: 'Exclude' },
-          { value: 'default', label: 'Default' }
-        ]
+        defaultValue: true,
+        description: 'Output as JSON array'
       },
       {
         name: 'output_filename',
@@ -267,10 +187,10 @@ export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
       }
     ]
   },
-  'json/template': {
-    name: 'JSON Template',
-    description: 'Generate JSON using custom template',
-    category: 'json',
+  'json/generate-with-template': {
+    name: 'Generate JSON with Template',
+    description: 'Generate JSON using a custom template',
+    category: 'generate_json',
     requiresFile: true,
     fields: [
       {
@@ -279,39 +199,116 @@ export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
         type: 'json',
         required: true,
         placeholder: '{"name": "{name}", "age": "{age}"}',
-        description: 'JSON template with placeholders'
+        description: 'JSON template with placeholders (use {column_name} syntax)'
       },
       {
         name: 'pretty_print',
         label: 'Pretty Print',
         type: 'checkbox',
         required: false,
-        defaultValue: true
+        defaultValue: true,
+        description: 'Format JSON with indentation'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'templated_output.json'
       }
     ]
   },
 
-  // Column Operations
-  'column/extract': {
-    name: 'Extract Columns',
-    description: 'Extract specific columns from file',
-    category: 'column',
+  // Generate SQL Operations
+  'sql/generate': {
+    name: 'Generate SQL',
+    description: 'Generate SQL INSERT statements from file data',
+    category: 'generate_sql',
     requiresFile: true,
     fields: [
+      {
+        name: 'table_name',
+        label: 'Table Name',
+        type: 'text',
+        required: true,
+        placeholder: 'users',
+        description: 'Name of the database table'
+      },
+      {
+        name: 'database_type',
+        label: 'Database Type',
+        type: 'select',
+        required: false,
+        options: [
+          { value: 'postgresql', label: 'PostgreSQL' },
+          { value: 'mysql', label: 'MySQL' },
+          { value: 'sqlite', label: 'SQLite' },
+          { value: 'mssql', label: 'MS SQL Server' }
+        ],
+        defaultValue: 'postgresql',
+        description: 'Target database system'
+      },
       {
         name: 'columns',
         label: 'Columns',
         type: 'json',
-        required: true,
-        placeholder: '["column1", "column2"]',
-        description: 'Array of column names to extract'
+        required: false,
+        placeholder: '["col1", "col2"]',
+        description: 'Specific columns to include (leave empty for all columns)'
+      },
+      {
+        name: 'batch_size',
+        label: 'Batch Size',
+        type: 'number',
+        required: false,
+        placeholder: '100',
+        description: 'Number of rows per INSERT statement'
       }
     ]
   },
-  'column/mapping': {
-    name: 'Column Mapping',
-    description: 'Map and transform column names',
-    category: 'column',
+  'sql/generate-to-text': {
+    name: 'Generate SQL to Text File',
+    description: 'Generate SQL statements and save to a text file',
+    category: 'generate_sql',
+    requiresFile: true,
+    fields: [
+      {
+        name: 'table_name',
+        label: 'Table Name',
+        type: 'text',
+        required: true,
+        placeholder: 'users',
+        description: 'Name of the database table'
+      },
+      {
+        name: 'database_type',
+        label: 'Database Type',
+        type: 'select',
+        required: false,
+        options: [
+          { value: 'postgresql', label: 'PostgreSQL' },
+          { value: 'mysql', label: 'MySQL' },
+          { value: 'sqlite', label: 'SQLite' },
+          { value: 'mssql', label: 'MS SQL Server' }
+        ],
+        defaultValue: 'postgresql',
+        description: 'Target database system'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'insert_statements.sql'
+      }
+    ]
+  },
+
+  // Map Columns Operations
+  'excel/map-columns': {
+    name: 'Map Columns',
+    description: 'Rename and transform column names in Excel file',
+    category: 'map_columns',
     requiresFile: true,
     fields: [
       {
@@ -319,47 +316,115 @@ export const OPERATIONS_METADATA: Record<string, OperationMetadata> = {
         label: 'Column Mapping',
         type: 'json',
         required: true,
-        placeholder: '{"old_name": "new_name"}',
-        description: 'Map old column names to new names'
+        placeholder: '{"old_name": "new_name", "another_old": "another_new"}',
+        description: 'Map old column names to new column names'
+      },
+      {
+        name: 'keep_unmapped',
+        label: 'Keep Unmapped Columns',
+        type: 'checkbox',
+        required: false,
+        defaultValue: true,
+        description: 'Keep columns that are not in the mapping'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'mapped_columns.xlsx'
       }
     ]
   },
 
-  // Normalization
-  'data/normalize': {
-    name: 'Normalize Data',
-    description: 'Apply data normalization transformations',
-    category: 'data',
+  // Normalize Data Operations
+  'normalization/apply': {
+    name: 'Apply Normalization',
+    description: 'Apply data normalization transformations to file',
+    category: 'normalize_data',
     requiresFile: true,
     fields: [
       {
         name: 'normalizations',
-        label: 'Normalizations',
+        label: 'Normalization Rules',
         type: 'json',
         required: true,
-        placeholder: '[{"column": "email", "type": "lowercase"}]',
-        description: 'Array of normalization rules'
+        placeholder: '[{"column": "email", "type": "lowercase"}, {"column": "phone", "type": "remove_spaces"}]',
+        description: 'Array of normalization rules (types: lowercase, uppercase, trim, remove_spaces, remove_special_chars)'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'normalized_data.xlsx'
       }
     ]
   },
 
-  // File Binding
-  'file/binding': {
-    name: 'File Binding',
-    description: 'Bind data from multiple files',
-    category: 'file',
+  // Search Filter Operations
+  'excel/search': {
+    name: 'Excel Search & Filter',
+    description: 'Search and filter data in Excel files based on conditions',
+    category: 'search_filter',
     requiresFile: true,
     fields: [
       {
-        name: 'column_mapping',
-        label: 'Column Mapping',
+        name: 'conditions',
+        label: 'Search Conditions',
         type: 'json',
         required: true,
-        placeholder: '{"file1_col": "file2_col"}',
-        description: 'Map columns between files'
+        placeholder: '[{"column": "age", "operator": "gt", "value": 18}]',
+        description: 'Array of conditions (operators: eq, ne, gt, lt, gte, lte, contains, startswith, endswith)'
+      },
+      {
+        name: 'match_all',
+        label: 'Match All Conditions',
+        type: 'checkbox',
+        required: false,
+        defaultValue: true,
+        description: 'If true, all conditions must match (AND). If false, any condition can match (OR)'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'filtered_results.xlsx'
       }
     ]
-  }
+  },
+  'csv/search': {
+    name: 'CSV Search & Filter',
+    description: 'Search and filter data in CSV files based on conditions',
+    category: 'search_filter',
+    requiresFile: true,
+    fields: [
+      {
+        name: 'conditions',
+        label: 'Search Conditions',
+        type: 'json',
+        required: true,
+        placeholder: '[{"column": "name", "operator": "contains", "value": "John"}]',
+        description: 'Array of conditions (operators: eq, ne, gt, lt, gte, lte, contains, startswith, endswith)'
+      },
+      {
+        name: 'match_all',
+        label: 'Match All Conditions',
+        type: 'checkbox',
+        required: false,
+        defaultValue: true,
+        description: 'If true, all conditions must match (AND). If false, any condition can match (OR)'
+      },
+      {
+        name: 'output_filename',
+        label: 'Output Filename',
+        type: 'text',
+        required: false,
+        placeholder: 'filtered_results.csv'
+      }
+    ]
+  },
 };
 
 /**
