@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2, LayoutGrid } from "lucide-react";
+import { Send, Paperclip, Loader2, LayoutGrid, FileText, Workflow } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { OperationsModal } from "./operations-modal";
 
@@ -12,6 +12,10 @@ interface ChatInputProps {
   onUploadFile: (file: File) => void;
   disabled?: boolean;
   showOperations?: boolean;
+  onOpenOutputFiles?: () => void;
+  onOpenWorkflowSteps?: () => void;
+  hasOutputFiles?: boolean;
+  hasWorkflowSteps?: boolean;
 }
 
 export function ChatInput({
@@ -19,6 +23,10 @@ export function ChatInput({
   onUploadFile,
   disabled = false,
   showOperations = true,
+  onOpenOutputFiles,
+  onOpenWorkflowSteps,
+  hasOutputFiles = false,
+  hasWorkflowSteps = false,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -104,12 +112,41 @@ export function ChatInput({
             </Button>
           )}
 
+          {onOpenOutputFiles && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onOpenOutputFiles}
+              disabled={disabled || !hasOutputFiles}
+              title="View output files"
+              className={hasOutputFiles ? "text-blue-600 dark:text-blue-400" : ""}
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+          )}
+
+          {onOpenWorkflowSteps && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onOpenWorkflowSteps}
+              disabled={disabled || !hasWorkflowSteps}
+              title="View workflow steps"
+              className={hasWorkflowSteps ? "text-purple-600 dark:text-purple-400" : ""}
+            >
+              <Workflow className="h-4 w-4" />
+            </Button>
+          )}
+
           <Button
             type="button"
             variant="outline"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading}
+            title="Upload file"
           >
             {isUploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

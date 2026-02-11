@@ -13,8 +13,8 @@ import { ChatMessages } from "@/components/features/chat/chat-messages";
 import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
 import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
-import { OutputFilesSection } from "@/components/features/chat/output-files-section";
-import { WorkflowStepsViewer } from "@/components/features/chat/workflow-steps-viewer";
+import { OutputFilesDrawer } from "@/components/features/chat/output-files-drawer";
+import { WorkflowStepsDrawer } from "@/components/features/chat/workflow-steps-drawer";
 import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { copyToClipboard } from "@/lib/utils/chat-utils";
@@ -43,6 +43,8 @@ export default function ChatBotPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedChatId, setCopiedChatId] = useState(false);
+  const [showOutputFilesDrawer, setShowOutputFilesDrawer] = useState(false);
+  const [showWorkflowStepsDrawer, setShowWorkflowStepsDrawer] = useState(false);
 
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
@@ -252,35 +254,36 @@ export default function ChatBotPage() {
       <Separator className="mb-4" />
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-4 overflow-hidden">
-        {/* Chat Area - Left Side */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Card className="flex-1 flex flex-col overflow-hidden">
-            <ChatMessages messages={messages} workflowProgress={workflowProgress} />
-            <ChatInput
-              onSendMessage={sendMessage}
-              onUploadFile={uploadFile}
-              disabled={isLoading || !chatId}
-              showOperations={true}
-            />
-          </Card>
-        </div>
-
-        {/* Right Sidebar - Output Files and Workflow Steps */}
-        {(conversationData?.output_files?.length || conversationData?.workflow_steps?.length) ? (
-          <div className="w-96 flex flex-col gap-4 overflow-y-auto">
-            {/* Output Files Section */}
-            {conversationData?.output_files && conversationData.output_files.length > 0 && (
-              <OutputFilesSection outputFiles={conversationData.output_files} />
-            )}
-
-            {/* Workflow Steps Section */}
-            {conversationData?.workflow_steps && conversationData.workflow_steps.length > 0 && (
-              <WorkflowStepsViewer steps={conversationData.workflow_steps} />
-            )}
-          </div>
-        ) : null}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Chat Area - Full Width */}
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <ChatMessages messages={messages} workflowProgress={workflowProgress} />
+          <ChatInput
+            onSendMessage={sendMessage}
+            onUploadFile={uploadFile}
+            disabled={isLoading || !chatId}
+            showOperations={true}
+            onOpenOutputFiles={() => setShowOutputFilesDrawer(true)}
+            onOpenWorkflowSteps={() => setShowWorkflowStepsDrawer(true)}
+            hasOutputFiles={!!conversationData?.output_files?.length}
+            hasWorkflowSteps={!!conversationData?.workflow_steps?.length}
+          />
+        </Card>
       </div>
+
+      {/* Output Files Drawer - Bottom */}
+      <OutputFilesDrawer
+        open={showOutputFilesDrawer}
+        onOpenChange={setShowOutputFilesDrawer}
+        outputFiles={conversationData?.output_files || []}
+      />
+
+      {/* Workflow Steps Drawer - Right */}
+      <WorkflowStepsDrawer
+        open={showWorkflowStepsDrawer}
+        onOpenChange={setShowWorkflowStepsDrawer}
+        steps={conversationData?.workflow_steps || []}
+      />
 
       {/* Workflow Confirmation Dialog */}
       <WorkflowConfirmDialog

@@ -27,7 +27,7 @@ export function ChatMessages({ messages, workflowProgress }: ChatMessagesProps) 
   }, [messages, workflowProgress]);
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+    <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950" ref={scrollAreaRef}>
       <div ref={scrollRef} className="space-y-4">
         {messages.map((message, index) => (
           <ChatMessage key={index} message={message} />
@@ -40,7 +40,9 @@ export function ChatMessages({ messages, workflowProgress }: ChatMessagesProps) 
         {messages.length === 0 && !workflowProgress && (
           <div className="flex items-center justify-center h-full text-center">
             <div className="text-gray-500 dark:text-gray-400">
-              <p className="text-lg font-medium">Welcome to Pycelize Chat Bot</p>
+              <p className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+                Welcome to Pycelize Chat Bot
+              </p>
               <p className="text-sm mt-2">
                 Upload a file or send a message to get started
               </p>
