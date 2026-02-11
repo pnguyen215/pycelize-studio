@@ -16,6 +16,8 @@ import type {
   SupportedOperationsResponse,
   WorkflowsListResponse,
   WorkflowStep,
+  DumpConversationResponse,
+  RestoreConversationResponse,
 } from "./types";
 
 /**
@@ -165,6 +167,43 @@ export const chatBotAPI = {
   async listConversations(): Promise<StandardResponse<WorkflowsListResponse>> {
     return await api.get("/chat/workflows", {
       notification: { enabled: false },
+      retry: { retries: 2 },
+      rateLimit: { maxRequests: 10, timeWindow: 1000 },
+    });
+  },
+
+  /**
+   * Dump a conversation by chat_id
+   * @param chatId - The ID of the conversation to dump
+   * @returns Dump conversation response with download URL
+   */
+  async dumpConversation(
+    chatId: string
+  ): Promise<StandardResponse<DumpConversationResponse>> {
+    return await api.post(
+      `/chat/workflows/${chatId}/dump`,
+      {},
+      {
+        notification: { enabled: true, successMessage: "Conversation dumped successfully" },
+        retry: { retries: 2 },
+        rateLimit: { maxRequests: 10, timeWindow: 1000 },
+      }
+    );
+  },
+
+  /**
+   * Restore a conversation from a dump file
+   * @param dumpFile - The dump file to restore
+   * @returns Restore conversation response with new chat_id
+   */
+  async restoreConversation(
+    dumpFile: File
+  ): Promise<StandardResponse<RestoreConversationResponse>> {
+    const form = new FormData();
+    form.append("dump_file", dumpFile);
+
+    return await api.post(`/chat/workflows/restore`, form, {
+      notification: { enabled: true, successMessage: "Conversation restored successfully" },
       retry: { retries: 2 },
       rateLimit: { maxRequests: 10, timeWindow: 1000 },
     });

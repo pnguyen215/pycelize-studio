@@ -554,3 +554,34 @@ export interface SupportedOperationsResponse {
   operations: Record<string, string[]>;
   total_intents: number;
 }
+
+/**
+ * Dump conversation response
+ */
+export interface DumpConversationResponse {
+  download_url: string;
+  dump_file: string;
+}
+
+/**
+ * Restore conversation response
+ */
+export interface RestoreConversationResponse {
+  chat_id: string;
+  created_at: string;
+  messages: ChatHistoryItem[];
+  metadata?: Record<string, unknown>;
+  output_files?: Array<{
+    file_path: string;
+    download_url: string;
+  }>;
+  participant_name: string;
+  partition_key: string;
+  status: string;
+  updated_at: string;
+  uploaded_files?: Array<{
+    file_path: string;
+    download_url: string;
+  }>;
+  workflow_steps?: WorkflowStep[];
+}

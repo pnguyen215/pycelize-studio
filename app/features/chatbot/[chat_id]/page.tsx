@@ -16,9 +16,10 @@ import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-d
 import { UploadedFilesDrawer } from "@/components/features/chat/uploaded-files-drawer";
 import { OutputFilesDrawer } from "@/components/features/chat/output-files-drawer";
 import { WorkflowStepsDrawer } from "@/components/features/chat/workflow-steps-drawer";
-import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
+import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw, Download } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { copyToClipboard } from "@/lib/utils/chat-utils";
+import { chatBotAPI } from "@/lib/api/chatbot";
 import type { WorkflowStep } from "@/lib/api/types";
 
 export default function ChatBotPage() {
@@ -48,6 +49,8 @@ export default function ChatBotPage() {
   const [showUploadedFilesDrawer, setShowUploadedFilesDrawer] = useState(false);
   const [showOutputFilesDrawer, setShowOutputFilesDrawer] = useState(false);
   const [showWorkflowStepsDrawer, setShowWorkflowStepsDrawer] = useState(false);
+  const [isDumping, setIsDumping] = useState(false);
+  const [dumpDownloadUrl, setDumpDownloadUrl] = useState<string | null>(null);
 
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
@@ -185,6 +188,31 @@ export default function ChatBotPage() {
     }
   };
 
+  const handleDumpConversation = async () => {
+    if (!chatId) {
+      NotificationManager.error("No active chat session");
+      return;
+    }
+
+    setIsDumping(true);
+    try {
+      const response = await chatBotAPI.dumpConversation(chatId);
+      setDumpDownloadUrl(response.data.download_url);
+    } catch (error) {
+      console.error("Failed to dump conversation:", error);
+      NotificationManager.error("Failed to dump conversation");
+    } finally {
+      setIsDumping(false);
+    }
+  };
+
+  const handleDownloadDump = () => {
+    if (dumpDownloadUrl) {
+      window.open(dumpDownloadUrl, "_blank");
+      setDumpDownloadUrl(null);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl h-screen flex flex-col">
       {/* Header */}
@@ -246,6 +274,26 @@ export default function ChatBotPage() {
                   <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
+                {dumpDownloadUrl ? (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadDump}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Dump
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDumpConversation}
+                    disabled={isDumping}
+                  >
+                    <Download className={`h-4 w-4 mr-2 ${isDumping ? 'animate-spin' : ''}`} />
+                    {isDumping ? 'Dumping...' : 'Dump'}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
