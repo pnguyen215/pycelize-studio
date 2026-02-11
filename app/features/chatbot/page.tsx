@@ -11,6 +11,25 @@ import type { ChatConversation } from "@/lib/api/types";
 import { MessageSquare, Plus, Loader2, Calendar, User, Upload, LayoutGrid, List } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 
+// Gradient colors for conversation cards
+const CONVERSATION_GRADIENTS = {
+  list: [
+    'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900',
+    'bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-900',
+    'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950 dark:to-teal-900',
+    'bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900',
+    'bg-gradient-to-br from-rose-50 to-red-100 dark:from-rose-950 dark:to-red-900',
+  ],
+  card: [
+    'bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 dark:from-blue-900 dark:via-blue-950 dark:to-indigo-900',
+    'bg-gradient-to-br from-purple-100 via-purple-50 to-pink-100 dark:from-purple-900 dark:via-purple-950 dark:to-pink-900',
+    'bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-900 dark:via-emerald-950 dark:to-teal-900',
+    'bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 dark:from-amber-900 dark:via-amber-950 dark:to-orange-900',
+    'bg-gradient-to-br from-rose-100 via-rose-50 to-red-100 dark:from-rose-900 dark:via-rose-950 dark:to-red-900',
+    'bg-gradient-to-br from-cyan-100 via-cyan-50 to-sky-100 dark:from-cyan-900 dark:via-cyan-950 dark:to-sky-900',
+  ],
+};
+
 export default function ChatConversationsPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -186,19 +205,12 @@ export default function ChatConversationsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className={`${viewMode === 'card' ? 'max-h-[calc(100vh-250px)]' : 'max-h-[calc(100vh-250px)]'} overflow-y-auto scroll-smooth`}>
+        <div className="max-h-[calc(100vh-250px)] overflow-y-auto scroll-smooth">
           {viewMode === 'list' ? (
             // List View
             <div className="grid gap-4">
               {conversations.map((conversation, index) => {
-                const gradients = [
-                  'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900',
-                  'bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-900',
-                  'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950 dark:to-teal-900',
-                  'bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900',
-                  'bg-gradient-to-br from-rose-50 to-red-100 dark:from-rose-950 dark:to-red-900',
-                ];
-                const gradient = gradients[index % gradients.length];
+                const gradient = CONVERSATION_GRADIENTS.list[index % CONVERSATION_GRADIENTS.list.length];
                 
                 return (
                   <Card
@@ -258,15 +270,7 @@ export default function ChatConversationsPage() {
             // Card View
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {conversations.map((conversation, index) => {
-                const gradients = [
-                  'bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 dark:from-blue-900 dark:via-blue-950 dark:to-indigo-900',
-                  'bg-gradient-to-br from-purple-100 via-purple-50 to-pink-100 dark:from-purple-900 dark:via-purple-950 dark:to-pink-900',
-                  'bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-900 dark:via-emerald-950 dark:to-teal-900',
-                  'bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 dark:from-amber-900 dark:via-amber-950 dark:to-orange-900',
-                  'bg-gradient-to-br from-rose-100 via-rose-50 to-red-100 dark:from-rose-900 dark:via-rose-950 dark:to-red-900',
-                  'bg-gradient-to-br from-cyan-100 via-cyan-50 to-sky-100 dark:from-cyan-900 dark:via-cyan-950 dark:to-sky-900',
-                ];
-                const gradient = gradients[index % gradients.length];
+                const gradient = CONVERSATION_GRADIENTS.card[index % CONVERSATION_GRADIENTS.card.length];
                 
                 return (
                   <Card
