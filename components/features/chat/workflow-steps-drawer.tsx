@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Drawer,
   DrawerClose,
@@ -13,10 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CheckCircle2, XCircle, Clock, Loader2, Copy, Workflow, ChevronDown } from "lucide-react";
 import { formatDate, copyToClipboard } from "@/lib/utils/chat-utils";
-import { NotificationManager } from "@/lib/services/notification-manager";
 import { JsonViewer } from "./json-viewer";
 import type { WorkflowStep } from "@/lib/api/types";
 
@@ -42,12 +43,22 @@ function StatusIcon({ status }: { status?: string }) {
 }
 
 export function WorkflowStepsDrawer({ open, onOpenChange, steps }: WorkflowStepsDrawerProps) {
-  const handleCopyArguments = async (args: Record<string, unknown>) => {
+  const [copiedStepId, setCopiedStepId] = useState<string | null>(null);
+  const [copiedArgIndex, setCopiedArgIndex] = useState<number | null>(null);
+
+  const handleCopyStepId = async (stepId: string) => {
+    const success = await copyToClipboard(stepId);
+    if (success) {
+      setCopiedStepId(stepId);
+      setTimeout(() => setCopiedStepId(null), 2000);
+    }
+  };
+
+  const handleCopyArguments = async (args: Record<string, unknown>, index: number) => {
     const success = await copyToClipboard(JSON.stringify(args, null, 2));
     if (success) {
-      NotificationManager.success("Arguments copied to clipboard");
-    } else {
-      NotificationManager.error("Failed to copy arguments");
+      setCopiedArgIndex(index);
+      setTimeout(() => setCopiedArgIndex(null), 2000);
     }
   };
 
@@ -90,6 +101,32 @@ export function WorkflowStepsDrawer({ open, onOpenChange, steps }: WorkflowSteps
                         </Badge>
                       </div>
                       
+                      {step.step_id && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
+                            ID: {step.step_id}
+                          </p>
+                          <TooltipProvider>
+                            <Tooltip open={copiedStepId === step.step_id}>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleCopyStepId(step.step_id!)}
+                                  className="h-6 w-6 p-0 cursor-pointer"
+                                  title="Copy step ID"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Copied!</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      )}
+                      
                       {step.progress !== undefined && step.progress < 100 && (
                         <div className="mb-2">
                           <Progress value={step.progress} className="h-2" />
@@ -122,14 +159,24 @@ export function WorkflowStepsDrawer({ open, onOpenChange, steps }: WorkflowSteps
                             View Arguments
                           </Button>
                         </CollapsibleTrigger>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => handleCopyArguments(step.arguments)}
-                        >
-                          <Copy className="h-4 w-4 mr-1" />
-                          Copy
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip open={copiedArgIndex === index}>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleCopyArguments(step.arguments, index)}
+                                className="cursor-pointer"
+                              >
+                                <Copy className="h-4 w-4 mr-1" />
+                                Copy
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Copied!</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                       
                       <CollapsibleContent>

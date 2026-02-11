@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2, LayoutGrid, FileText, Workflow } from "lucide-react";
+import { Send, Paperclip, Loader2, LayoutGrid, FileText, Workflow, Upload } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { OperationsModal } from "./operations-modal";
 
@@ -14,8 +14,10 @@ interface ChatInputProps {
   showOperations?: boolean;
   onOpenOutputFiles?: () => void;
   onOpenWorkflowSteps?: () => void;
+  onOpenUploadedFiles?: () => void;
   hasOutputFiles?: boolean;
   hasWorkflowSteps?: boolean;
+  hasUploadedFiles?: boolean;
 }
 
 export function ChatInput({
@@ -25,8 +27,10 @@ export function ChatInput({
   showOperations = true,
   onOpenOutputFiles,
   onOpenWorkflowSteps,
+  onOpenUploadedFiles,
   hasOutputFiles = false,
   hasWorkflowSteps = false,
+  hasUploadedFiles = false,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -109,6 +113,20 @@ export function ChatInput({
               title="View supported operations"
             >
               <LayoutGrid className="h-4 w-4" />
+            </Button>
+          )}
+
+          {onOpenUploadedFiles && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onOpenUploadedFiles}
+              disabled={disabled || !hasUploadedFiles}
+              title="View uploaded files"
+              className={hasUploadedFiles ? "text-green-600 dark:text-green-400" : ""}
+            >
+              <Upload className="h-4 w-4" />
             </Button>
           )}
 

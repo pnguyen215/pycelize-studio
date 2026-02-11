@@ -13,6 +13,7 @@ import { ChatMessages } from "@/components/features/chat/chat-messages";
 import { ChatInput } from "@/components/features/chat/chat-input";
 import { WorkflowConfirmDialog } from "@/components/features/chat/workflow-confirm-dialog";
 import { DeleteConfirmDialog } from "@/components/features/chat/delete-confirm-dialog";
+import { UploadedFilesDrawer } from "@/components/features/chat/uploaded-files-drawer";
 import { OutputFilesDrawer } from "@/components/features/chat/output-files-drawer";
 import { WorkflowStepsDrawer } from "@/components/features/chat/workflow-steps-drawer";
 import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
@@ -43,6 +44,7 @@ export default function ChatBotPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedChatId, setCopiedChatId] = useState(false);
+  const [showUploadedFilesDrawer, setShowUploadedFilesDrawer] = useState(false);
   const [showOutputFilesDrawer, setShowOutputFilesDrawer] = useState(false);
   const [showWorkflowStepsDrawer, setShowWorkflowStepsDrawer] = useState(false);
 
@@ -146,10 +148,7 @@ export default function ChatBotPage() {
       const success = await copyToClipboard(chatId);
       if (success) {
         setCopiedChatId(true);
-        NotificationManager.success("Chat ID copied to clipboard");
         setTimeout(() => setCopiedChatId(false), 2000);
-      } else {
-        NotificationManager.error("Failed to copy Chat ID");
       }
     }
   };
@@ -208,7 +207,7 @@ export default function ChatBotPage() {
                           variant="ghost"
                           size="sm"
                           onClick={handleCopyChatId}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 cursor-pointer"
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -263,13 +262,22 @@ export default function ChatBotPage() {
             onUploadFile={uploadFile}
             disabled={isLoading || !chatId}
             showOperations={true}
+            onOpenUploadedFiles={() => setShowUploadedFilesDrawer(true)}
             onOpenOutputFiles={() => setShowOutputFilesDrawer(true)}
             onOpenWorkflowSteps={() => setShowWorkflowStepsDrawer(true)}
+            hasUploadedFiles={!!conversationData?.uploaded_files?.length}
             hasOutputFiles={!!conversationData?.output_files?.length}
             hasWorkflowSteps={!!conversationData?.workflow_steps?.length}
           />
         </Card>
       </div>
+
+      {/* Uploaded Files Drawer - Bottom */}
+      <UploadedFilesDrawer
+        open={showUploadedFilesDrawer}
+        onOpenChange={setShowUploadedFilesDrawer}
+        uploadedFiles={conversationData?.uploaded_files || []}
+      />
 
       {/* Output Files Drawer - Bottom */}
       <OutputFilesDrawer
