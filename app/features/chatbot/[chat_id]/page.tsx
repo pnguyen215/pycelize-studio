@@ -175,7 +175,8 @@ export default function ChatBotPage() {
 
     try {
       // Call confirmWorkflow with the single step as a workflow
-      await confirmWorkflow([workflowStep]);
+      // Pass true for confirmed and the workflow step array
+      await confirmWorkflow(true, [workflowStep]);
       NotificationManager.success("Operation applied successfully");
     } catch (error) {
       console.error("Failed to apply operation:", error);
