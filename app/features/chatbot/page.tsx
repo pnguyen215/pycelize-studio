@@ -43,7 +43,8 @@ export default function ChatConversationsPage() {
 
   useEffect(() => {
     loadConversations();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load on mount
 
   const loadConversations = async () => {
     try {
@@ -227,7 +228,7 @@ export default function ChatConversationsPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <CardTitle className="text-lg">
-                              Conversation
+                              {conversation.participant_name}
                             </CardTitle>
                             {conversation.status && (
                               <Badge variant={conversation.status === "completed" ? "default" : "secondary"}>
@@ -289,7 +290,7 @@ export default function ChatConversationsPage() {
                           </div>
                           <div>
                             <CardTitle className="text-base">
-                              Chat
+                              {conversation.participant_name}
                             </CardTitle>
                             {conversation.status && (
                               <Badge variant={conversation.status === "completed" ? "default" : "secondary"} className="mt-1">

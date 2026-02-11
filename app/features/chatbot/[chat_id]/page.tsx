@@ -51,9 +51,13 @@ export default function ChatBotPage() {
   const [showWorkflowStepsDrawer, setShowWorkflowStepsDrawer] = useState(false);
   const [isDumping, setIsDumping] = useState(false);
   const [dumpDownloadUrl, setDumpDownloadUrl] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Initialize chat on mount or use existing chat_id from URL
   useEffect(() => {
+    // Don't try to load conversation if we're in the process of deleting
+    if (isDeleting) return;
+    
     if (chatIdFromUrl && !chatId) {
       // Load existing conversation
       loadConversation(chatIdFromUrl).catch((error) => {
@@ -67,7 +71,7 @@ export default function ChatBotPage() {
         router.push(`/features/chatbot/${conversation.chat_id}`);
       });
     }
-  }, [chatIdFromUrl, chatId, initChat, loadConversation, router]);
+  }, [chatIdFromUrl, chatId, initChat, loadConversation, router, isDeleting]);
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback(
@@ -137,10 +141,17 @@ export default function ChatBotPage() {
   useChatWebSocket(chatId, handleWebSocketMessage);
 
   const handleDeleteConversation = async () => {
-    await deleteConversation();
-    setShowDeleteDialog(false);
-    // Redirect to conversations list
-    router.push("/features/chatbot");
+    try {
+      setIsDeleting(true);
+      await deleteConversation();
+      setShowDeleteDialog(false);
+      // Redirect to conversations list
+      router.push("/features/chatbot");
+    } catch (error) {
+      // Error is already handled by the hook, just prevent navigation
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
   };
 
   const handleBackToList = () => {
