@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2, LayoutGrid, FileText, Workflow, Upload } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { OperationsModal } from "./operations-modal";
+import type { WorkflowStep } from "@/lib/api/types";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -18,6 +19,8 @@ interface ChatInputProps {
   hasOutputFiles?: boolean;
   hasWorkflowSteps?: boolean;
   hasUploadedFiles?: boolean;
+  onApplyOperation?: (workflowStep: WorkflowStep) => Promise<void>;
+  chatId?: string;
 }
 
 export function ChatInput({
@@ -31,6 +34,8 @@ export function ChatInput({
   hasOutputFiles = false,
   hasWorkflowSteps = false,
   hasUploadedFiles = false,
+  onApplyOperation,
+  chatId,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -85,9 +90,15 @@ export function ChatInput({
 
   const handleSelectOperation = (operation: string, endpoint: string) => {
     console.log("Selected operation:", operation, endpoint);
-    setShowOperationsModal(false);
-    // Optionally, you could auto-fill the message input with the selected operation
-    // setMessage(`I want to use ${operation}: ${endpoint}`);
+    // Don't close modal - let user configure and apply
+  };
+
+  const handleApplyOperation = async (workflowStep: WorkflowStep) => {
+    if (onApplyOperation) {
+      await onApplyOperation(workflowStep);
+      setShowOperationsModal(false);
+      NotificationManager.success("Operation applied successfully");
+    }
   };
 
   return (
@@ -201,6 +212,8 @@ export function ChatInput({
         open={showOperationsModal}
         onOpenChange={setShowOperationsModal}
         onSelectOperation={handleSelectOperation}
+        onApplyOperation={handleApplyOperation}
+        chatId={chatId}
       />
     </>
   );

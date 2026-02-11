@@ -19,6 +19,7 @@ import { WorkflowStepsDrawer } from "@/components/features/chat/workflow-steps-d
 import { MessageSquare, Trash2, Loader2, ArrowLeft, Copy, RefreshCw } from "lucide-react";
 import { NotificationManager } from "@/lib/services/notification-manager";
 import { copyToClipboard } from "@/lib/utils/chat-utils";
+import type { WorkflowStep } from "@/lib/api/types";
 
 export default function ChatBotPage() {
   const router = useRouter();
@@ -166,6 +167,23 @@ export default function ChatBotPage() {
     }
   };
 
+  const handleApplyOperation = async (workflowStep: WorkflowStep) => {
+    if (!chatId) {
+      NotificationManager.error("No active chat session");
+      return;
+    }
+
+    try {
+      // Call confirmWorkflow with the single step as a workflow
+      await confirmWorkflow([workflowStep]);
+      NotificationManager.success("Operation applied successfully");
+    } catch (error) {
+      console.error("Failed to apply operation:", error);
+      NotificationManager.error("Failed to apply operation");
+      throw error;
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl h-screen flex flex-col">
       {/* Header */}
@@ -268,6 +286,8 @@ export default function ChatBotPage() {
             hasUploadedFiles={!!conversationData?.uploaded_files?.length}
             hasOutputFiles={!!conversationData?.output_files?.length}
             hasWorkflowSteps={!!conversationData?.workflow_steps?.length}
+            onApplyOperation={handleApplyOperation}
+            chatId={chatId || undefined}
           />
         </Card>
       </div>
