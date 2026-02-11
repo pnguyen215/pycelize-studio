@@ -37,9 +37,33 @@ export function UploadedFilesDrawer({ open, onOpenChange, uploadedFiles }: Uploa
     }
   };
 
-  const handleQuickView = (downloadUrl: string) => {
-    // Open file in new tab for quick view
-    window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+  const handleQuickView = async (downloadUrl: string, fileName: string) => {
+    try {
+      // Fetch the file as a blob to force inline viewing instead of download
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+      
+      const blob = await response.blob();
+      
+      // Create an object URL for the blob
+      const objectUrl = URL.createObjectURL(blob);
+      
+      // Open in new window - this will display inline instead of downloading
+      const newWindow = window.open(objectUrl, '_blank', 'noopener,noreferrer');
+      
+      // Clean up the object URL after the window loads (optional, helps with memory)
+      if (newWindow) {
+        newWindow.addEventListener('load', () => {
+          URL.revokeObjectURL(objectUrl);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to open quick view:', error);
+      // Fallback to direct URL if fetch fails
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -78,7 +102,7 @@ export function UploadedFilesDrawer({ open, onOpenChange, uploadedFiles }: Uploa
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => handleQuickView(file.download_url)}
+                      onClick={() => handleQuickView(file.download_url, extractFileName(file.file_path))}
                       title="Quick View"
                     >
                       <Eye className="h-4 w-4 mr-1" />
