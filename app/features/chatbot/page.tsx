@@ -30,9 +30,6 @@ const CONVERSATION_GRADIENTS = {
   ],
 };
 
-// Height constants for layout calculations
-const HEADER_HEIGHT = 250; // px - combined height of page header and controls
-
 export default function ChatConversationsPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -109,226 +106,232 @@ export default function ChatConversationsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-6 w-6" />
-                Chat Conversations
-              </CardTitle>
-              <CardDescription>
-                View and manage your chat bot conversations
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Layout Toggle */}
-              <div className="flex items-center gap-1 border rounded-md p-1">
+    <div className="flex flex-col h-screen">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 container mx-auto p-6 max-w-6xl">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-6 w-6" />
+                  Chat Conversations
+                </CardTitle>
+                <CardDescription>
+                  View and manage your chat bot conversations
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Layout Toggle */}
+                <div className="flex items-center gap-1 border rounded-md p-1">
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 px-2"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'card' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('card')}
+                    className="h-8 px-2"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Restore Button */}
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="h-8 px-2"
+                  variant="outline"
+                  onClick={() => document.getElementById('restore-file-input')?.click()}
+                  disabled={restoring}
                 >
-                  <List className="h-4 w-4" />
+                  {restoring ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Restoring...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Restore
+                    </>
+                  )}
                 </Button>
-                <Button
-                  variant={viewMode === 'card' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('card')}
-                  className="h-8 px-2"
-                >
-                  <LayoutGrid className="h-4 w-4" />
+                <input
+                  id="restore-file-input"
+                  type="file"
+                  accept=".tar.gz"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                
+                {/* New Conversation Button */}
+                <Button onClick={handleCreateConversation} disabled={creating}>
+                  {creating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Conversation
+                    </>
+                  )}
                 </Button>
               </div>
-              
-              {/* Restore Button */}
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('restore-file-input')?.click()}
-                disabled={restoring}
-              >
-                {restoring ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Restoring...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Restore
-                  </>
-                )}
-              </Button>
-              <input
-                id="restore-file-input"
-                type="file"
-                accept=".tar.gz"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-              
-              {/* New Conversation Button */}
-              <Button onClick={handleCreateConversation} disabled={creating}>
-                {creating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Conversation
-                  </>
-                )}
-              </Button>
             </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      ) : conversations.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">No conversations yet</h3>
-              <p className="text-gray-500 mb-4">
-                Create your first conversation to start chatting with the AI assistant
-              </p>
-              <Button onClick={handleCreateConversation} disabled={creating}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Conversation
-              </Button>
-            </div>
-          </CardContent>
+          </CardHeader>
         </Card>
-      ) : (
-        <div className={`max-h-[calc(100vh-${HEADER_HEIGHT}px)] overflow-y-auto scroll-smooth`}>
-          {viewMode === 'list' ? (
-            // List View
-            <div className="grid gap-4">
-              {conversations.map((conversation, index) => {
-                const gradient = CONVERSATION_GRADIENTS.list[index % CONVERSATION_GRADIENTS.list.length];
-                
-                return (
-                  <Card
-                    key={conversation.chat_id}
-                    className={`cursor-pointer hover:shadow-lg transition-all ${gradient}`}
-                    onClick={() => handleOpenConversation(conversation.chat_id)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            <CardTitle className="text-lg">
-                              {conversation.participant_name}
-                            </CardTitle>
-                            {conversation.status && (
-                              <Badge variant={conversation.status === "completed" ? "default" : "secondary"}>
-                                {conversation.status}
-                              </Badge>
-                            )}
+      </div>
+
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto container mx-auto px-6 pb-6 max-w-6xl">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        ) : conversations.length === 0 ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No conversations yet</h3>
+                <p className="text-gray-500 mb-4">
+                  Create your first conversation to start chatting with the AI assistant
+                </p>
+                <Button onClick={handleCreateConversation} disabled={creating}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Conversation
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {viewMode === 'list' ? (
+              // List View
+              <div className="grid gap-4">
+                {conversations.map((conversation, index) => {
+                  const gradient = CONVERSATION_GRADIENTS.list[index % CONVERSATION_GRADIENTS.list.length];
+                  
+                  return (
+                    <Card
+                      key={conversation.chat_id}
+                      className={`cursor-pointer hover:shadow-lg transition-all ${gradient}`}
+                      onClick={() => handleOpenConversation(conversation.chat_id)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              <CardTitle className="text-lg">
+                                {conversation.participant_name}
+                              </CardTitle>
+                              {conversation.status && (
+                                <Badge variant={conversation.status === "completed" ? "default" : "secondary"}>
+                                  {conversation.status}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <User className="h-3 w-3" />
+                                <span>{conversation.participant_name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <Calendar className="h-3 w-3" />
+                                <span>Created: {formatDate(conversation.created_at)}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <Calendar className="h-3 w-3" />
+                                <span>Updated: {formatDate(conversation.updated_at)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                              <User className="h-3 w-3" />
-                              <span>{conversation.participant_name}</span>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {conversation.chat_id.slice(0, 8)}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      {conversation.bot_message && (
+                        <>
+                          <Separator />
+                          <CardContent className="pt-4">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                              {conversation.bot_message}
+                            </p>
+                          </CardContent>
+                        </>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              // Card View
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {conversations.map((conversation, index) => {
+                  const gradient = CONVERSATION_GRADIENTS.card[index % CONVERSATION_GRADIENTS.card.length];
+                  
+                  return (
+                    <Card
+                      key={conversation.chat_id}
+                      className={`cursor-pointer hover:shadow-xl hover:scale-105 transition-all ${gradient} h-64 flex flex-col`}
+                      onClick={() => handleOpenConversation(conversation.chat_id)}
+                    >
+                      <CardHeader className="flex-shrink-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-white/50 dark:bg-black/30">
+                              <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                              <Calendar className="h-3 w-3" />
-                              <span>Created: {formatDate(conversation.created_at)}</span>
+                            <div>
+                              <CardTitle className="text-base">
+                                {conversation.participant_name}
+                              </CardTitle>
+                              {conversation.status && (
+                                <Badge variant={conversation.status === "completed" ? "default" : "secondary"} className="mt-1">
+                                  {conversation.status}
+                                </Badge>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                              <Calendar className="h-3 w-3" />
-                              <span>Updated: {formatDate(conversation.updated_at)}</span>
-                            </div>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-xs bg-white/50 dark:bg-black/30">
+                            {conversation.chat_id.slice(0, 8)}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <Separator />
+                      <CardContent className="flex-1 overflow-hidden pt-4">
+                        <div className="space-y-2 mb-3">
+                          <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+                            <User className="h-3 w-3" />
+                            <span className="truncate">{conversation.participant_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+                            <Calendar className="h-3 w-3" />
+                            <span className="truncate">{formatDate(conversation.created_at)}</span>
                           </div>
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {conversation.chat_id.slice(0, 8)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    {conversation.bot_message && (
-                      <>
-                        <Separator />
-                        <CardContent className="pt-4">
-                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                        {conversation.bot_message && (
+                          <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-4">
                             {conversation.bot_message}
                           </p>
-                        </CardContent>
-                      </>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            // Card View
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {conversations.map((conversation, index) => {
-                const gradient = CONVERSATION_GRADIENTS.card[index % CONVERSATION_GRADIENTS.card.length];
-                
-                return (
-                  <Card
-                    key={conversation.chat_id}
-                    className={`cursor-pointer hover:shadow-xl hover:scale-105 transition-all ${gradient} h-64 flex flex-col`}
-                    onClick={() => handleOpenConversation(conversation.chat_id)}
-                  >
-                    <CardHeader className="flex-shrink-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 rounded-full bg-white/50 dark:bg-black/30">
-                            <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-base">
-                              {conversation.participant_name}
-                            </CardTitle>
-                            {conversation.status && (
-                              <Badge variant={conversation.status === "completed" ? "default" : "secondary"} className="mt-1">
-                                {conversation.status}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="font-mono text-xs bg-white/50 dark:bg-black/30">
-                          {conversation.chat_id.slice(0, 8)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <Separator />
-                    <CardContent className="flex-1 overflow-hidden pt-4">
-                      <div className="space-y-2 mb-3">
-                        <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-                          <User className="h-3 w-3" />
-                          <span className="truncate">{conversation.participant_name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-                          <Calendar className="h-3 w-3" />
-                          <span className="truncate">{formatDate(conversation.created_at)}</span>
-                        </div>
-                      </div>
-                      {conversation.bot_message && (
-                        <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-4">
-                          {conversation.bot_message}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
