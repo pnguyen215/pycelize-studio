@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -13,11 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileUpload } from "@/components/features/file-upload";
 import { DownloadLink } from "@/components/features/download-link";
 import { LoadingSpinner } from "@/components/features/loading-spinner";
 import { ColumnSelect } from "@/components/features/column-select";
 import { useFileColumns } from "@/lib/hooks/useFileColumns";
+import { useExcelSheetNames } from "@/lib/hooks/useExcelSheetNames";
+import { useSheetColumns } from "@/lib/hooks/useSheetColumns";
 import { sqlApi } from "@/lib/api/sql";
 import { Code, Plus, X } from "lucide-react";
 import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
@@ -25,7 +34,7 @@ import type { StandardResponse, DownloadUrlResponse } from "@/lib/api/types";
 export default function SQLCustomPage() {
   const [file, setFile] = useState<File | null>(null);
   const [template, setTemplate] = useState(
-    "INSERT INTO table_name (col1, col2) VALUES ({col1}, {col2});"
+    "INSERT INTO table_name (col1, col2) VALUES ({col1}, {col2});",
   );
   const [columns, setColumns] = useState<string[]>([""]);
   const [columnMappings, setColumnMappings] = useState<
@@ -37,16 +46,45 @@ export default function SQLCustomPage() {
   const [startValue, setStartValue] = useState("");
   const [sequenceName, setSequenceName] = useState("");
   const [removeDuplicates, setRemoveDuplicates] = useState(false);
+  const [sheetName, setSheetName] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] =
     useState<StandardResponse<DownloadUrlResponse> | null>(null);
 
-  // Fetch available columns from the uploaded file
+  // Extract sheet names from the XLSX file (ZIP-based, no cell data loaded)
+  const { sheetNames, loading: sheetsLoading } = useExcelSheetNames(file);
+
+  // The effective sheet name — falls back to first detected sheet so the
+  // column list stays in sync with whatever sheet is currently selected.
+  const activeSheet = sheetName || sheetNames[0] || undefined;
+
+  // Reset column selections whenever the active sheet changes so stale values
+  // from a previous sheet don't remain in the form.
+  useEffect(() => {
+    setColumns([""]);
+    setColumnMappings([{ key: "", value: "" }]);
+  }, [activeSheet]);
+
+  // For .xlsx files: read columns directly from the ZIP (no API call) so the
+  // list always reflects the selected sheet instantly and accurately.
+  // For .xls files: fall back to the API (sheetNames will be empty).
+  const isXlsx = sheetNames.length > 0;
+
   const {
-    columns: availableColumns,
-    loading: columnsLoading,
-    error: columnsError,
-  } = useFileColumns(file, "excel");
+    columns: sheetCols,
+    loading: sheetLoading,
+    error: sheetError,
+  } = useSheetColumns(isXlsx ? file : null, activeSheet);
+
+  const {
+    columns: apiCols,
+    loading: apiLoading,
+    error: apiError,
+  } = useFileColumns(isXlsx ? null : file, "excel");
+
+  const availableColumns = isXlsx ? sheetCols : apiCols;
+  const columnsLoading = isXlsx ? sheetLoading : apiLoading;
+  const columnsError = isXlsx ? sheetError : apiError;
 
   const handleSubmit = async () => {
     if (!file || !template) return;
@@ -57,7 +95,7 @@ export default function SQLCustomPage() {
     try {
       const validColumns = columns.filter((col) => col.trim() !== "");
       const validMappings = columnMappings.filter(
-        (m) => m.key.trim() && m.value.trim()
+        (m) => m.key.trim() && m.value.trim(),
       );
       const mappingObj: Record<string, string> = {};
       validMappings.forEach((m) => {
@@ -79,6 +117,7 @@ export default function SQLCustomPage() {
             }
           : undefined,
         removeDuplicates,
+        sheetName: sheetName || undefined,
       });
       setResult(response);
     } finally {
@@ -102,7 +141,7 @@ export default function SQLCustomPage() {
   const updateMapping = (
     index: number,
     field: "key" | "value",
-    value: string
+    value: string,
   ) => {
     const newMappings = [...columnMappings];
     newMappings[index][field] = value;
@@ -131,10 +170,38 @@ export default function SQLCustomPage() {
         <CardContent className="space-y-4">
           <FileUpload
             accept=".xlsx,.xls"
-            onChange={setFile}
+            onChange={(f) => {
+              setFile(f);
+              setSheetName("");
+            }}
             value={file}
             label="Select Excel File"
           />
+
+          {sheetNames.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="sheet-name">Sheet Name</Label>
+              <Select
+                value={sheetName || sheetNames[0]}
+                onValueChange={setSheetName}
+                disabled={sheetsLoading}
+              >
+                <SelectTrigger id="sheet-name">
+                  <SelectValue placeholder="Select sheet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sheetNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Defaults to the first sheet when not selected
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="template">SQL Template</Label>

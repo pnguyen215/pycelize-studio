@@ -9,7 +9,8 @@ import type { RateLimitInterceptorConfig } from "./interceptors/rate-limit.inter
  * Includes support for notifications, retry, caching, and rate limiting.
  */
 export interface ApiRequestConfig
-  extends AxiosRequestConfig,
+  extends
+    AxiosRequestConfig,
     CacheInterceptorConfig,
     RateLimitInterceptorConfig {
   /**
@@ -251,6 +252,7 @@ export interface SQLGenerationRequest {
  * @param columnMapping - The mapping of columns
  * @param autoIncrement - The auto increment configuration
  * @param remove_duplicates - Whether to remove duplicates
+ * @param sheetName - The sheet name to read from (default: Sheet1)
  */
 export interface CustomSQLRequest {
   file: File;
@@ -265,6 +267,7 @@ export interface CustomSQLRequest {
     sequenceName?: string;
   };
   removeDuplicates?: boolean;
+  sheetName?: string;
 }
 
 /**

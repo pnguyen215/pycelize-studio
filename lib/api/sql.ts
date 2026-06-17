@@ -13,7 +13,7 @@ export const sqlApi = {
    * @returns Download URL
    */
   generateSQL: async (
-    request: SQLGenerationRequest
+    request: SQLGenerationRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
 
@@ -46,7 +46,7 @@ export const sqlApi = {
    * @returns Download URL
    */
   generateCustomSQL: async (
-    request: CustomSQLRequest
+    request: CustomSQLRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
 
@@ -63,6 +63,9 @@ export const sqlApi = {
     }
     if (request.removeDuplicates !== undefined) {
       form.append("remove_duplicates", String(request.removeDuplicates));
+    }
+    if (request.sheetName) {
+      form.append("sheet_name", request.sheetName);
     }
 
     return api.post("/sql/generate-custom-to-text", form, {

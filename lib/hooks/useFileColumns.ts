@@ -16,7 +16,8 @@ interface UseFileColumnsResult {
  */
 export function useFileColumns(
   file: File | null,
-  fileType: "excel" | "csv"
+  fileType: "excel" | "csv",
+  sheetName?: string,
 ): UseFileColumnsResult {
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,12 +33,13 @@ export function useFileColumns(
     const fetchColumns = async () => {
       setLoading(true);
       setError(null);
+      setColumns([]); // Clear stale columns immediately while re-fetching
 
       try {
         let columnNames: string[] = [];
 
         if (fileType === "excel") {
-          const response = await excelApi.getInfo(file);
+          const response = await excelApi.getInfo(file, sheetName || undefined);
           columnNames = response.data.column_names || [];
         } else if (fileType === "csv") {
           const response = await csvApi.getInfo(file);
@@ -56,7 +58,7 @@ export function useFileColumns(
     };
 
     fetchColumns();
-  }, [file, fileType]);
+  }, [file, fileType, sheetName]);
 
   return { columns, loading, error };
 }

@@ -19,10 +19,16 @@ export const excelApi = {
    * @param file - The Excel file to get information about
    * @returns Excel file information
    */
-  getInfo: async (file: File): Promise<StandardResponse<ExcelInfoResponse>> => {
+  getInfo: async (
+    file: File,
+    sheetName?: string,
+  ): Promise<StandardResponse<ExcelInfoResponse>> => {
     const form = new FormData();
 
     form.append("file", file);
+    if (sheetName) {
+      form.append("sheet_name", sheetName);
+    }
 
     return api.post("/excel/info", form, {
       notification: { enabled: true },
@@ -37,7 +43,7 @@ export const excelApi = {
    * @returns JSON with statistics
    */
   extractColumns: async (
-    request: ColumnExtractionRequest
+    request: ColumnExtractionRequest,
   ): Promise<StandardResponse<ColumnExtractionResponse>> => {
     const form = new FormData();
 
@@ -58,7 +64,7 @@ export const excelApi = {
    * @returns Download URL
    */
   extractColumnsToFile: async (
-    request: ColumnExtractionRequest
+    request: ColumnExtractionRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
 
@@ -79,7 +85,7 @@ export const excelApi = {
    * @returns Download URL
    */
   mapColumns: async (
-    request: ColumnMappingRequest
+    request: ColumnMappingRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
     form.append("file", request.file);
@@ -101,7 +107,7 @@ export const excelApi = {
    * @returns Download URL
    */
   bindSingleKey: async (
-    request: BindingSingleKeyRequest
+    request: BindingSingleKeyRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
 
@@ -126,7 +132,7 @@ export const excelApi = {
    * @returns Download URL
    */
   bindMultiKey: async (
-    request: BindingMultiKeyRequest
+    request: BindingMultiKeyRequest,
   ): Promise<StandardResponse<DownloadUrlResponse>> => {
     const form = new FormData();
 
@@ -134,7 +140,7 @@ export const excelApi = {
     form.append("bind_file", request.bindFile);
     form.append(
       "comparison_columns",
-      JSON.stringify(request.comparisonColumns)
+      JSON.stringify(request.comparisonColumns),
     );
     form.append("bind_columns", JSON.stringify(request.bindColumns));
     if (request.outputFilename) {
@@ -154,7 +160,7 @@ export const excelApi = {
    * @returns Search results with download URL
    */
   search: async (
-    request: SearchRequest
+    request: SearchRequest,
   ): Promise<StandardResponse<SearchResponse>> => {
     const form = new FormData();
 
@@ -183,7 +189,7 @@ export const excelApi = {
    * @returns Suggested operators for each column
    */
   suggestOperators: async (
-    file: File
+    file: File,
   ): Promise<StandardResponse<SuggestOperatorsResponse>> => {
     const form = new FormData();
     form.append("file", file);
